@@ -759,6 +759,12 @@
      `
    };
 
+   document.addEventListener('DOMContentLoaded', function () {
+      if (!localStorage.getItem('sudahSetujuKebijakan')) {
+        window.location.href = 'kebijakan.html';
+      }
+    });
+
    const content = document.getElementById('content');
 
    // Slider functionality for Beranda slider inside SPA content
@@ -885,14 +891,7 @@
     // Membuka halaman HTML yang berisi iklan AdSense di WebView
     var ref = cordova.InAppBrowser.open('file:///android_asset/www/ads.html', '_blank', 'location=no');
     }, false);
-
-  document.addEventListener('DOMContentLoaded', function () {
-      if (!localStorage.getItem('sudahSetujuKebijakan')) {
-        window.location.href = 'kebijakan.html';
-      }
-    });
-
-    
+   
   </script>
 
  </body>
