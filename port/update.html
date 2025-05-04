@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Update Status</title>
+</head>
+<body>
+  <h1>Update Status</h1>
+  <form id="statusForm">
+    <input type="text" id="nama" placeholder="Nama (wajib)" required><br>
+    <textarea id="deskripsi" placeholder="Tulis status (wajib)" required></textarea><br>
+    <input type="file" id="gambar" accept="image/*"><br><br>
+    <button type="submit">Kirim</button>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabase = supabase.createClient(
+      'https://uvmwcpbaxrrwxkadjpzj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2bXdjcGJheHJyd3hrYWRqcHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDM3MTIsImV4cCI6MjA2MTkxOTcxMn0.xE9TkZxDxEbvL2rsHBq5XETlwLTUVv18OvYcMNiZlK4'
+    );
+
+    document.getElementById("statusForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const nama = document.getElementById("nama").value.trim();
+      const deskripsi = document.getElementById("deskripsi").value.trim();
+      const file = document.getElementById("gambar").files[0];
+
+      if (!nama || !deskripsi) {
+        alert("Nama dan deskripsi wajib diisi.");
+        return;
+      }
+
+      let gambar_url = null;
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const filePath = `status-images/${Date.now()}.${fileExt}`;
+        let { error: uploadError } = await supabase.storage.from('public').upload(filePath, file);
+
+        if (uploadError) {
+          alert("Gagal mengupload gambar.");
+          return;
+        }
+
+        const { data: publicURL } = supabase.storage.from('public').getPublicUrl(filePath);
+        gambar_url = publicURL.publicUrl;
+      }
+
+      const { error } = await supabase.from("forum").insert([
+        { nama, status: deskripsi, gambar: gambar_url, expired: false }
+      ]);
+
+      if (error) {
+        alert("Gagal menyimpan status.");
+      } else {
+        alert("Status berhasil dikirim!");
+        window.location.href = "forum.html";
+      }
+    });
+  </script>
+</body>
+</html>
