@@ -2,45 +2,46 @@
 <html>
 <head>
   <title>Forum</title>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
 </head>
 <body>
   <h2>Forum Status</h2>
   <a href="update.html">[+] Tambah Status</a>
-  <div id="forum"></div>
+  <div id="daftarStatus"></div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
     const firebaseConfig = {
-      apiKey: "AIzaSyBfYHBRKTxjEtzCHst2tPuwHjJ1Vfyer8",
+      apiKey: "AIzaSyBnghk8X1csh2zp6UwHJfEyyeFs",
       authDomain: "gmi-official21-74326.firebaseapp.com",
       projectId: "gmi-official21-74326",
       storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5b8428ccdd952faa544a9",
-      measurementId: "G-KJXBCY83M"
+      messagingSenderId: "746607586342",
+      appId: "1:746607586342:web:5b824dccad952faa544a49",
+      measurementId: "G-KJX8CEV93M"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    const forumDiv = document.getElementById("forum");
+    const daftar = document.getElementById('daftarStatus');
 
-    async function loadStatuses() {
-      const snapshot = await db.collection("statuses").orderBy("created", "desc").get();
-      snapshot.forEach(doc => {
+    const q = query(collection(db, 'status'), orderBy('waktu', 'desc'));
+    onSnapshot(q, (snapshot) => {
+      daftar.innerHTML = '';
+      snapshot.forEach((doc) => {
         const data = doc.data();
-        const statusEl = document.createElement("div");
-        statusEl.innerHTML = `
+        const el = document.createElement('div');
+        el.innerHTML = `
+          <h3>${data.nama}</h3>
+          <p>${data.deskripsi}</p>
+          ${data.gambar ? `<img src="${data.gambar}" width="200">` : ''}
           <hr>
-          <strong>${data.name}</strong><br>
-          <p>${data.desc}</p>
         `;
-        forumDiv.appendChild(statusEl);
+        daftar.appendChild(el);
       });
-    }
-
-    loadStatuses();
+    });
   </script>
 </body>
 </html>
