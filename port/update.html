@@ -2,44 +2,62 @@
 <html>
 <head>
   <title>Update Status</title>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
 </head>
 <body>
   <h2>Update Status</h2>
   <form id="statusForm">
-    <input type="text" id="name" placeholder="Nama Anda" required><br><br>
-    <textarea id="desc" placeholder="Deskripsi status..." required></textarea><br><br>
+    <input type="text" id="nama" placeholder="Nama" required><br>
+    <textarea id="deskripsi" placeholder="Deskripsi" required></textarea><br>
+    <input type="file" id="gambar"><br>
     <button type="submit">Kirim</button>
   </form>
 
-  <script>
+  <script type="module">
+    // Import Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+
+    // Firebase config dari gambar kamu
     const firebaseConfig = {
-      apiKey: "AIzaSyBfYHBRKTxjEtzCHst2tPuwHjJ1Vfyer8",
+      apiKey: "AIzaSyBnghk8X1csh2zp6UwHJfEyyeFs",
       authDomain: "gmi-official21-74326.firebaseapp.com",
       projectId: "gmi-official21-74326",
       storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5b8428ccdd952faa544a9",
-      measurementId: "G-KJXBCY83M"
+      messagingSenderId: "746607586342",
+      appId: "1:746607586342:web:5b824dccad952faa544a49",
+      measurementId: "G-KJX8CEV93M"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
-    const form = document.getElementById("statusForm");
-    form.addEventListener("submit", async (e) => {
+    const form = document.getElementById('statusForm');
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById("name").value;
-      const desc = document.getElementById("desc").value;
 
-      await db.collection("statuses").add({
-        name,
-        desc,
-        created: new Date()
+      const nama = document.getElementById('nama').value;
+      const deskripsi = document.getElementById('deskripsi').value;
+      const file = document.getElementById('gambar').files[0];
+
+      let imageUrl = '';
+
+      if (file) {
+        const storageRef = ref(storage, 'gambar/' + Date.now() + '_' + file.name);
+        await uploadBytes(storageRef, file);
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      await addDoc(collection(db, 'status'), {
+        nama,
+        deskripsi,
+        gambar: imageUrl,
+        waktu: serverTimestamp()
       });
 
-      alert("Status terkirim!");
+      alert('Status berhasil ditambahkan!');
       form.reset();
     });
   </script>
