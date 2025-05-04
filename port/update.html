@@ -5,60 +5,64 @@
 </head>
 <body>
   <h1>Update Status</h1>
-  <form id="statusForm">
-    <input type="text" id="nama" placeholder="Nama" required><br>
-    <textarea id="deskripsi" placeholder="Deskripsi" required></textarea><br>
-    <input type="text" id="gambar" placeholder="URL Gambar (opsional)"><br>
-    <button type="submit">Kirim</button>
-  </form>
+<form id="statusForm">
+  <input type="text" id="nama" placeholder="Nama" required><br>
+  <textarea id="deskripsi" placeholder="Deskripsi" required></textarea><br>
+  <input type="text" id="gambar" placeholder="URL Gambar (opsional)"><br>
+  <button type="submit">Kirim</button>
+</form>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-  <script>
-  // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-  authDomain: "gmi-official21-74326.firebaseapp.com",
-  projectId: "gmi-official21-74326",
-  storageBucket: "gmi-official21-74326.firebasestorage.app",
-  messagingSenderId: "496607636364",
-  appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-  measurementId: "G-KJ0X8CY03M"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+    authDomain: "gmi-official21-74326.firebaseapp.com",
+    projectId: "gmi-official21-74326",
+    storageBucket: "gmi-official21-74326.firebasestorage.app",
+    messagingSenderId: "496607636364",
+    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+    measurementId: "G-KJ0X8CY03M"
+  };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
 
-    document.getElementById("statusForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const nama = document.getElementById("nama").value;
-      const deskripsi = document.getElementById("deskripsi").value;
-      const gambar = document.getElementById("gambar").value;
+  // Submit form
+  document.getElementById("statusForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      try {
-        await db.collection("status").add({
-          nama: nama,
-          deskripsi: deskripsi,
-          gambar: gambar || null,
-          waktu: new Date()
-        });
-        alert("Status berhasil dikirim!");
-        window.location.href = "forum.html";
-      } catch (error) {
-        console.error("Error menambahkan status:", error);
-        alert("Gagal mengirim status.");
-      }
-    });
-  </script>
+    const nama = document.getElementById("nama").value.trim();
+    const deskripsi = document.getElementById("deskripsi").value.trim();
+    const gambar = document.getElementById("gambar").value.trim();
+
+    if (!nama || !deskripsi) {
+      alert("Nama dan deskripsi wajib diisi.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "status"), {
+        nama: nama,
+        deskripsi: deskripsi,
+        gambar: gambar || null,
+        waktu: serverTimestamp()
+      });
+
+      alert("Status berhasil dikirim!");
+      window.location.href = "forum.html";
+    } catch (err) {
+      console.error("Gagal kirim status:", err);
+      alert("Gagal mengirim status.");
+    }
+  });
+</script>
 </body>
 </html>
