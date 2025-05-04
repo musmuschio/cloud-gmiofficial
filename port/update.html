@@ -1,67 +1,46 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Update Status</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
 </head>
 <body>
   <h2>Update Status</h2>
   <form id="statusForm">
-    <input type="text" id="nama" placeholder="Nama Anda" required><br><br>
-    <textarea id="status" placeholder="Tulis status Anda..." required></textarea><br><br>
-    <input type="file" id="gambar"><br><br>
+    <input type="text" id="name" placeholder="Nama Anda" required><br><br>
+    <textarea id="desc" placeholder="Deskripsi status..." required></textarea><br><br>
     <button type="submit">Kirim</button>
   </form>
 
   <script>
-    const supabase = supabase.createClient(
-      'https://uvmwcpbaxrrwxkadjpzj.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2bXdjcGJheHJyd3hrYWRqcHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDM3MTIsImV4cCI6MjA2MTkxOTcxMn0.xE9TkZxDxEbvL2rsHBq5XETlwLTUVv18OvYcMNiZlK4'
-    );
+    const firebaseConfig = {
+      apiKey: "AIzaSyBfYHBRKTxjEtzCHst2tPuwHjJ1Vfyer8",
+      authDomain: "gmi-official21-74326.firebaseapp.com",
+      projectId: "gmi-official21-74326",
+      storageBucket: "gmi-official21-74326.appspot.com",
+      messagingSenderId: "496607636364",
+      appId: "1:496607636364:web:5b8428ccdd952faa544a9",
+      measurementId: "G-KJXBCY83M"
+    };
 
-    document.getElementById('statusForm').addEventListener('submit', async function (e) {
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const form = document.getElementById("statusForm");
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      const name = document.getElementById("name").value;
+      const desc = document.getElementById("desc").value;
 
-      const nama = document.getElementById('nama').value.trim();
-      const status = document.getElementById('status').value.trim();
-      const file = document.getElementById('gambar').files[0];
+      await db.collection("statuses").add({
+        name,
+        desc,
+        created: new Date()
+      });
 
-      if (!nama || !status) {
-        alert("Nama dan status wajib diisi.");
-        return;
-      }
-
-      let gambarUrl = null;
-
-      if (file) {
-        const { data, error: uploadError } = await supabase.storage
-          .from('public')
-          .upload(`gambar/${Date.now()}_${file.name}`, file);
-
-        if (uploadError) {
-          alert('Gagal upload gambar!');
-          return;
-        }
-
-        const { data: publicUrl } = supabase.storage
-          .from('public')
-          .getPublicUrl(data.path);
-          
-        gambarUrl = publicUrl.publicUrl;
-      }
-
-      const { error } = await supabase
-        .from('forum')
-        .insert([{ nama, status, gambar: gambarUrl }]);
-
-      if (error) {
-        console.error("Insert error:", error);
-        alert("Gagal mengirim status.");
-      } else {
-        alert("Berhasil kirim status!");
-        window.location.href = "forum.html";
-      }
+      alert("Status terkirim!");
+      form.reset();
     });
   </script>
 </body>
