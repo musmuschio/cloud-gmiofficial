@@ -4,61 +4,60 @@
   <title>Update Status</title>
 </head>
 <body>
-  <h2>Update Status</h2>
+  <h1>Update Status</h1>
   <form id="statusForm">
     <input type="text" id="nama" placeholder="Nama" required><br>
     <textarea id="deskripsi" placeholder="Deskripsi" required></textarea><br>
-    <input type="file" id="gambar"><br>
+    <input type="text" id="gambar" placeholder="URL Gambar (opsional)"><br>
     <button type="submit">Kirim</button>
   </form>
 
-  <script type="module">
-    // Import Firebase SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-    // Firebase config dari gambar kamu
-    const firebaseConfig = {
-      apiKey: "AIzaSyBnghk8X1csh2zp6UwHJfEyyeFs",
-      authDomain: "gmi-official21-74326.firebaseapp.com",
-      projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "746607586342",
-      appId: "1:746607586342:web:5b824dccad952faa544a49",
-      measurementId: "G-KJX8CEV93M"
-    };
+  <script>
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+  authDomain: "gmi-official21-74326.firebaseapp.com",
+  projectId: "gmi-official21-74326",
+  storageBucket: "gmi-official21-74326.firebasestorage.app",
+  messagingSenderId: "496607636364",
+  appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+  measurementId: "G-KJ0X8CY03M"
+};
 
-    const form = document.getElementById('statusForm');
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-    form.addEventListener('submit', async (e) => {
+    document.getElementById("statusForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const nama = document.getElementById("nama").value;
+      const deskripsi = document.getElementById("deskripsi").value;
+      const gambar = document.getElementById("gambar").value;
 
-      const nama = document.getElementById('nama').value;
-      const deskripsi = document.getElementById('deskripsi').value;
-      const file = document.getElementById('gambar').files[0];
-
-      let imageUrl = '';
-
-      if (file) {
-        const storageRef = ref(storage, 'gambar/' + Date.now() + '_' + file.name);
-        await uploadBytes(storageRef, file);
-        imageUrl = await getDownloadURL(storageRef);
+      try {
+        await db.collection("status").add({
+          nama: nama,
+          deskripsi: deskripsi,
+          gambar: gambar || null,
+          waktu: new Date()
+        });
+        alert("Status berhasil dikirim!");
+        window.location.href = "forum.html";
+      } catch (error) {
+        console.error("Error menambahkan status:", error);
+        alert("Gagal mengirim status.");
       }
-
-      await addDoc(collection(db, 'status'), {
-        nama,
-        deskripsi,
-        gambar: imageUrl,
-        waktu: serverTimestamp()
-      });
-
-      alert('Status berhasil ditambahkan!');
-      form.reset();
     });
   </script>
 </body>
