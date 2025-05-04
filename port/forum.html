@@ -1,54 +1,46 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Forum</title>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Forum</h1>
-    <button onclick="window.location.href='update.html'">[+]</button>
-  </header>
+  <h2>Forum Status</h2>
+  <a href="update.html">[+] Tambah Status</a>
+  <div id="forum"></div>
 
-  <div id="forum-container"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    const supabase = supabase.createClient(
-      'https://uvmwcpbaxrrwxkadjpzj.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2bXdjcGJheHJyd3hrYWRqcHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzNDM3MTIsImV4cCI6MjA2MTkxOTcxMn0.xE9TkZxDxEbvL2rsHBq5XETlwLTUVv18OvYcMNiZlK4'
-    );
+    const firebaseConfig = {
+      apiKey: "AIzaSyBfYHBRKTxjEtzCHst2tPuwHjJ1Vfyer8",
+      authDomain: "gmi-official21-74326.firebaseapp.com",
+      projectId: "gmi-official21-74326",
+      storageBucket: "gmi-official21-74326.appspot.com",
+      messagingSenderId: "496607636364",
+      appId: "1:496607636364:web:5b8428ccdd952faa544a9",
+      measurementId: "G-KJXBCY83M"
+    };
 
-    async function tampilkanStatus() {
-      const { data, error } = await supabase
-        .from('forum')
-        .select('*')
-        .order('waktu', { ascending: false });
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-      const container = document.getElementById('forum-container');
-      container.innerHTML = '';
+    const forumDiv = document.getElementById("forum");
 
-      const sekarang = new Date();
-
-      data.forEach(item => {
-        const waktuStatus = new Date(item.waktu);
-        const selisihJam = (sekarang - waktuStatus) / (1000 * 60 * 60);
-
-        if (selisihJam > 24) return;
-
-        container.innerHTML += `
-          <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px">
-            <h3>${item.nama}</h3>
-            <p>${item.status}</p>
-            ${item.gambar ? `<img src="${item.gambar}" alt="gambar" width="200"/>` : ''}
-            <small>${waktuStatus.toLocaleString()}</small>
-          </div>
+    async function loadStatuses() {
+      const snapshot = await db.collection("statuses").orderBy("created", "desc").get();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const statusEl = document.createElement("div");
+        statusEl.innerHTML = `
+          <hr>
+          <strong>${data.name}</strong><br>
+          <p>${data.desc}</p>
         `;
+        forumDiv.appendChild(statusEl);
       });
     }
 
-    tampilkanStatus();
+    loadStatuses();
   </script>
 </body>
 </html>
