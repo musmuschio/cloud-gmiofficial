@@ -1,18 +1,61 @@
-<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Update Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
 </head>
-<body>
-  <h1>Update Status</h1>
-  <form id="statusForm">
-    <input type="text" id="nama" placeholder="Nama (wajib)" required><br>
-    <textarea id="deskripsi" placeholder="Tulis status (wajib)" required></textarea><br>
-    <input type="file" id="gambar" accept="image/*"><br><br>
-    <button type="submit">Kirim</button>
-  </form>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <main class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-3xl font-semibold text-center mb-6 text-gray-800">Update Status</h1>
+    <form id="statusForm" class="space-y-5" autocomplete="off" novalidate>
+      <div>
+        <label for="nama" class="block text-gray-700 font-medium mb-1">Nama <span class="text-red-500">*</span></label>
+        <input
+          type="text"
+          id="nama"
+          name="nama"
+          placeholder="Nama (wajib)"
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+        />
+      </div>
+      <div>
+        <label for="deskripsi" class="block text-gray-700 font-medium mb-1">Tulis Status <span class="text-red-500">*</span></label>
+        <textarea
+          id="deskripsi"
+          name="deskripsi"
+          rows="4"
+          placeholder="Tulis status (wajib)"
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+        ></textarea>
+      </div>
+      <div>
+        <label for="gambar" class="block text-gray-700 font-medium mb-1">Unggah Gambar (opsional)</label>
+        <input
+          type="file"
+          id="gambar"
+          name="gambar"
+          accept="image/*"
+          class="w-full text-gray-600"
+        />
+      </div>
+      <button
+        type="submit"
+        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-md shadow-md transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+      >
+        Kirim
+      </button>
+    </form>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
