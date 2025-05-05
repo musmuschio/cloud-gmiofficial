@@ -1,24 +1,35 @@
-<!-- lanjutkan dari forum.html sebelumnya -->
-<!DOCTYPE html>
-<html lang="id">
+<!-- FILE: forum.html -->
+<html class="scroll-smooth" lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Forum Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f8f8f8; }
-    .status { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 0 5px #ccc; }
-    .status img { max-width: 100%; margin-top: 10px; border-radius: 8px; }
-    .name { font-weight: bold; }
-    .time { color: #888; font-size: 0.9em; margin-top: 5px; }
+    body { font-family: 'Inter', sans-serif; }
   </style>
 </head>
-<body>
-  <h2>Forum Status</h2>
-  <div id="statusList"></div>
+<body class="bg-gray-100 min-h-screen">
+  <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 md:px-8 h-14 md:h-16">
+      <div class="flex items-center space-x-3">
+        <img src="https://storage.googleapis.com/a1aa/image/45315b23-9cf5-4c3a-c82f-9be5fa2ee2cf.jpg" alt="Logo" class="w-10 h-10" />
+        <h1 class="text-blue-700 font-extrabold text-xl md:text-2xl select-none">GMI | forum</h1>
+      </div>
+      <a href="update.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2 transition">+ tanyakan</a>
+    </div>
+  </header>
+
+  <main class="pt-20 max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
+    <div id="statusList" class="flex flex-col gap-6"></div>
+  </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
@@ -26,34 +37,191 @@
       projectId: "gmi-official21-74326",
       storageBucket: "gmi-official21-74326.appspot.com",
       messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-      measurementId: "G-KJ0X8CY03M"
+      appId: "1:496607636364:web:5c0428ccad6952faa544a9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const statusList = document.getElementById('statusList');
+    let currentUserName = '';
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const uid = user.uid;
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (userDoc.exists()) {
+          currentUserName = userDoc.data().name;
+          loadStatuses();
+        } else {
+          alert("Profil pengguna tidak ditemukan.");
+        }
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function timeAgo(date) {
+      if (!date) return '';
+      const seconds = Math.floor((new Date() - date) / 1000);
+      let interval = Math.floor(seconds / 31536000);
+      if (interval >= 1) return interval + " tahun lalu";
+      interval = Math.floor(seconds / 2592000);
+      if (interval >= 1) return interval + " bulan lalu";
+      interval = Math.floor(seconds / 86400);
+      if (interval >= 1) return interval + " hari lalu";
+      interval = Math.floor(seconds / 3600);
+      if (interval >= 1) return interval + " jam lalu";
+      interval = Math.floor(seconds / 60);
+      if (interval >= 1) return interval + " menit lalu";
+      return "Baru saja";
+    }
+
+    async function loadStatuses() {
+      statusList.innerHTML = '';
+      const q = query(collection(db, 'statuses'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        const statusId = docSnap.id;
+        const createdAtDate = data.createdAt?.toDate();
+
+        const item = document.createElement('article');
+        item.className = 'bg-white rounded-lg shadow-md p-4 md:p-6';
+
+        let imageHtml = data.imageUrl ? `<img src="${data.imageUrl}" alt="Gambar status" class="w-full max-h-96 object-cover rounded-lg mt-3 mb-3" />` : '';
+
+        item.innerHTML = `
+          <header class="flex items-center space-x-3">
+            <img src="https://placehold.co/40x40/007bff/ffffff?text=👤" alt="User icon" class="w-10 h-10 rounded-full" />
+            <div>
+              <h2 class="font-semibold text-gray-900">${data.name}</h2>
+              <time class="text-xs text-gray-500">${timeAgo(createdAtDate)}</time>
+            </div>
+          </header>
+          <p class="mt-3 text-gray-800 whitespace-pre-line">${data.description}</p>
+          ${imageHtml}
+        `;
+
+        statusList.appendChild(item);
+      }
+    }
+  </script>
+</body>
+</html>
+
+<!-- FILE: update.html -->
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tambah Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 py-10 px-4">
+  <main class="max-w-xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h1 class="text-2xl font-bold text-blue-700 mb-6">Tulis Status Baru</h1>
+    <label class="block mb-4">
+      <span class="text-gray-700">Nama</span>
+      <input id="name" type="text" class="mt-1 block w-full border border-gray-300 rounded-md px-4 py-2" required />
+    </label>
+    <label class="block mb-4">
+      <span class="text-gray-700">Deskripsi</span>
+      <textarea id="description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md px-4 py-2" required></textarea>
+    </label>
+    <label class="block mb-4">
+      <span class="text-gray-700">Gambar (opsional)</span>
+      <input id="image" type="file" accept="image/*" class="mt-1 block" />
+      <span id="uploadStatus" class="text-sm text-gray-600 mt-1 block"></span>
+      <img id="preview" class="mt-2 max-h-60 rounded-lg hidden" />
+    </label>
+    <button id="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Kirim</button>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+      authDomain: "gmi-official21-74326.firebaseapp.com",
+      projectId: "gmi-official21-74326",
+      storageBucket: "gmi-official21-74326.appspot.com",
+      messagingSenderId: "496607636364",
+      appId: "1:496607636364:web:5c0428ccad6952faa544a9"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const statusList = document.getElementById("statusList");
+    const nameInput = document.getElementById('name');
+    const descInput = document.getElementById('description');
+    const imageInput = document.getElementById('image');
+    const preview = document.getElementById('preview');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const submitBtn = document.getElementById('submit');
 
-    async function loadStatuses() {
-      const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.className = "status";
-        div.innerHTML = `
-          <div class="name">${data.name}</div>
-          <div class="desc">${data.description}</div>
-          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="gambar">` : ""}
-          <div class="time">${data.createdAt?.toDate().toLocaleString() || ''}</div>
-        `;
-        statusList.appendChild(div);
-      });
-    }
+    let imageUrl = "";
+    let isUploading = false;
 
-    loadStatuses();
+    imageInput.addEventListener('change', async function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      isUploading = true;
+      uploadStatus.textContent = '⏳ Mengunggah gambar...';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'forum_unsigned');
+
+      try {
+        const res = await fetch('https://api.cloudinary.com/v1_1/forum-images/image/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        imageUrl = data.secure_url;
+        preview.src = imageUrl;
+        preview.classList.remove('hidden');
+        uploadStatus.textContent = '✅ Gambar berhasil diunggah';
+      } catch (err) {
+        console.error(err);
+        uploadStatus.textContent = '❌ Gagal mengunggah gambar';
+        imageUrl = "";
+      } finally {
+        isUploading = false;
+      }
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      const name = nameInput.value.trim();
+      const description = descInput.value.trim();
+
+      if (!name || !description) {
+        alert('Nama dan deskripsi wajib diisi.');
+        return;
+      }
+
+      if (isUploading) {
+        alert('Tunggu hingga gambar selesai diunggah.');
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, 'statuses'), {
+          name,
+          description,
+          imageUrl: imageUrl || null,
+          createdAt: serverTimestamp()
+        });
+        window.location.href = "forum.html";
+      } catch (err) {
+        console.error(err);
+        alert('Gagal mengirim status.');
+      }
+    });
   </script>
 </body>
 </html>
-
