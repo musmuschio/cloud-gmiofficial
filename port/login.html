@@ -1,136 +1,110 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login Forum</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Register</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #ecf0f1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.2);
-      width: 300px;
-    }
-    .login-box h2 {
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .login-box input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    .login-box button {
-      width: 100%;
-      padding: 10px;
-      background: #2980b9;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
-    .login-box .toggle {
-      margin-top: 10px;
-      text-align: center;
-      cursor: pointer;
-      color: #3498db;
-    }
+    .hidden { display: none; }
+    .toggle-btn { margin: 10px 0; cursor: pointer; color: blue; text-decoration: underline; }
+    form { margin-bottom: 20px; }
   </style>
 </head>
 <body>
+  <h2 id="form-title">Login</h2>
 
-<div class="login-box">
-  <h2 id="formTitle">Login Forum</h2>
-  <input type="text" id="name" placeholder="Nama" style="display: none;" />
-  <input type="email" id="email" placeholder="Alamat Email" required />
-  <input type="password" id="password" placeholder="Kata Sandi" required />
-  <button id="submitBtn">Masuk</button>
-  <div class="toggle" id="toggleForm">Belum punya akun? Daftar di sini</div>
-</div>
+  <!-- Login Form -->
+  <form id="loginForm">
+    <input type="email" id="login-email" placeholder="Email" required><br>
+    <input type="password" id="login-password" placeholder="Kata Sandi" required><br>
+    <button type="submit">Masuk</button>
+  </form>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <!-- Register Form -->
+  <form id="registerForm" class="hidden">
+    <input type="text" id="reg-name" placeholder="Nama" required><br>
+    <input type="email" id="reg-email" placeholder="Email" required><br>
+    <input type="password" id="reg-password" placeholder="Kata Sandi" required><br>
+    <input type="text" id="reg-wa" placeholder="Nomor WhatsApp" required><br>
+    <button type="submit">Daftar</button>
+  </form>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-    authDomain: "gmi-official21-74326.firebaseapp.com",
-    projectId: "gmi-official21-74326",
-    storageBucket: "gmi-official21-74326.appspot.com",
-    messagingSenderId: "496607636364",
-    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-    measurementId: "G-KJ0X8CY03M"
-  };
+  <div class="toggle-btn" onclick="toggleForm()">Belum punya akun? Daftar di sini</div>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-  let mode = 'login'; // atau 'register'
+    const firebaseConfig = {
+      apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
+      authDomain: "training-gmiproject.firebaseapp.com",
+      projectId: "training-gmiproject",
+      storageBucket: "training-gmiproject.firebasestorage.app",
+      messagingSenderId: "188178811217",
+      appId: "1:188178811217:web:636b61392f7e302b046b70",
+      measurementId: "G-F6DBMTSTLR"
+    };
 
-  const nameInput = document.getElementById('name');
-  const emailInput = document.getElementById('email');
-  const passInput = document.getElementById('password');
-  const submitBtn = document.getElementById('submitBtn');
-  const toggleForm = document.getElementById('toggleForm');
-  const formTitle = document.getElementById('formTitle');
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  toggleForm.addEventListener('click', () => {
-    if (mode === 'login') {
-      mode = 'register';
-      nameInput.style.display = 'block';
-      submitBtn.textContent = 'Daftar';
-      formTitle.textContent = 'Daftar Forum';
-      toggleForm.textContent = 'Sudah punya akun? Login di sini';
-    } else {
-      mode = 'login';
-      nameInput.style.display = 'none';
-      submitBtn.textContent = 'Masuk';
-      formTitle.textContent = 'Login Forum';
-      toggleForm.textContent = 'Belum punya akun? Daftar di sini';
-    }
-  });
+    // Login Handler
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
 
-  submitBtn.addEventListener('click', async () => {
-    const email = emailInput.value.trim();
-    const password = passInput.value.trim();
-    const name = nameInput.value.trim();
+      const userRef = doc(db, "users", email);
+      const userSnap = await getDoc(userRef);
 
-    if (!email || !password || (mode === 'register' && !name)) {
-      alert('Lengkapi semua data!');
-      return;
-    }
-
-    try {
-      if (mode === 'login') {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = 'forum.html';
+      if (userSnap.exists() && userSnap.data().password === password) {
+        const userData = userSnap.data();
+        sessionStorage.setItem("user", JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          wa: userData.wa
+        }));
+        window.location.href = "forum.html";
       } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Simpan data profil ke Firestore
-        await setDoc(doc(db, 'users', user.uid), {
-          name,
-          email,
-          createdAt: new Date()
-        });
-
-        window.location.href = 'forum.html';
+        alert("Login gagal. Cek kembali email dan kata sandi.");
       }
-    } catch (error) {
-      alert('Gagal: ' + error.message);
-    }
-  });
-</script>
+    });
 
+    // Register Handler
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("reg-name").value;
+      const email = document.getElementById("reg-email").value;
+      const password = document.getElementById("reg-password").value;
+      const wa = document.getElementById("reg-wa").value;
+
+      await setDoc(doc(db, "users", email), {
+        name, email, password, wa
+      });
+
+      sessionStorage.setItem("user", JSON.stringify({ name, email, wa }));
+      window.location.href = "forum.html";
+    });
+
+    // Toggle Form
+    function toggleForm() {
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+      const title = document.getElementById("form-title");
+      const toggleText = document.querySelector(".toggle-btn");
+
+      if (registerForm.classList.contains("hidden")) {
+        loginForm.classList.add("hidden");
+        registerForm.classList.remove("hidden");
+        title.textContent = "Daftar";
+        toggleText.textContent = "Sudah punya akun? Masuk di sini";
+      } else {
+        loginForm.classList.remove("hidden");
+        registerForm.classList.add("hidden");
+        title.textContent = "Login";
+        toggleText.textContent = "Belum punya akun? Daftar di sini";
+      }
+    }
+  </script>
 </body>
 </html>
