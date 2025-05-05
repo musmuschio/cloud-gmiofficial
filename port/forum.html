@@ -1,71 +1,34 @@
-<html class="scroll-smooth" lang="id">
- <head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1" name="viewport" />
-  <title>Forum Status</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
-    rel="stylesheet"
-  />
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Update Status</title>
   <style>
-    body {
-      font-family: "Inter", sans-serif;
-    }
+    body { font-family: sans-serif; padding: 20px; }
+    #preview { max-width: 100%; display: none; margin-top: 10px; }
+    #uploadStatus { margin-top: 5px; font-size: 14px; color: #555; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
- </head>
- <body class="bg-gray-100 min-h-screen">
-  <header
-    class="fixed top-0 left-0 right-0 bg-white shadow-md z-50"
-    role="banner"
-  >
-   <div
-     class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 md:px-8 h-14 md:h-16"
-   >
-    <div class="flex items-center space-x-3">
-     <img
-       alt="Logo GMI forum, gambar logo biru dengan tulisan GMI forum"
-       class="w-10 h-10 object-contain"
-       height="40"
-       src="https://storage.googleapis.com/a1aa/image/45315b23-9cf5-4c3a-c82f-9be5fa2ee2cf.jpg"
-       width="40"
-     />
-     <h1
-       class="text-blue-700 font-extrabold text-xl md:text-2xl select-none"
-     >
-      GMI | forum
-     </h1>
-    </div>
-    <a
-      aria-label="Tambah status baru"
-      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-      href="update.html"
-      >+ tanyakan</a
-    >
-   </div>
-  </header>
-  <main class="pt-20 max-w-3xl mx-auto px-4 sm:px-6 md:px-8" role="main">
-   <div class="flex flex-col gap-6" id="statusList"></div>
-  </main>
+</head>
+<body>
+  <h2>Tulis Status Baru</h2>
+  <textarea id="description" rows="5" placeholder="Tulis sesuatu..." style="width: 100%;"></textarea><br><br>
+  
+  <label style="cursor: pointer; color: #007bff;">
+    📷 Pilih gambar (opsional)
+    <input type="file" id="imageInput" accept="image/*" style="display: none;" />
+  </label>
+  <div id="uploadStatus"></div>
+  <img id="preview" />
+
+  <br><br>
+  <button id="submitBtn">📤 Kirim</button>
+
   <script type="module">
-    import {
-      initializeApp,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      getDocs,
-      addDoc,
-      serverTimestamp,
-      doc,
-      getDoc,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -75,132 +38,85 @@
       storageBucket: "gmi-official21-74326.appspot.com",
       messagingSenderId: "496607636364",
       appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-      measurementId: "G-KJ0X8CY03M",
+      measurementId: "G-KJ0X8CY03M"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     const auth = getAuth(app);
 
-    const statusList = document.getElementById("statusList");
+    const description = document.getElementById('description');
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const submitBtn = document.getElementById('submitBtn');
 
-    let currentUserName = "";
+    let imageUrl = null;
+    let currentUser = null;
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const uid = user.uid;
-          const userDoc = await getDoc(doc(db, "users", uid));
-          if (userDoc.exists()) {
-            currentUserName = userDoc.data().name;
-            loadStatuses();
-          } else {
-            alert("Data pengguna tidak ditemukan. Silakan login ulang.");
-            auth.signOut().then(() => {
-              window.location.href = "login.html";
-            });
-          }
-        } catch (error) {
-          console.error("Error saat mengambil data user:", error);
-          window.location.href = "login.html";
-        }
-      } else {
+    // Cek login
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
         window.location.href = "login.html";
+      } else {
+        currentUser = user;
       }
     });
 
-    async function loadStatuses() {
-      statusList.innerHTML = "";
-      const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      for (const docSnap of querySnapshot.docs) {
-        const data = docSnap.data();
-        const statusId = docSnap.id;
+    // Upload gambar dan tampilkan preview
+    imageInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-        const item = document.createElement("article");
-        item.className =
-          "bg-white rounded-lg shadow-md p-4 flex flex-col gap-3 border border-gray-200";
-
-        let html = "";
-
-        if (data.imageUrl) {
-          html += `<img src="${data.imageUrl}" alt="Gambar status dengan deskripsi: ${escapeHtml(
-            data.description
-          )}" class="w-full h-auto rounded-md object-cover max-h-96" />`;
-        } else {
-          // If no image, show a placeholder image with descriptive alt text
-          html += `<img src="https://placehold.co/600x400/png?text=No+Image+Available" alt="Placeholder gambar status tidak tersedia" class="w-full h-auto rounded-md object-cover max-h-96" />`;
-        }
-
-        html += `<h3 class="text-lg font-semibold text-gray-900">${escapeHtml(
-          data.name
-        )}</h3>`;
-
-        html += `<p class="text-gray-700 whitespace-pre-line">${escapeHtml(
-          data.description
-        )}</p>`;
-
-        html += `<section aria-label="Komentar untuk status ini" id="comments-${statusId}" class="flex flex-col gap-2 max-h-60 overflow-y-auto border-t border-gray-200 pt-2"></section>`;
-
-        html += `<form data-id="${statusId}" class="comment-form flex gap-2 mt-2" aria-label="Form komentar">
-          <input type="text" placeholder="Tulis komentar..." class="comment-text flex-grow rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">Kirim</button>
-        </form>`;
-
-        item.innerHTML = html;
-        statusList.appendChild(item);
-
-        loadComments(statusId);
-
-        const form = item.querySelector(".comment-form");
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const text = form.querySelector(".comment-text").value.trim();
-
-          if (!text || !currentUserName) return;
-
-          await addDoc(collection(db, "statuses", statusId, "comments"), {
-            name: currentUserName,
-            text,
-            createdAt: serverTimestamp(),
-          });
-
-          form.reset();
-          loadComments(statusId);
-        });
+      if (file.size > 2 * 1024 * 1024) {
+        uploadStatus.textContent = '❌ Ukuran gambar maksimal 2MB.';
+        imageInput.value = '';
+        return;
       }
-    }
 
-    async function loadComments(statusId) {
-      const commentsDiv = document.getElementById(`comments-${statusId}`);
-      commentsDiv.innerHTML = "";
+      uploadStatus.innerHTML = '⏳ Mengunggah gambar...';
+      submitBtn.disabled = true;
 
-      const commentsRef = collection(db, "statuses", statusId, "comments");
-      const q = query(commentsRef, orderBy("createdAt", "asc"));
-      const querySnapshot = await getDocs(q);
+      try {
+        const storageRef = ref(storage, 'images/' + Date.now() + '-' + file.name);
+        await uploadBytes(storageRef, file);
+        imageUrl = await getDownloadURL(storageRef);
+        preview.src = imageUrl;
+        preview.style.display = 'block';
+        uploadStatus.innerHTML = '✅ Gambar berhasil diunggah!';
+      } catch (err) {
+        console.error(err);
+        uploadStatus.innerHTML = '❌ Gagal mengunggah gambar.';
+        imageUrl = null;
+      }
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.className =
-          "border-t border-gray-300 pt-1 text-gray-800 text-sm break-words";
-        div.innerHTML = `<strong class="font-semibold">${escapeHtml(
-          data.name
-        )}:</strong> ${escapeHtml(data.text)}`;
-        commentsDiv.appendChild(div);
-      });
-    }
+      submitBtn.disabled = false;
+    });
 
-    // Simple escape function to prevent XSS
-    function escapeHtml(text) {
-      if (!text) return "";
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
+    // Submit status
+    submitBtn.addEventListener('click', async () => {
+      const text = description.value.trim();
+      if (!text || !currentUser) return alert('Deskripsi wajib diisi');
+
+      submitBtn.disabled = true;
+      try {
+        await addDoc(collection(db, 'statuses'), {
+          uid: currentUser.uid,
+          name: currentUser.displayName || currentUser.email || "Pengguna",
+          description: text,
+          imageUrl: imageUrl || null,
+          createdAt: serverTimestamp()
+        });
+
+        alert("✅ Status berhasil dikirim!");
+        window.location.href = "forum.html";
+      } catch (err) {
+        console.error(err);
+        alert("❌ Gagal mengirim status.");
+      }
+      submitBtn.disabled = false;
+    });
   </script>
- </body>
+</body>
 </html>
