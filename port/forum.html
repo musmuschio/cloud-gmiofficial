@@ -94,9 +94,9 @@
       // User avatar placeholder
       const avatar = document.createElement("img");
       avatar.src = `https://placehold.co/48x48/png?text=${encodeURIComponent(
-        data.username ? data.username.charAt(0).toUpperCase() : "U"
+      data.name ? data.name.charAt(0).toUpperCase() : "U"
       )}`;
-      avatar.alt = `Avatar pengguna dengan inisial ${data.username || "Anonim"}`;
+      avatar.alt = `Avatar pengguna dengan inisial ${data.name || "Anonim"}`;
       avatar.className = "w-12 h-12 rounded-full object-cover bg-gray-200";
 
       // Username and timestamp container
@@ -105,7 +105,7 @@
 
       const usernameEl = document.createElement("h2");
       usernameEl.className = "font-semibold text-gray-900 text-lg";
-      usernameEl.textContent = data.username || "Anonim";
+      usernameEl.textContent = data.name || "Anonim";
 
       const timeEl = document.createElement("time");
       timeEl.className = "text-gray-500 text-sm";
