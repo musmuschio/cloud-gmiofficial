@@ -41,206 +41,54 @@
   </main>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    serverTimestamp,
-  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
     authDomain: "training-gmiproject.firebaseapp.com",
     projectId: "training-gmiproject",
-    storageBucket: "training-gmiproject.appspot.com",
-    messagingSenderId: "188178811217",
-    appId: "1:188178811217:web:636b61392f7e302b046b70",
-    measurementId: "G-F6DBMTSTLR",
   };
 
   const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
   const db = getFirestore(app);
-  const auth = getAuth();
 
-  let currentUser = null;
+  const statusList = document.getElementById("statusList");
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = "login.html";
     } else {
-      currentUser = user;
-      loadStatus();
+      try {
+        const q = query(collection(db, "statuses"), orderBy("timestamp", "desc"));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          statusList.innerHTML = "<p>Belum ada status yang diposting.</p>";
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const statusItem = document.createElement("div");
+          statusItem.className = "status-item";
+          statusItem.innerHTML = `
+            <div style="border:1px solid #ddd;padding:10px;margin:10px 0;border-radius:8px;">
+              <strong>${data.name || "Anonim"}</strong><br/>
+              <p>${data.text}</p>
+              <small>${data.timestamp?.toDate().toLocaleString() || "Baru saja"}</small>
+            </div>
+          `;
+          statusList.appendChild(statusItem);
+        });
+      } catch (error) {
+        statusList.innerHTML = "<p>Gagal memuat status: " + error.message + "</p>";
+      }
     }
   });
-
-  function createStatusCard(data, statusId) {
-    const card = document.createElement("article");
-    card.className =
-      "bg-white rounded-lg shadow-md p-5 space-y-4 border border-gray-200";
-
-    const header = document.createElement("header");
-    header.className = "flex items-center justify-between";
-
-    const userInfo = document.createElement("div");
-    userInfo.className = "flex items-center space-x-3";
-
-    const avatar = document.createElement("img");
-    avatar.src = `https://placehold.co/48x48/png?text=${encodeURIComponent(
-      data.name ? data.name.charAt(0).toUpperCase() : "U"
-    )}`;
-    avatar.alt = `Avatar pengguna dengan inisial ${data.name || "Anonim"}`;
-    avatar.className = "w-12 h-12 rounded-full object-cover bg-gray-200";
-
-    const userText = document.createElement("div");
-    userText.className = "flex flex-col";
-
-    const usernameEl = document.createElement("h2");
-    usernameEl.className = "font-semibold text-gray-900 text-lg";
-    usernameEl.textContent = data.name || "Anonim";
-
-    const timeEl = document.createElement("time");
-    timeEl.className = "text-gray-500 text-sm";
-    if (data.timestamp && data.timestamp.toDate) {
-      const date = data.timestamp.toDate();
-      timeEl.textContent = date.toLocaleString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      timeEl.dateTime = date.toISOString();
-    } else {
-      timeEl.textContent = "";
-    }
-
-    userText.appendChild(usernameEl);
-    userText.appendChild(timeEl);
-    userInfo.appendChild(avatar);
-    userInfo.appendChild(userText);
-    header.appendChild(userInfo);
-    card.appendChild(header);
-
-    const statusText = document.createElement("p");
-    statusText.className = "text-gray-800 whitespace-pre-wrap break-words";
-    statusText.textContent = data.text || "";
-    card.appendChild(statusText);
-
-    const commentSection = document.createElement("section");
-    commentSection.className = "pt-3 border-t border-gray-200";
-
-    const commentLabel = document.createElement("h3");
-    commentLabel.className = "font-semibold text-gray-700 mb-2";
-    commentLabel.textContent = "Komentar:";
-    commentSection.appendChild(commentLabel);
-
-    const commentsList = document.createElement("div");
-    commentsList.id = `list-${statusId}`;
-    commentsList.className = "space-y-2 text-gray-700 text-sm max-h-48 overflow-y-auto";
-    commentsList.textContent = "Memuat...";
-    commentSection.appendChild(commentsList);
-
-    const commentInputContainer = document.createElement("div");
-    commentInputContainer.className = "mt-3 flex flex-col sm:flex-row sm:items-center sm:space-x-3";
-
-    const textarea = document.createElement("textarea");
-    textarea.id = `input-${statusId}`;
-    textarea.rows = 2;
-    textarea.placeholder = "Tulis komentar...";
-    textarea.className =
-      "resize-none w-full rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-3 py-2 text-gray-900 placeholder-gray-400";
-    textarea.setAttribute("aria-label", "Tulis komentar");
-
-    const sendBtn = document.createElement("button");
-    sendBtn.type = "button";
-    sendBtn.className =
-      "mt-2 sm:mt-0 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1";
-    sendBtn.innerHTML = `<i class="fas fa-paper-plane mr-2"></i><span>Kirim</span>`;
-    sendBtn.onclick = () => postComment(statusId);
-
-    commentInputContainer.appendChild(textarea);
-    commentInputContainer.appendChild(sendBtn);
-
-    commentSection.appendChild(commentInputContainer);
-    card.appendChild(commentSection);
-
-    return card;
-  }
-
-  function loadStatus() {
-    const statusList = document.getElementById("statusList");
-    const q = query(collection(db, "status"), orderBy("timestamp", "desc"));
-
-    onSnapshot(q, (snapshot) => {
-      statusList.innerHTML = "";
-      if (snapshot.empty) {
-        const emptyMsg = document.createElement("p");
-        emptyMsg.className = "text-center text-gray-500 py-10";
-        emptyMsg.textContent = "Belum ada status yang diposting.";
-        statusList.appendChild(emptyMsg);
-        return;
-      }
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const statusId = docSnap.id;
-
-        const card = createStatusCard(data, statusId);
-        statusList.appendChild(card);
-
-        loadComments(statusId);
-      });
-    });
-  }
-
-  function loadComments(statusId) {
-    const commentList = document.getElementById("list-" + statusId);
-    const commentsRef = collection(db, "status", statusId, "comments");
-    const q = query(commentsRef, orderBy("timestamp", "asc"));
-
-    onSnapshot(q, (snapshot) => {
-      commentList.innerHTML = "";
-      if (snapshot.empty) {
-        const noComments = document.createElement("p");
-        noComments.className = "text-gray-400 italic";
-        noComments.textContent = "Belum ada komentar.";
-        commentList.appendChild(noComments);
-        return;
-      }
-      snapshot.forEach((doc) => {
-        const c = doc.data();
-        const div = document.createElement("div");
-        div.className =
-          "border-l-4 border-blue-500 pl-3 py-1 bg-blue-50 rounded-md";
-        div.innerHTML = `<strong class="block font-semibold text-blue-700">${c.name}</strong><p class="whitespace-pre-wrap">${c.text}</p>`;
-        commentList.appendChild(div);
-      });
-    });
-  }
-
-  async function postComment(statusId) {
-    const input = document.getElementById("input-" + statusId);
-    const text = input.value.trim();
-    if (text === "") return;
-
-    const commentsRef = collection(db, "status", statusId, "comments");
-    try {
-      await addDoc(commentsRef, {
-        userId: currentUser.uid,
-        name: currentUser.displayName || "Anonim",
-        text,
-        timestamp: serverTimestamp(),
-      });
-      input.value = "";
-    } catch (e) {
-      alert("Gagal mengirim komentar. Silakan coba lagi.");
-      console.error(e);
-    }
-  }
 </script>
+
 
  </body>
 </html>
