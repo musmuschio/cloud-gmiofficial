@@ -1,178 +1,59 @@
-<html class="scroll-smooth" lang="id">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1" name="viewport"/>
-  <title>
-   Forum Status
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter&amp;display=swap" rel="stylesheet"/>
+<!-- lanjutkan dari forum.html sebelumnya -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Forum Status</title>
   <style>
-   body {
-      font-family: 'Inter', sans-serif;
-    }
+    body { font-family: sans-serif; padding: 20px; background: #f8f8f8; }
+    .status { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 0 5px #ccc; }
+    .status img { max-width: 100%; margin-top: 10px; border-radius: 8px; }
+    .name { font-weight: bold; }
+    .time { color: #888; font-size: 0.9em; margin-top: 5px; }
   </style>
- </head>
- <body class="bg-gray-100 min-h-screen">
-  <!-- Header with logo + text and "+ tanyakan" button -->
-  <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
-   <div class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 md:px-8 h-14 md:h-16">
-    <div class="flex items-center space-x-3">
-     <img alt="Logo GMI forum, gambar logo.png" class="w-10 h-10" height="40" src="https://storage.googleapis.com/a1aa/image/45315b23-9cf5-4c3a-c82f-9be5fa2ee2cf.jpg" width="40"/>
-     <h1 class="text-blue-700 font-extrabold text-xl md:text-2xl select-none">
-      GMI | forum
-     </h1>
-    </div>
-    <a aria-label="Tambah status baru" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2 transition" href="update.html">
-     + tanyakan
-    </a>
-   </div>
-  </header>
-  <main class="pt-20 max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
-   <div class="flex flex-col gap-6" id="statusList">
-   </div>
-  </main>
+</head>
+<body>
+  <h2>Forum Status</h2>
+  <div id="statusList"></div>
+
   <script type="module">
-   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-    authDomain: "gmi-official21-74326.firebaseapp.com",
-    projectId: "gmi-official21-74326",
-    storageBucket: "gmi-official21-74326.appspot.com",
-    messagingSenderId: "496607636364",
-    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-    measurementId: "G-KJ0X8CY03M"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+      authDomain: "gmi-official21-74326.firebaseapp.com",
+      projectId: "gmi-official21-74326",
+      storageBucket: "gmi-official21-74326.appspot.com",
+      messagingSenderId: "496607636364",
+      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+      measurementId: "G-KJ0X8CY03M"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const statusList = document.getElementById('statusList');
+    const statusList = document.getElementById("statusList");
 
-  let currentUserName = '';
-
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const uid = user.uid;
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        currentUserName = userDoc.data().name;
-        loadStatuses();
-      } else {
-        alert("Profil pengguna tidak ditemukan.");
-      }
-    } else {
-      window.location.href = "login.html";
-    }
-  });
-
-  function timeAgo(date) {
-    if (!date) return '';
-    const seconds = Math.floor((new Date() - date) / 1000);
-    let interval = Math.floor(seconds / 31536000);
-    if (interval >= 1) return interval + " tahun lalu";
-    interval = Math.floor(seconds / 2592000);
-    if (interval >= 1) return interval + " bulan lalu";
-    interval = Math.floor(seconds / 86400);
-    if (interval >= 1) return interval + " hari lalu";
-    interval = Math.floor(seconds / 3600);
-    if (interval >= 1) return interval + " jam lalu";
-    interval = Math.floor(seconds / 60);
-    if (interval >= 1) return interval + " menit lalu";
-    return "Baru saja";
-  }
-
-  async function loadStatuses() {
-    statusList.innerHTML = '';
-    const q = query(collection(db, 'statuses'), orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
-    for (const docSnap of querySnapshot.docs) {
-      const data = docSnap.data();
-      const statusId = docSnap.id;
-
-      const createdAtDate = data.createdAt ? data.createdAt.toDate() : null;
-
-      const item = document.createElement('article');
-      item.className = 'bg-white rounded-lg shadow-md p-4 md:p-6';
-
-      let imageHtml = '';
-      if (data.imageUrl) {
-        imageHtml = `<img src="${data.imageUrl}" alt="Gambar status dari pengguna ${data.name}" class="w-full max-h-96 object-cover rounded-lg mt-3 mb-3" />`;
-      }
-
-      item.innerHTML = `
-        <header class="flex items-center space-x-3">
-          <img src="https://placehold.co/40x40/007bff/ffffff?text=👤" alt="Ikon user berwarna biru dengan latar putih berbentuk lingkaran" class="w-10 h-10 rounded-full" />
-          <div>
-            <h2 class="font-semibold text-gray-900">${data.name}</h2>
-            <time class="text-xs text-gray-500">${timeAgo(createdAtDate)}</time>
-          </div>
-        </header>
-        <p class="mt-3 text-gray-800 whitespace-pre-line">${data.description}</p>
-        ${imageHtml}
-        <section class="mt-4 border-t border-gray-200 pt-3" id="comments-section-${statusId}">
-          <div id="comments-${statusId}" class="space-y-2 max-h-48 overflow-y-auto"></div>
-          <form data-id="${statusId}" class="comment-form mt-3 flex items-center space-x-2">
-            <input type="text" placeholder="Tulis komentar..." class="comment-text flex-grow rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600" required />
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2 font-semibold transition">Kirim</button>
-          </form>
-        </section>
-      `;
-
-      statusList.appendChild(item);
-
-      loadComments(statusId);
-
-      const form = item.querySelector('.comment-form');
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const text = form.querySelector('.comment-text').value.trim();
-
-        if (!text || !currentUserName) return;
-
-        await addDoc(collection(db, 'statuses', statusId, 'comments'), {
-          name: currentUserName,
-          text,
-          createdAt: serverTimestamp()
-        });
-
-        form.reset();
-        loadComments(statusId);
+    async function loadStatuses() {
+      const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "status";
+        div.innerHTML = `
+          <div class="name">${data.name}</div>
+          <div class="desc">${data.description}</div>
+          ${data.imageUrl ? `<img src="${data.imageUrl}" alt="gambar">` : ""}
+          <div class="time">${data.createdAt?.toDate().toLocaleString() || ''}</div>
+        `;
+        statusList.appendChild(div);
       });
     }
-  }
 
-  async function loadComments(statusId) {
-    const commentsDiv = document.getElementById(`comments-${statusId}`);
-    commentsDiv.innerHTML = '';
-
-    const commentsRef = collection(db, 'statuses', statusId, 'comments');
-    const q = query(commentsRef, orderBy('createdAt', 'asc'));
-    const querySnapshot = await getDocs(q);
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      const createdAtDate = data.createdAt ? data.createdAt.toDate() : null;
-      const commentDiv = document.createElement('div');
-      commentDiv.className = 'flex items-start space-x-3';
-
-      commentDiv.innerHTML = `
-        <img src="https://placehold.co/32x32/007bff/ffffff?text=👤" alt="Ikon user berwarna biru dengan latar putih berbentuk lingkaran untuk komentar" class="w-8 h-8 rounded-full mt-1" />
-        <div class="bg-gray-100 rounded-xl px-4 py-2 max-w-[85%]">
-          <p class="text-sm"><strong>${data.name}</strong></p>
-          <p class="text-gray-700 text-sm">${data.text}</p>
-          <time class="text-xs text-gray-400">${timeAgo(createdAtDate)}</time>
-        </div>
-      `;
-      commentsDiv.appendChild(commentDiv);
-    });
-  }
+    loadStatuses();
   </script>
- </body>
+</body>
 </html>
+
