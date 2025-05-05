@@ -1,40 +1,61 @@
-<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login / Register</title>
-  <style>
-    .hidden { display: none; }
-    .toggle-btn { margin: 10px 0; cursor: pointer; color: blue; text-decoration: underline; }
-    form { margin-bottom: 20px; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login & Register Firebase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
 </head>
-<body>
-  <h2 id="form-title">Login</h2>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8">
+    <h2 class="text-2xl font-semibold text-center mb-6">Form Login / Register</h2>
 
-  <!-- Login Form -->
-  <form id="loginForm">
-    <input type="email" id="login-email" placeholder="Email" required><br>
-    <input type="password" id="login-password" placeholder="Kata Sandi" required><br>
-    <button type="submit">Masuk</button>
-  </form>
+    <input
+      type="email"
+      id="email"
+      placeholder="Email"
+      class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+      autocomplete="email"
+      aria-label="Email"
+    />
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
+      class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
+      autocomplete="current-password"
+      aria-label="Password"
+    />
 
-  <!-- Register Form -->
-  <form id="registerForm" class="hidden">
-    <input type="text" id="reg-name" placeholder="Nama" required><br>
-    <input type="email" id="reg-email" placeholder="Email" required><br>
-    <input type="password" id="reg-password" placeholder="Kata Sandi" required><br>
-    <input type="text" id="reg-wa" placeholder="Nomor WhatsApp" required><br>
-    <button type="submit">Daftar</button>
-  </form>
+    <button
+      onclick="register()"
+      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md mb-3 transition-colors flex items-center justify-center gap-2"
+      aria-label="Daftar (Register)"
+    >
+      <i class="fas fa-user-plus"></i> Daftar (Register)
+    </button>
+    <button
+      onclick="login()"
+      class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md mb-3 transition-colors flex items-center justify-center gap-2"
+      aria-label="Masuk (Login)"
+    >
+      <i class="fas fa-sign-in-alt"></i> Masuk (Login)
+    </button>
+    <button
+      onclick="logout()"
+      class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-md transition-colors flex items-center justify-center gap-2"
+      aria-label="Logout"
+    >
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
 
-  <div class="toggle-btn" onclick="toggleForm()">Belum punya akun? Daftar di sini</div>
+    <p id="status" class="mt-6 text-center text-gray-700 font-medium">Status: Belum login</p>
+  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-
+  <script>
+    // Konfigurasi Firebase milik Mus
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
       authDomain: "training-gmiproject.firebaseapp.com",
@@ -45,66 +66,63 @@
       measurementId: "G-F6DBMTSTLR"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-    // Login Handler
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("login-email").value;
-      const password = document.getElementById("login-password").value;
+    // Fungsi Daftar
+    function register() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
 
-      const userRef = doc(db, "users", email);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists() && userSnap.data().password === password) {
-        const userData = userSnap.data();
-        sessionStorage.setItem("user", JSON.stringify({
-          name: userData.name,
-          email: userData.email,
-          wa: userData.wa
-        }));
-        window.location.href = "forum.html";
-      } else {
-        alert("Login gagal. Cek kembali email dan kata sandi.");
+      if (!email || !password) {
+        document.getElementById("status").innerText = "Error: Email dan password harus diisi.";
+        return;
       }
-    });
 
-    // Register Handler
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("reg-name").value;
-      const email = document.getElementById("reg-email").value;
-      const password = document.getElementById("reg-password").value;
-      const wa = document.getElementById("reg-wa").value;
-
-      await setDoc(doc(db, "users", email), {
-        name, email, password, wa
-      });
-
-      sessionStorage.setItem("user", JSON.stringify({ name, email, wa }));
-      window.location.href = "forum.html";
-    });
-
-    // Toggle Form
-    function toggleForm() {
-      const loginForm = document.getElementById("loginForm");
-      const registerForm = document.getElementById("registerForm");
-      const title = document.getElementById("form-title");
-      const toggleText = document.querySelector(".toggle-btn");
-
-      if (registerForm.classList.contains("hidden")) {
-        loginForm.classList.add("hidden");
-        registerForm.classList.remove("hidden");
-        title.textContent = "Daftar";
-        toggleText.textContent = "Sudah punya akun? Masuk di sini";
-      } else {
-        loginForm.classList.remove("hidden");
-        registerForm.classList.add("hidden");
-        title.textContent = "Login";
-        toggleText.textContent = "Belum punya akun? Daftar di sini";
-      }
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          document.getElementById("status").innerText = "Registrasi berhasil!";
+        })
+        .catch(error => {
+          document.getElementById("status").innerText = "Error: " + error.message;
+        });
     }
+
+    // Fungsi Login
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        document.getElementById("status").innerText = "Error: Email dan password harus diisi.";
+        return;
+      }
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          document.getElementById("status").innerText = "Login berhasil!";
+        })
+        .catch(error => {
+          document.getElementById("status").innerText = "Error: " + error.message;
+        });
+    }
+
+    // Fungsi Logout
+    function logout() {
+      auth.signOut().then(() => {
+        document.getElementById("status").innerText = "Berhasil logout.";
+      });
+    }
+
+    // Status Auth Real-Time
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("status").innerText = `Login sebagai: ${user.email}`;
+      } else {
+        document.getElementById("status").innerText = "Status: Belum login";
+      }
+    });
   </script>
 </body>
 </html>
