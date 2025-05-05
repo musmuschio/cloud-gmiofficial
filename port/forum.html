@@ -1,31 +1,39 @@
-<html lang="id" class="bg-gray-100">
+<!DOCTYPE html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Forum Diskusi</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Register</title>
+  <style>
+    .hidden { display: none; }
+    .toggle-btn { margin: 10px 0; cursor: pointer; color: blue; text-decoration: underline; }
+    form { margin-bottom: 20px; }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col bg-gray-100">
-  <header class="bg-white shadow p-4 sticky top-0 z-10">
-    <h2 class="text-2xl font-semibold text-gray-800 text-center">Forum Diskusi</h2>
-  </header>
+<body>
+  <h2 id="form-title">Login</h2>
 
-  <main class="flex-grow container mx-auto px-4 py-6">
-    <div id="forum-container" class="space-y-4"></div>
-  </main>
+  <!-- Login Form -->
+  <form id="loginForm">
+    <input type="email" id="login-email" placeholder="Email" required><br>
+    <input type="password" id="login-password" placeholder="Kata Sandi" required><br>
+    <button type="submit">Masuk</button>
+  </form>
 
-  <button
-    aria-label="Tambah Postingan"
-    onclick="window.location.href='update.html'"
-    class="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white text-3xl w-14 h-14 rounded-full flex items-center justify-center shadow-lg focus:outline-none focus:ring-4 focus:ring-green-400"
-  >
-    <i class="fas fa-plus"></i>
-  </button>
+  <!-- Register Form -->
+  <form id="registerForm" class="hidden">
+    <input type="text" id="reg-name" placeholder="Nama" required><br>
+    <input type="email" id="reg-email" placeholder="Email" required><br>
+    <input type="password" id="reg-password" placeholder="Kata Sandi" required><br>
+    <input type="text" id="reg-wa" placeholder="Nomor WhatsApp" required><br>
+    <button type="submit">Daftar</button>
+  </form>
+
+  <div class="toggle-btn" onclick="toggleForm()">Belum punya akun? Daftar di sini</div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
@@ -40,23 +48,63 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) window.location.href = "login.html";
+    // Login Handler
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
 
-    const forumContainer = document.getElementById("forum-container");
-    const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
+      const userRef = doc(db, "users", email);
+      const userSnap = await getDoc(userRef);
 
-    querySnapshot.forEach((doc) => {
-      const post = doc.data();
-      const div = document.createElement("div");
-      div.className = "bg-white rounded-lg shadow p-4";
-      div.innerHTML = `
-        <strong class="block text-lg text-gray-900 mb-2">${post.name}</strong>
-        <p class="text-gray-700 whitespace-pre-wrap">${post.content}</p>
-      `;
-      forumContainer.appendChild(div);
+      if (userSnap.exists() && userSnap.data().password === password) {
+        const userData = userSnap.data();
+        sessionStorage.setItem("user", JSON.stringify({
+          name: userData.name,
+          email: userData.email,
+          wa: userData.wa
+        }));
+        window.location.href = "forum.html";
+      } else {
+        alert("Login gagal. Cek kembali email dan kata sandi.");
+      }
     });
+
+    // Register Handler
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("reg-name").value;
+      const email = document.getElementById("reg-email").value;
+      const password = document.getElementById("reg-password").value;
+      const wa = document.getElementById("reg-wa").value;
+
+      await setDoc(doc(db, "users", email), {
+        name, email, password, wa
+      });
+
+      sessionStorage.setItem("user", JSON.stringify({ name, email, wa }));
+      window.location.href = "forum.html";
+    });
+
+    // Toggle Form
+    function toggleForm() {
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+      const title = document.getElementById("form-title");
+      const toggleText = document.querySelector(".toggle-btn");
+
+      if (registerForm.classList.contains("hidden")) {
+        loginForm.classList.add("hidden");
+        registerForm.classList.remove("hidden");
+        title.textContent = "Daftar";
+        toggleText.textContent = "Sudah punya akun? Masuk di sini";
+      } else {
+        loginForm.classList.remove("hidden");
+        registerForm.classList.add("hidden");
+        title.textContent = "Login";
+        toggleText.textContent = "Belum punya akun? Daftar di sini";
+      }
+    }
   </script>
 </body>
 </html>
