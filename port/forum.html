@@ -1,198 +1,205 @@
 <html class="scroll-smooth" lang="id">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1" name="viewport"/>
-  <title>
-   Forum GMI | FORUM
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
-  <style>
-   body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f3f4f6;
-    }
-  </style>
- </head>
- <body class="min-h-screen flex flex-col">
-  <!-- Header -->
-  <header class="flex items-center justify-between bg-white px-4 sm:px-6 md:px-8 py-3 shadow-md sticky top-0 z-50">
-   <div class="flex items-center space-x-3">
-    <img alt="Logo GMI, a stylized letter G with blue and white colors" class="w-10 h-10 object-contain" height="40" src="https://storage.googleapis.com/a1aa/image/c4d3b1ab-37a0-4f2b-1822-e5fdfe3ab3a2.jpg" width="40"/>
-    <h1 class="text-xl font-semibold text-gray-900 select-none">
-     GMI | FORUM
-    </h1>
-   </div>
-   <button aria-label="Tombol Posting Status Baru" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" onclick="location.href='update.html'" type="button">
-    <i class="fas fa-plus">
-    </i>
-    <span>
-     Posting
-    </span>
-   </button>
-  </header>
-  <!-- Main content -->
-  <main class="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 md:px-8 py-6">
-   <div class="space-y-6 text-gray-800" id="statusList">
-   </div>
-  </main>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <title>Forum GMI | FORUM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f3f4f6;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="flex items-center justify-between bg-white px-4 sm:px-6 md:px-8 py-3 shadow-md sticky top-0 z-50">
+      <div class="flex items-center space-x-3">
+        <img alt="Logo GMI, a stylized letter G with blue and white colors" class="w-10 h-10 object-contain" height="40" src="https://storage.googleapis.com/a1aa/image/c4d3b1ab-37a0-4f2b-1822-e5fdfe3ab3a2.jpg" width="40"/>
+        <h1 class="text-xl font-semibold text-gray-900 select-none">GMI | FORUM</h1>
+      </div>
+      <button aria-label="Tombol Posting Status Baru" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" onclick="location.href='update.html'" type="button">
+        <i class="fas fa-plus"></i>
+        <span>Posting</span>
+      </button>
+    </header>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
-    authDomain: "training-gmiproject.firebaseapp.com",
-    projectId: "training-gmiproject",
-  };
+    <!-- Main content -->
+    <main class="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 md:px-8 py-6">
+      <div class="space-y-6 text-gray-800" id="statusList"></div>
+    </main>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  const statusList = document.getElementById("statusList");
+      const firebaseConfig = {
+        apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
+        authDomain: "training-gmiproject.firebaseapp.com",
+        projectId: "training-gmiproject",
+      };
 
-  function createStatusElement(docId, data) {
-    const container = document.createElement("div");
-    container.className = "border border-gray-300 rounded-lg p-4 bg-white shadow-sm";
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
 
-    // Status header with name and timestamp
-    const header = document.createElement("div");
-    header.className = "mb-2 flex justify-between items-center";
+      const statusList = document.getElementById("statusList");
 
-    const nameEl = document.createElement("strong");
-    nameEl.textContent = data.name || "Anonim";
-    nameEl.className = "text-gray-900";
+      // Function to calculate how long ago the status was posted
+      function getTimeAgo(timestamp) {
+        const diff = new Date() - timestamp.toDate();
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
 
-    const timeEl = document.createElement("small");
-    timeEl.className = "text-gray-500 text-sm";
-    timeEl.textContent = data.timestamp?.toDate().toLocaleString() || "Baru saja";
+        if (seconds < 60) return `${seconds} detik yang lalu`;
+        if (minutes < 60) return `${minutes} menit yang lalu`;
+        if (hours < 24) return `${hours} jam yang lalu`;
+        return `${days} hari yang lalu`;
+      }
 
-    header.appendChild(nameEl);
-    header.appendChild(timeEl);
+      // Create a status element with time ago
+      function createStatusElement(docId, data) {
+        const container = document.createElement("div");
+        container.className = "border border-gray-300 rounded-lg p-4 bg-white shadow-sm";
 
-    // Status text
-    const textEl = document.createElement("p");
-    textEl.className = "mb-3 whitespace-pre-wrap";
-    textEl.textContent = data.text;
+        // Status header with name and timestamp
+        const header = document.createElement("div");
+        header.className = "mb-2 flex justify-between items-center";
 
-    // Comment input form
-    const commentForm = document.createElement("form");
-    commentForm.className = "flex space-x-2";
+        const nameEl = document.createElement("strong");
+        nameEl.textContent = data.name || "Anonim";
+        nameEl.className = "text-gray-900";
 
-    const commentInput = document.createElement("input");
-    commentInput.type = "text";
-    commentInput.placeholder = "Tulis komentar...";
-    commentInput.required = true;
-    commentInput.className = "flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+        const timeEl = document.createElement("small");
+        timeEl.className = "text-gray-500 text-sm";
+        timeEl.textContent = getTimeAgo(data.timestamp);
 
-    const submitBtn = document.createElement("button");
-    submitBtn.type = "submit";
-    submitBtn.className = "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1";
-    submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i><span>Kirim</span>`;
+        header.appendChild(nameEl);
+        header.appendChild(timeEl);
 
-    commentForm.appendChild(commentInput);
-    commentForm.appendChild(submitBtn);
+        // Status text
+        const textEl = document.createElement("p");
+        textEl.className = "mb-3 whitespace-pre-wrap";
+        textEl.textContent = data.text;
 
-    // Comments container
-    const commentsContainer = document.createElement("div");
-    commentsContainer.className = "mt-3 space-y-2 text-gray-700 text-sm";
+        // Comment input form
+        const commentForm = document.createElement("form");
+        commentForm.className = "flex space-x-2";
 
-    // Load comments from Firestore
-    async function loadComments() {
-      commentsContainer.innerHTML = "";
-      try {
-        const commentsQuery = query(collection(db, "statuses", docId, "comments"), orderBy("timestamp", "asc"));
-        const commentsSnapshot = await getDocs(commentsQuery);
-        if (commentsSnapshot.empty) {
-          const noComments = document.createElement("p");
-          noComments.className = "text-gray-400 italic";
-          noComments.textContent = "Belum ada komentar.";
-          commentsContainer.appendChild(noComments);
-        } else {
-          commentsSnapshot.forEach((commentDoc) => {
-            const commentData = commentDoc.data();
-            const commentEl = document.createElement("div");
-            commentEl.className = "border border-gray-200 rounded-md p-2 bg-gray-50";
-            commentEl.innerHTML = `
-              <div class="flex justify-between items-center mb-1">
-                <strong class="text-gray-800">${commentData.name || "Anonim"}</strong>
-                <small class="text-gray-500 text-xs">${commentData.timestamp?.toDate().toLocaleString() || "Baru saja"}</small>
-              </div>
-              <p class="whitespace-pre-wrap">${commentData.text}</p>
-            `;
-            commentsContainer.appendChild(commentEl);
-          });
+        const commentInput = document.createElement("input");
+        commentInput.type = "text";
+        commentInput.placeholder = "Tulis komentar...";
+        commentInput.required = true;
+        commentInput.className = "flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+
+        const submitBtn = document.createElement("button");
+        submitBtn.type = "submit";
+        submitBtn.className = "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1";
+        submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i><span>Kirim</span>`;
+
+        commentForm.appendChild(commentInput);
+        commentForm.appendChild(submitBtn);
+
+        // Comments container
+        const commentsContainer = document.createElement("div");
+        commentsContainer.className = "mt-3 space-y-2 text-gray-700 text-sm";
+
+        // Load comments from Firestore
+        async function loadComments() {
+          commentsContainer.innerHTML = "";
+          try {
+            const commentsQuery = query(collection(db, "statuses", docId, "comments"), orderBy("timestamp", "asc"));
+            const commentsSnapshot = await getDocs(commentsQuery);
+            if (commentsSnapshot.empty) {
+              const noComments = document.createElement("p");
+              noComments.className = "text-gray-400 italic";
+              noComments.textContent = "Belum ada komentar.";
+              commentsContainer.appendChild(noComments);
+            } else {
+              commentsSnapshot.forEach((commentDoc) => {
+                const commentData = commentDoc.data();
+                const commentEl = document.createElement("div");
+                commentEl.className = "border border-gray-200 rounded-md p-2 bg-gray-50";
+                commentEl.innerHTML = `
+                  <div class="flex justify-between items-center mb-1">
+                    <strong class="text-gray-800">${commentData.name || "Anonim"}</strong>
+                    <small class="text-gray-500 text-xs">${getTimeAgo(commentData.timestamp)}</small>
+                  </div>
+                  <p class="whitespace-pre-wrap">${commentData.text}</p>
+                `;
+                commentsContainer.appendChild(commentEl);
+              });
+            }
+          } catch (err) {
+            commentsContainer.innerHTML = `<p class="text-red-600">Gagal memuat komentar: ${err.message}</p>`;
+          }
         }
-      } catch (err) {
-        commentsContainer.innerHTML = `<p class="text-red-600">Gagal memuat komentar: ${err.message}</p>`;
-      }
-    }
 
-    // Initial load comments
-    loadComments();
-
-    // Handle comment form submit
-    commentForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const commentText = commentInput.value.trim();
-      if (!commentText) return;
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        alert("Anda harus login untuk mengirim komentar.");
-        return;
-      }
-      try {
-        await addDoc(collection(db, "statuses", docId, "comments"), {
-          name: currentUser.displayName || "Anonim",
-          text: commentText,
-          timestamp: serverTimestamp(),
-          uid: currentUser.uid,
-        });
-        commentInput.value = "";
+        // Initial load comments
         loadComments();
-      } catch (err) {
-        alert("Gagal mengirim komentar: " + err.message);
-      }
-    });
 
-    container.appendChild(header);
-    container.appendChild(textEl);
-    container.appendChild(commentForm);
-    container.appendChild(commentsContainer);
-
-    return container;
-  }
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-    } else {
-      try {
-        const q = query(collection(db, "statuses"), orderBy("timestamp", "desc"));
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-          statusList.innerHTML = "<p>Belum ada status yang diposting.</p>";
-          return;
-        }
-
-        statusList.innerHTML = "";
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const statusElement = createStatusElement(doc.id, data);
-          statusList.appendChild(statusElement);
+        // Handle comment form submit
+        commentForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const commentText = commentInput.value.trim();
+          if (!commentText) return;
+          const currentUser = auth.currentUser;
+          if (!currentUser) {
+            alert("Anda harus login untuk mengirim komentar.");
+            return;
+          }
+          try {
+            await addDoc(collection(db, "statuses", docId, "comments"), {
+              name: currentUser.displayName || "Anonim",
+              text: commentText,
+              timestamp: serverTimestamp(),
+              uid: currentUser.uid,
+            });
+            commentInput.value = "";
+            loadComments();
+          } catch (err) {
+            alert("Gagal mengirim komentar: " + err.message);
+          }
         });
-      } catch (error) {
-        statusList.innerHTML = "<p>Gagal memuat status: " + error.message + "</p>";
+
+        container.appendChild(header);
+        container.appendChild(textEl);
+        container.appendChild(commentForm);
+        container.appendChild(commentsContainer);
+
+        return container;
       }
-    }
-  });
-</script>
 
+      // Listen for auth state changes
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+        } else {
+          try {
+            const q = query(collection(db, "statuses"), orderBy("timestamp", "desc"));
+            const querySnapshot = await getDocs(q);
 
- </body>
+            if (querySnapshot.empty) {
+              statusList.innerHTML = "<p>Belum ada status yang diposting.</p>";
+              return;
+            }
+
+            statusList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              const statusElement = createStatusElement(doc.id, data);
+              statusList.appendChild(statusElement);
+            });
+          } catch (error) {
+            statusList.innerHTML = "<p>Gagal memuat status: " + error.message + "</p>";
+          }
+        }
+      });
+    </script>
+  </body>
 </html>
