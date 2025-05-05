@@ -11,6 +11,20 @@
         font-family: 'Inter', sans-serif;
         background-color: #f3f4f6;
       }
+      /* Styling untuk komentar yang bisa di-scroll */
+      .comments-container {
+        overflow-x: auto; /* Membuat komentar bisa di-scroll horizontal */
+        white-space: nowrap; /* Agar komentar tetap berada dalam satu baris */
+        padding: 10px 0; /* Spasi atas dan bawah */
+      }
+      .comment-item {
+        display: inline-block; /* Membuat setiap komentar berada dalam satu baris */
+        background-color: #f1f5f9;
+        padding: 10px 15px;
+        margin-right: 10px;
+        border-radius: 8px;
+        max-width: 300px; /* Batasi lebar komentar */
+      }
     </style>
   </head>
   <body class="min-h-screen flex flex-col">
@@ -105,9 +119,9 @@
         commentForm.appendChild(commentInput);
         commentForm.appendChild(submitBtn);
 
-        // Comments container
+        // Comments container (horizontal scroll)
         const commentsContainer = document.createElement("div");
-        commentsContainer.className = "mt-3 space-y-2 text-gray-700 text-sm";
+        commentsContainer.className = "comments-container"; // Apply the scrollable class here
 
         // Load comments from Firestore
         async function loadComments() {
@@ -124,7 +138,7 @@
               commentsSnapshot.forEach((commentDoc) => {
                 const commentData = commentDoc.data();
                 const commentEl = document.createElement("div");
-                commentEl.className = "border border-gray-200 rounded-md p-2 bg-gray-50";
+                commentEl.className = "comment-item"; // Each comment will be inline
                 commentEl.innerHTML = `
                   <div class="flex justify-between items-center mb-1">
                     <strong class="text-gray-800">${commentData.name || "Anonim"}</strong>
