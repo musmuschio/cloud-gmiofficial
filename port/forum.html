@@ -26,125 +26,27 @@
   </main>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// Dalam loadStatuses()
+const user = auth.currentUser;
+const userDoc = await getDoc(doc(db, 'users', user.uid));
+const userName = userDoc.exists() ? userDoc.data().name : 'Anonim';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-      authDomain: "gmi-official21-74326.firebaseapp.com",
-      projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-      measurementId: "G-KJ0X8CY03M"
-    };
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = form.querySelector('.comment-text').value;
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  if (!text) return;
 
-    const statusList = document.getElementById('statusList');
+  await addDoc(collection(db, 'statuses', statusId, 'comments'), {
+    name: userName,
+    text,
+    createdAt: serverTimestamp()
+  });
 
-    async function loadStatuses() {
-      statusList.innerHTML = '';
-      const q = query(collection(db, 'statuses'), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      for (const docSnap of querySnapshot.docs) {
-        const data = docSnap.data();
-        const statusId = docSnap.id;
+  form.reset();
+  loadComments(statusId); // refresh komentar
+});
 
-        const item = document.createElement('article');
-        item.className = 'bg-white rounded-xl shadow-md p-5 flex flex-col sm:flex-row sm:gap-6';
-
-        let imageHtml = '';
-        if (data.imageUrl) {
-          imageHtml = `<img src="${data.imageUrl}" alt="Foto status berjudul ${data.name}, menampilkan ilustrasi terkait" class="w-full sm:w-48 h-36 sm:h-40 object-cover rounded-lg flex-shrink-0" loading="lazy" />`;
-        } else {
-          imageHtml = `<img src="https://placehold.co/192x160/png?text=No+Image" alt="Gambar placeholder tidak tersedia" class="w-full sm:w-48 h-36 sm:h-40 object-cover rounded-lg flex-shrink-0" loading="lazy" />`;
-        }
-
-        item.innerHTML = `
-          ${imageHtml}
-          <div class="flex flex-col flex-1 mt-4 sm:mt-0">
-            <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(data.name)}</h3>
-            <p class="mt-1 text-gray-700 whitespace-pre-line">${escapeHtml(data.description)}</p>
-            <section class="mt-4 flex flex-col gap-3">
-              <div id="comments-${statusId}" class="max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50 text-gray-800 text-sm"></div>
-              <form data-id="${statusId}" class="comment-form flex flex-col sm:flex-row sm:items-center gap-2">
-                <input type="text" placeholder="Nama" class="comment-name rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 flex-grow sm:flex-grow-0 sm:w-36" required />
-                <input type="text" placeholder="Tulis komentar..." class="comment-text rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 flex-grow" required />
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded-md px-4 py-2 font-semibold transition flex-shrink-0">
-                  <i class="fas fa-paper-plane mr-1"></i> Kirim
-                </button>
-              </form>
-            </section>
-          </div>
-        `;
-
-        statusList.appendChild(item);
-
-        loadComments(statusId);
-
-        const form = item.querySelector('.comment-form');
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const nameInput = form.querySelector('.comment-name');
-          const textInput = form.querySelector('.comment-text');
-          const name = nameInput.value.trim();
-          const text = textInput.value.trim();
-          if (!name || !text) return;
-
-          try {
-            await addDoc(collection(db, 'statuses', statusId, 'comments'), {
-              name,
-              text,
-              createdAt: serverTimestamp()
-            });
-            form.reset();
-            loadComments(statusId);
-          } catch (error) {
-            alert('Gagal mengirim komentar, coba lagi.');
-            console.error(error);
-          }
-        });
-      }
-    }
-
-    async function loadComments(statusId) {
-      const commentsDiv = document.getElementById(`comments-${statusId}`);
-      commentsDiv.innerHTML = '';
-      const commentsRef = collection(db, 'statuses', statusId, 'comments');
-      const q = query(commentsRef, orderBy('createdAt', 'asc'));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        commentsDiv.innerHTML = `<p class="text-gray-500 italic">Belum ada komentar.</p>`;
-        return;
-      }
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const div = document.createElement('div');
-        div.className = 'border-t border-gray-300 pt-2 mt-2 text-gray-800 text-sm';
-        div.innerHTML = `<strong class="text-green-700">${escapeHtml(data.name)}:</strong> ${escapeHtml(data.text)}`;
-        commentsDiv.appendChild(div);
-      });
-    }
-
-    // Simple escape to prevent XSS
-    function escapeHtml(text) {
-      if (!text) return '';
-      return text.replace(/[&<>"']/g, function(m) {
-        return ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;'
-        })[m];
-      });
-    }
-
-    loadStatuses();
   </script>
 
 </body>
