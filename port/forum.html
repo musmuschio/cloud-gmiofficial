@@ -2,156 +2,46 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GMI | Forum</title>
+  <title>Update Status</title>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-    import { getDatabase, ref, set, push, get } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
       authDomain: "training-gmiproject.firebaseapp.com",
       projectId: "training-gmiproject",
-      storageBucket: "training-gmiproject.firebasestorage.app",
+      storageBucket: "training-gmiproject.appspot.com",
       messagingSenderId: "188178811217",
       appId: "1:188178811217:web:636b61392f7e302b046b70",
       measurementId: "G-F6DBMTSTLR"
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const database = getDatabase(app);
+    const db = getFirestore(app);
 
-    // Checking user authentication
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        document.getElementById("userName").innerText = `Welcome, ${user.displayName}`;
-        loadPosts();
-      } else {
-        window.location.href = "login.html";
-      }
-    });
+    window.postStatus = async function () {
+      const username = document.getElementById("username").value;
+      const text = document.getElementById("statusText").value;
+      if (text.trim() === "") return alert("Status tidak boleh kosong.");
 
-    // Load posts from the database
-    async function loadPosts() {
-      const postsRef = ref(database, 'posts');
-      const snapshot = await get(postsRef);
-      const postsContainer = document.getElementById("postsContainer");
-
-      if (snapshot.exists()) {
-        const posts = snapshot.val();
-        for (const postId in posts) {
-          const post = posts[postId];
-          const postElement = document.createElement("div");
-          postElement.classList.add("post");
-
-          postElement.innerHTML = `
-            <div class="post-header">
-              <strong>${post.userName}</strong>
-              <p>${post.description}</p>
-            </div>
-            <div class="post-body">
-              <p>${post.content}</p>
-            </div>
-            <div class="post-footer">
-              <button onclick="showCommentForm('${postId}')">Komentar</button>
-              <div class="comments" id="comments-${postId}"></div>
-            </div>
-          `;
-          postsContainer.appendChild(postElement);
-
-          // Load comments for this post
-          loadComments(postId);
-        }
-      } else {
-        postsContainer.innerHTML = "<p>Belum ada postingan.</p>";
-      }
-    }
-
-    // Show comment form
-    function showCommentForm(postId) {
-      const comment = prompt("Masukkan komentar:");
-      if (comment) {
-        const user = auth.currentUser;
-        if (user) {
-          const commentRef = ref(database, 'comments/' + postId);
-          const newComment = push(commentRef);
-          set(newComment, {
-            userName: user.displayName,
-            commentText: comment
-          });
-          loadComments(postId);
-        }
-      }
-    }
-
-    // Load comments for a specific post
-    async function loadComments(postId) {
-      const commentsRef = ref(database, 'comments/' + postId);
-      const snapshot = await get(commentsRef);
-      const commentsContainer = document.getElementById("comments-" + postId);
-      commentsContainer.innerHTML = ""; // Clear existing comments
-
-      if (snapshot.exists()) {
-        const comments = snapshot.val();
-        for (const commentId in comments) {
-          const comment = comments[commentId];
-          const commentElement = document.createElement("div");
-          commentElement.classList.add("comment");
-          commentElement.innerHTML = `
-            <strong>${comment.userName}</strong>: <p>${comment.commentText}</p>
-          `;
-          commentsContainer.appendChild(commentElement);
-        }
-      }
+      await addDoc(collection(db, "status"), {
+        username: username || "Anonim",
+        text,
+        timestamp: serverTimestamp()
+      });
+      alert("Status berhasil diposting!");
+      window.location.href = "forum.html";
     }
   </script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      padding: 20px;
-      background-color: #4CAF50;
-      color: white;
-    }
-    .post {
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .post-header {
-      font-weight: bold;
-    }
-    .post-footer {
-      margin-top: 10px;
-    }
-    .comments {
-      margin-top: 10px;
-    }
-    .comment {
-      margin-bottom: 5px;
-    }
-  </style>
 </head>
 <body>
-
-  <header>
-    <div>
-      <img src="logo.png" alt="Logo" style="height: 40px;">
-      <span>GMI | Forum</span>
-    </div>
-    <a href="update.html"><button>Posting</button></a>
-  </header>
-
-  <div>
-    <p id="userName">Welcome, Guest</p>
-  </div>
-
-  <div id="postsContainer"></div>
-
+  <h2>Posting Status Baru</h2>
+  <input type="text" id="username" placeholder="Nama Anda (opsional)">
+  <br><br>
+  <textarea id="statusText" placeholder="Apa yang sedang kamu pikirkan?" rows="5" cols="50"></textarea>
+  <br><br>
+  <button onclick="postStatus()">Posting</button>
+  <a href="forum.html"><button>Kembali</button></a>
 </body>
 </html>
