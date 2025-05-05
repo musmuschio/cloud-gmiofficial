@@ -1,30 +1,52 @@
-<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <title>Login & Register Firebase</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Forum Diskusi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
-    input, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
-    #status { margin-top: 10px; color: green; }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
 </head>
-<body>
-  <h2>Form Login / Register</h2>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-4 sm:p-6">
+  <div class="w-full max-w-3xl bg-white rounded-lg shadow-md p-4 sm:p-6 flex flex-col">
+    <header class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+      <div id="userInfo" class="text-gray-700 font-semibold text-center sm:text-left w-full sm:w-auto">
+        Memuat...
+      </div>
+      <div class="flex gap-3 w-full sm:w-auto justify-center sm:justify-start">
+        <button
+          onclick="window.location.href='update.html'"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 transition"
+          aria-label="Tambahkan postingan baru"
+          type="button"
+        >
+          <i class="fas fa-plus"></i> Tambahkan
+        </button>
+        <button
+          onclick="logout()"
+          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 transition"
+          aria-label="Logout dari aplikasi"
+          type="button"
+        >
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </header>
 
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6 text-center sm:text-left">Forum Diskusi</h1>
 
-  <button onclick="register()">Daftar (Register)</button>
-  <button onclick="login()">Masuk (Login)</button>
-  <button onclick="logout()">Logout</button>
-
-  <p id="status">Status: Belum login</p>
+    <main id="forumList" class="space-y-6">
+      <!-- Posts will be injected here -->
+    </main>
+  </div>
 
   <script>
-    // Konfigurasi Firebase milik Mus
+    // Firebase config Mus
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
       authDomain: "training-gmiproject.firebaseapp.com",
@@ -35,51 +57,119 @@
       measurementId: "G-F6DBMTSTLR"
     };
 
-    // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
 
-    // Fungsi Daftar
-    function register() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("userInfo").innerText = "Login: " + user.email;
+        tampilkanForum();
+      } else {
+        alert("Silakan login terlebih dahulu.");
+        window.location.href = "login-register.html";
+      }
+    });
 
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          document.getElementById("status").innerText = "Registrasi berhasil!";
-        })
-        .catch(error => {
-          document.getElementById("status").innerText = "Error: " + error.message;
-        });
-    }
-
-    // Fungsi Login
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      auth.signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          document.getElementById("status").innerText = "Login berhasil!";
-        })
-        .catch(error => {
-          document.getElementById("status").innerText = "Error: " + error.message;
-        });
-    }
-
-    // Fungsi Logout
-    function logout() {
-      auth.signOut().then(() => {
-        document.getElementById("status").innerText = "Berhasil logout.";
+    function tampilkanForum() {
+      const forumList = document.getElementById("forumList");
+      db.ref("forum").on("value", snapshot => {
+        forumList.innerHTML = "";
+        const data = snapshot.val();
+        if (data) {
+          const posts = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+          posts.forEach(([id, post]) => {
+            const postDiv = document.createElement("article");
+            postDiv.className = "bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col";
+            postDiv.setAttribute("tabindex", "0");
+            postDiv.innerHTML = `
+              <h2 class="text-xl font-semibold text-gray-900 mb-2 break-words">${escapeHtml(post.judul)}</h2>
+              <p class="text-gray-700 whitespace-pre-line mb-3 break-words">${escapeHtml(post.isi)}</p>
+              <div class="text-sm text-gray-500 mb-4">Ditulis oleh: <span class="font-medium">${escapeHtml(post.email)}</span></div>
+              <section class="comment-box border-t border-dashed border-gray-300 pt-4" aria-label="Komentar untuk postingan ${escapeHtml(post.judul)}">
+                <strong class="block mb-2 text-gray-800">Komentar:</strong>
+                <div class="comments mb-3 max-h-48 overflow-y-auto space-y-2 text-gray-700" id="list-komentar-${id}">Memuat...</div>
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Tulis komentar..."
+                    id="input-komentar-${id}"
+                    class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="Input komentar untuk postingan ${escapeHtml(post.judul)}"
+                  />
+                  <button
+                    onclick="kirimKomentar('${id}')"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 rounded-md flex items-center justify-center transition"
+                    aria-label="Kirim komentar untuk postingan ${escapeHtml(post.judul)}"
+                    type="button"
+                  >
+                    Kirim
+                  </button>
+                </div>
+              </section>
+            `;
+            forumList.appendChild(postDiv);
+            tampilkanKomentar(id);
+          });
+        } else {
+          forumList.innerHTML = `<p class="text-center text-gray-600 py-10">Belum ada postingan.</p>`;
+        }
       });
     }
 
-    // Status Auth Real-Time
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("status").innerText = `Login sebagai: ${user.email}`;
+    function tampilkanKomentar(postId) {
+      const komentarRef = db.ref(`forum/${postId}/komentar`);
+      komentarRef.on("value", snapshot => {
+        const komentarList = document.getElementById(`list-komentar-${postId}`);
+        komentarList.innerHTML = "";
+        const komentarData = snapshot.val();
+        if (komentarData) {
+          // Sort comments by timestamp ascending
+          const sortedComments = Object.values(komentarData).sort((a,b) => a.timestamp - b.timestamp);
+          sortedComments.forEach(k => {
+            const div = document.createElement("div");
+            div.className = "comment bg-gray-100 rounded-md p-2";
+            div.innerHTML = `
+              <p class="break-words">${escapeHtml(k.teks)}</p>
+              <div class="email text-xs text-gray-500 mt-1">${escapeHtml(k.email)}</div>
+            `;
+            komentarList.appendChild(div);
+          });
+        } else {
+          komentarList.innerHTML = `<i class="text-gray-500">Belum ada komentar.</i>`;
+        }
+      });
+    }
+
+    function kirimKomentar(postId) {
+      const user = auth.currentUser;
+      const input = document.getElementById(`input-komentar-${postId}`);
+      const teks = input.value.trim();
+      if (teks) {
+        const refKomentar = db.ref(`forum/${postId}/komentar`).push();
+        refKomentar.set({
+          teks,
+          email: user.email,
+          timestamp: Date.now()
+        });
+        input.value = "";
       }
-    });
+    }
+
+    function logout() {
+      auth.signOut().then(() => (window.location.href = "login-register.html"));
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
   </script>
 </body>
 </html>
