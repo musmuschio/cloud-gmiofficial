@@ -25,29 +25,112 @@
     <div id="statusList" class="flex flex-col gap-6"></div>
   </main>
 
-  <script type="module">
-// Dalam loadStatuses()
-const user = auth.currentUser;
-const userDoc = await getDoc(doc(db, 'users', user.uid));
-const userName = userDoc.exists() ? userDoc.data().name : 'Anonim';
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const text = form.querySelector('.comment-text').value;
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+    authDomain: "gmi-official21-74326.firebaseapp.com",
+    projectId: "gmi-official21-74326",
+    storageBucket: "gmi-official21-74326.appspot.com",
+    messagingSenderId: "496607636364",
+    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+    measurementId: "G-KJ0X8CY03M"
+  };
 
-  if (!text) return;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  await addDoc(collection(db, 'statuses', statusId, 'comments'), {
-    name: userName,
-    text,
-    createdAt: serverTimestamp()
+  const statusList = document.getElementById('statusList');
+
+  let currentUserName = '';
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const uid = user.uid;
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        currentUserName = userDoc.data().name;
+        loadStatuses();
+      } else {
+        alert("Profil pengguna tidak ditemukan.");
+      }
+    } else {
+      window.location.href = "login.html";
+    }
   });
 
-  form.reset();
-  loadComments(statusId); // refresh komentar
-});
+  async function loadStatuses() {
+    const q = query(collection(db, 'statuses'), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    for (const docSnap of querySnapshot.docs) {
+      const data = docSnap.data();
+      const statusId = docSnap.id;
+      const item = document.createElement('div');
+      item.className = 'status-item';
 
-  </script>
+      let html = '';
+      if (data.imageUrl) {
+        html += `<img src="${data.imageUrl}" alt="gambar status" style="max-width: 100%;">`;
+      }
+      html += `<h3>${data.name}</h3>`;
+      html += `<p>${data.description}</p>`;
+
+      // Form komentar
+      html += `
+        <div class="comments" id="comments-${statusId}"></div>
+        <form data-id="${statusId}" class="comment-form">
+          <input type="text" placeholder="Tulis komentar..." class="comment-text" required />
+          <button type="submit">Kirim</button>
+        </form>
+      `;
+
+      item.innerHTML = html;
+      statusList.appendChild(item);
+
+      loadComments(statusId);
+
+      const form = item.querySelector('.comment-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = form.querySelector('.comment-text').value;
+
+        if (!text || !currentUserName) return;
+
+        await addDoc(collection(db, 'statuses', statusId, 'comments'), {
+          name: currentUserName,
+          text,
+          createdAt: serverTimestamp()
+        });
+
+        form.reset();
+        loadComments(statusId);
+      });
+    }
+  }
+
+  async function loadComments(statusId) {
+    const commentsDiv = document.getElementById(`comments-${statusId}`);
+    commentsDiv.innerHTML = '';
+
+    const commentsRef = collection(db, 'statuses', statusId, 'comments');
+    const q = query(commentsRef, orderBy('createdAt', 'asc'));
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const div = document.createElement('div');
+      div.style.borderTop = '1px solid #ccc';
+      div.style.marginTop = '10px';
+      div.style.paddingTop = '5px';
+      div.innerHTML = `<strong>${data.name}:</strong> ${data.text}`;
+      commentsDiv.appendChild(div);
+    });
+  }
+</script>
 
 </body>
 </html>
