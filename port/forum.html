@@ -1,76 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang="id" class="bg-gray-100">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Forum</title>
-  <style>
-    .post {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 20px;
-    }
-    .post p {
-      margin: 10px 0;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Forum Diskusi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<body class="min-h-screen flex flex-col bg-gray-100">
+  <header class="bg-white shadow p-4 sticky top-0 z-10">
+    <h2 class="text-2xl font-semibold text-gray-800 text-center">Forum Diskusi</h2>
+  </header>
+
+  <main class="flex-grow container mx-auto px-4 py-6">
+    <div id="forum-container" class="space-y-4"></div>
+  </main>
+
+  <button
+    aria-label="Tambah Postingan"
+    onclick="window.location.href='update.html'"
+    class="fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white text-3xl w-14 h-14 rounded-full flex items-center justify-center shadow-lg focus:outline-none focus:ring-4 focus:ring-green-400"
+  >
+    <i class="fas fa-plus"></i>
+  </button>
+
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"; 
-    import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-      authDomain: "gmi-official21-74326.firebaseapp.com",
-      projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-      measurementId: "G-KJ0X8CY03M"
+      apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
+      authDomain: "training-gmiproject.firebaseapp.com",
+      projectId: "training-gmiproject",
+      storageBucket: "training-gmiproject.firebasestorage.app",
+      messagingSenderId: "188178811217",
+      appId: "1:188178811217:web:636b61392f7e302b046b70",
+      measurementId: "G-F6DBMTSTLR"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
 
-    let userName = "";
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    if (!user) window.location.href = "login.html";
 
-    // Fetch the logged-in user's name
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        alert("Please log in to view posts.");
-        window.location.href = "login.html"; // Redirect to login page if not logged in
-      } else {
-        userName = user.displayName || user.email;  // Use display name or email if name is not available
-      }
+    const forumContainer = document.getElementById("forum-container");
+    const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach((doc) => {
+      const post = doc.data();
+      const div = document.createElement("div");
+      div.className = "bg-white rounded-lg shadow p-4";
+      div.innerHTML = `
+        <strong class="block text-lg text-gray-900 mb-2">${post.name}</strong>
+        <p class="text-gray-700 whitespace-pre-wrap">${post.content}</p>
+      `;
+      forumContainer.appendChild(div);
     });
-
-    const loadPosts = async () => {
-      const postsRef = collection(db, "posts");
-      const q = query(postsRef, orderBy("timestamp", "desc"));
-      const querySnapshot = await getDocs(q);
-
-      const postsContainer = document.getElementById("posts-container");
-      querySnapshot.forEach((doc) => {
-        const postData = doc.data();
-        const postElement = document.createElement("div");
-        postElement.classList.add("post");
-        postElement.innerHTML = `
-          <h3>${postData.name}</h3>
-          <p>${postData.description}</p>
-          <p>Posted on: ${new Date(postData.timestamp.seconds * 1000).toLocaleString()}</p>
-        `;
-        postsContainer.appendChild(postElement);
-      });
-    };
-
-    window.onload = loadPosts;
   </script>
-</head>
-<body>
-  <h1>Forum</h1>
-  <button onclick="window.location.href='update.html'">Add New Post</button>
-  <div id="posts-container"></div>
 </body>
 </html>
