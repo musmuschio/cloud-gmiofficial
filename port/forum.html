@@ -1,47 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Forum</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Forum Status</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #2c3e50;
+      color: white;
+      padding: 10px 20px;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    header a {
+      background: #27ae60;
+      color: white;
+      padding: 8px 12px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status-list {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .status-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .status-item img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .status-item h3 {
+      margin: 0;
+    }
+    .status-item p {
+      margin: 5px 0 0 0;
+    }
+  </style>
 </head>
 <body>
-  <h2>Forum Status</h2>
-  <a href="update.html">[+] Tambah Status</a>
-  <div id="daftarStatus"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+<header>
+  <h1>Forum Status</h1>
+  <a href="update.html">[ + ]</a>
+</header>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBnghk8X1csh2zp6UwHJfEyyeFs",
-      authDomain: "gmi-official21-74326.firebaseapp.com",
-      projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "746607586342",
-      appId: "1:746607586342:web:5b824dccad952faa544a49",
-      measurementId: "G-KJX8CEV93M"
-    };
+<div class="status-list" id="statusList">
+  <!-- Status akan dimuat di sini -->
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+<!-- Firebase logic -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    const daftar = document.getElementById('daftarStatus');
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+    authDomain: "gmi-official21-74326.firebaseapp.com",
+    projectId: "gmi-official21-74326",
+    storageBucket: "gmi-official21-74326.appspot.com",
+    messagingSenderId: "496607636364",
+    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+    measurementId: "G-KJ0X8CY03M"
+  };
 
-    const q = query(collection(db, 'status'), orderBy('waktu', 'desc'));
-    onSnapshot(q, (snapshot) => {
-      daftar.innerHTML = '';
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const el = document.createElement('div');
-        el.innerHTML = `
-          <h3>${data.nama}</h3>
-          <p>${data.deskripsi}</p>
-          ${data.gambar ? `<img src="${data.gambar}" width="200">` : ''}
-          <hr>
-        `;
-        daftar.appendChild(el);
-      });
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const statusList = document.getElementById('statusList');
+
+  async function loadStatuses() {
+    const q = query(collection(db, 'statuses'), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const item = document.createElement('div');
+      item.className = 'status-item';
+
+      let html = '';
+      if (data.imageUrl) {
+        html += `<img src="${data.imageUrl}" alt="gambar status">`;
+      }
+      html += `<h3>${data.name}</h3>`;
+      html += `<p>${data.description}</p>`;
+      item.innerHTML = html;
+      statusList.appendChild(item);
     });
-  </script>
+  }
+
+  loadStatuses();
+</script>
+
 </body>
 </html>
