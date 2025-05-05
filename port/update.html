@@ -2,115 +2,49 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Update Post</title>
+  <title>Update Status</title>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-    import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
       authDomain: "training-gmiproject.firebaseapp.com",
       projectId: "training-gmiproject",
-      storageBucket: "training-gmiproject.firebasestorage.app",
+      storageBucket: "training-gmiproject.appspot.com",
       messagingSenderId: "188178811217",
       appId: "1:188178811217:web:636b61392f7e302b046b70",
       measurementId: "G-F6DBMTSTLR"
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const database = getDatabase(app);
+    const db = getFirestore(app);
 
-    // Cek status login user
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-      }
-    });
+    window.postStatus = async function () {
+      const username = document.getElementById("username").value.trim();
+      const text = document.getElementById("statusText").value.trim();
+      if (text === "") return alert("Status tidak boleh kosong.");
 
-    // Fungsi untuk mengirimkan postingan ke Firebase
-    document.getElementById("updateForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const content = document.getElementById("content").value;
-      const description = document.getElementById("description").value;
-      const user = auth.currentUser;
-
-      if (user) {
-        const postsRef = ref(database, 'posts');
-        const newPostRef = push(postsRef);
-        await set(newPostRef, {
-          userName: user.displayName,
-          description: description,
-          content: content
+      try {
+        await addDoc(collection(db, "status"), {
+          username: username || "Anonim",
+          text,
+          timestamp: serverTimestamp()
         });
-
-        alert("Postingan berhasil dibuat!");
-        window.location.href = "forum.html"; // Redirect ke halaman forum setelah posting
+        window.location.href = "forum.html"; // ✅ Redirect langsung
+      } catch (error) {
+        alert("Gagal mengirim status: " + error.message);
       }
-    });
+    }
   </script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f4;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      padding: 20px;
-      background-color: #4CAF50;
-      color: white;
-    }
-    header img {
-      height: 40px;
-    }
-    form {
-      background-color: white;
-      padding: 20px;
-      margin: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-  </style>
 </head>
 <body>
-
-  <header>
-    <div>
-      <img src="logo.png" alt="Logo">
-      <span>GMI | Forum</span>
-    </div>
-  </header>
-
-  <h2>Buat Postingan</h2>
-  <form id="updateForm">
-    <textarea id="description" placeholder="Deskripsi" rows="3" required></textarea><br />
-    <textarea id="content" placeholder="Tulis postingan Anda" rows="5" required></textarea><br />
-    <button type="submit">Post</button>
-  </form>
-
+  <h2>Posting Status Baru</h2>
+  <input type="text" id="username" placeholder="Nama Anda (opsional)">
+  <br><br>
+  <textarea id="statusText" placeholder="Apa yang sedang kamu pikirkan?" rows="5" cols="50"></textarea>
+  <br><br>
+  <button onclick="postStatus()">Posting</button>
+  <a href="forum.html"><button>Kembali</button></a>
 </body>
 </html>
