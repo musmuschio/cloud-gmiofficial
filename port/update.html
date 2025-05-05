@@ -1,33 +1,30 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Tulis Status Baru</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tulis Status</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    .card { max-width: 400px; margin: auto; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-    .card h2 { text-align: center; }
-    .preview-img { max-width: 100%; display: none; margin-top: 10px; }
+    .card { max-width: 500px; margin: auto; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; background: #fff; }
+    textarea, input, button { width: 100%; margin-top: 10px; padding: 10px; font-size: 16px; }
+    img { max-width: 100%; margin-top: 10px; display: none; border-radius: 8px; }
     #uploadStatus { margin-top: 10px; font-weight: bold; }
-    #kirim { margin-top: 10px; padding: 10px; width: 100%; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>Tulis Status Baru</h2>
-    <textarea id="description" rows="5" placeholder="Tulis sesuatu..." required></textarea><br><br>
-
-    <input type="file" id="imageInput" accept="image/*">
-    <img id="preview" style="display:none; max-width:100%">
+    <textarea id="description" rows="5" placeholder="Tulis sesuatu..." required></textarea>
+    <input type="file" id="imageInput" accept="image/*" />
+    <img id="preview" alt="Preview Gambar" />
     <div id="uploadStatus"></div>
-
-    <button id="kirim" disabled>📤 Kirim</button>
+    <button id="submitBtn" disabled>Kirim Status</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -42,20 +39,18 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
     const auth = getAuth(app);
 
     const descriptionInput = document.getElementById("description");
     const imageInput = document.getElementById("imageInput");
-    const uploadStatus = document.getElementById("uploadStatus");
     const preview = document.getElementById("preview");
-    const submitBtn = document.getElementById("kirim");
-    const progressBar = document.getElementById("progressBar");
+    const uploadStatus = document.getElementById("uploadStatus");
+    const submitBtn = document.getElementById("submitBtn");
 
-    let imageUrl = "";
     let currentUser = null;
+    let uploadedImageUrl = "";
 
-    // Auth check
+    // Cek login
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
@@ -65,50 +60,53 @@
       }
     });
 
-    // Upload gambar otomatis
- document.getElementById('imageInput').addEventListener('change', async function () {
-  const file = this.files[0];
-  if (!file) return;
+    // Upload gambar ke Cloudinary
+    imageInput.addEventListener("change", async function () {
+      const file = this.files[0];
+      if (!file) return;
 
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'forum_unsigned'); // preset kamu
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "forum_unsigned"); // preset Cloudinary kamu
 
-  uploadStatus.textContent = '⏳ Mengunggah gambar...';
+      uploadStatus.textContent = "⏳ Mengunggah gambar...";
 
-  try {
-    const response = await fetch('https://api.cloudinary.com/v1_1/forum-images/upload', {
-      method: 'POST',
-      body: formData
+      try {
+        const response = await fetch("https://api.cloudinary.com/v1_1/forum-images/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await response.json();
+        uploadedImageUrl = data.secure_url;
+
+        preview.src = uploadedImageUrl;
+        preview.style.display = "block";
+        uploadStatus.textContent = "✅ Gambar berhasil diunggah!";
+      } catch (error) {
+        uploadStatus.textContent = "❌ Gagal mengunggah gambar.";
+        console.error(error);
+      }
     });
 
-    const data = await response.json();
-    imageUrl = data.secure_url; // GANTI INI, hapus "const"
-
-    preview.src = imageUrl;
-    preview.style.display = 'block';
-    uploadStatus.textContent = '✅ Gambar berhasil diunggah!';
-  } catch (error) {
-    console.error(error);
-    uploadStatus.textContent = '❌ Gagal mengunggah.';
-  }
-});
-
-
-    // Submit status
+    // Kirim status ke Firestore
     submitBtn.addEventListener("click", async () => {
       const description = descriptionInput.value.trim();
-      if (!description) return alert("Deskripsi wajib diisi!");
+      if (!description) return alert("Deskripsi wajib diisi.");
 
       submitBtn.disabled = true;
-      await addDoc(collection(db, "statuses"), {
-        name: currentUser.displayName || currentUser.email,
-        description,
-        imageUrl: imageUrl || null,
-        createdAt: serverTimestamp()
-      });
 
-      window.location.href = "forum.html";
+      try {
+        await addDoc(collection(db, "statuses"), {
+          name: currentUser.displayName || currentUser.email,
+          description,
+          imageUrl: uploadedImageUrl || null,
+          createdAt: serverTimestamp()
+        });
+        window.location.href = "forum.html";
+      } catch (error) {
+        alert("Gagal menyimpan status.");
+        console.error(error);
+      }
     });
   </script>
 </body>
