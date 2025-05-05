@@ -1,34 +1,38 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Update Status</title>
+  <meta charset="UTF-8">
+  <title>Tulis Status Baru</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    #preview { max-width: 100%; display: none; margin-top: 10px; }
-    #uploadStatus { margin-top: 5px; font-size: 14px; color: #555; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .card { max-width: 400px; margin: auto; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    .card h2 { text-align: center; }
+    .preview-img { max-width: 100%; display: none; margin-top: 10px; }
+    #uploadStatus { margin-top: 10px; font-weight: bold; }
+    #kirim { margin-top: 10px; padding: 10px; width: 100%; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h2>Tulis Status Baru</h2>
-  <textarea id="description" rows="5" placeholder="Tulis sesuatu..." style="width: 100%;"></textarea><br><br>
-  
-  <label style="cursor: pointer; color: #007bff;">
-    📷 Pilih gambar (opsional)
-    <input type="file" id="imageInput" accept="image/*" style="display: none;" />
-  </label>
-  <div id="uploadStatus"></div>
-  <img id="preview" />
+  <div class="card">
+    <h2>Tulis Status Baru</h2>
+    <textarea id="description" rows="5" placeholder="Tulis sesuatu..." required></textarea><br><br>
 
-  <br><br>
-  <button id="submitBtn">📤 Kirim</button>
+    <label>
+      📷 Pilih gambar (opsional)
+      <input type="file" id="imageInput" accept="image/*">
+    </label>
+    
+    <div id="uploadStatus"></div>
+    <progress id="progressBar" value="0" max="100" style="width: 100%; display: none;"></progress>
+    <img id="preview" class="preview-img" src="">
+
+    <button id="kirim" disabled>📤 Kirim</button>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -46,76 +50,72 @@
     const storage = getStorage(app);
     const auth = getAuth(app);
 
-    const description = document.getElementById('description');
-    const imageInput = document.getElementById('imageInput');
-    const preview = document.getElementById('preview');
-    const uploadStatus = document.getElementById('uploadStatus');
-    const submitBtn = document.getElementById('submitBtn');
+    const descriptionInput = document.getElementById("description");
+    const imageInput = document.getElementById("imageInput");
+    const uploadStatus = document.getElementById("uploadStatus");
+    const preview = document.getElementById("preview");
+    const submitBtn = document.getElementById("kirim");
+    const progressBar = document.getElementById("progressBar");
 
-    let imageUrl = null;
+    let imageUrl = "";
     let currentUser = null;
 
-    // Cek login
+    // Auth check
     onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-      } else {
+      if (user) {
         currentUser = user;
+        submitBtn.disabled = false;
+      } else {
+        window.location.href = "login.html";
       }
     });
 
-    // Upload gambar dan tampilkan preview
-    imageInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
+    // Upload gambar otomatis
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
       if (!file) return;
 
-      if (file.size > 2 * 1024 * 1024) {
-        uploadStatus.textContent = '❌ Ukuran gambar maksimal 2MB.';
-        imageInput.value = '';
-        return;
-      }
+      const storageRef = ref(storage, 'images/' + Date.now() + '-' + file.name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
-      uploadStatus.innerHTML = '⏳ Mengunggah gambar...';
-      submitBtn.disabled = true;
+      uploadStatus.textContent = '⏳ Mengunggah gambar...';
+      progressBar.style.display = 'block';
 
-      try {
-        const storageRef = ref(storage, 'images/' + Date.now() + '-' + file.name);
-        await uploadBytes(storageRef, file);
-        imageUrl = await getDownloadURL(storageRef);
-        preview.src = imageUrl;
-        preview.style.display = 'block';
-        uploadStatus.innerHTML = '✅ Gambar berhasil diunggah!';
-      } catch (err) {
-        console.error(err);
-        uploadStatus.innerHTML = '❌ Gagal mengunggah gambar.';
-        imageUrl = null;
-      }
-
-      submitBtn.disabled = false;
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressBar.value = progress;
+          uploadStatus.textContent = `⏳ Mengunggah gambar... ${progress.toFixed(0)}%`;
+        },
+        (error) => {
+          console.error(error);
+          uploadStatus.textContent = '❌ Gagal mengunggah gambar.';
+          submitBtn.disabled = false;
+        },
+        async () => {
+          imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          preview.src = imageUrl;
+          preview.style.display = 'block';
+          uploadStatus.textContent = '✅ Gambar berhasil diunggah!';
+          submitBtn.disabled = false;
+        }
+      );
     });
 
     // Submit status
-    submitBtn.addEventListener('click', async () => {
-      const text = description.value.trim();
-      if (!text || !currentUser) return alert('Deskripsi wajib diisi');
+    submitBtn.addEventListener("click", async () => {
+      const description = descriptionInput.value.trim();
+      if (!description) return alert("Deskripsi wajib diisi!");
 
       submitBtn.disabled = true;
-      try {
-        await addDoc(collection(db, 'statuses'), {
-          uid: currentUser.uid,
-          name: currentUser.displayName || currentUser.email || "Pengguna",
-          description: text,
-          imageUrl: imageUrl || null,
-          createdAt: serverTimestamp()
-        });
+      await addDoc(collection(db, "statuses"), {
+        name: currentUser.displayName || currentUser.email,
+        description,
+        imageUrl: imageUrl || null,
+        createdAt: serverTimestamp()
+      });
 
-        alert("✅ Status berhasil dikirim!");
-        window.location.href = "forum.html";
-      } catch (err) {
-        console.error(err);
-        alert("❌ Gagal mengirim status.");
-      }
-      submitBtn.disabled = false;
+      window.location.href = "forum.html";
     });
   </script>
 </body>
