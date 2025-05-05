@@ -1,144 +1,14 @@
-<!-- FILE: login.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Login - GMI Forum</title>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
-      authDomain: "training-gmiproject.firebaseapp.com",
-      projectId: "training-gmiproject",
-      storageBucket: "training-gmiproject.firebasestorage.app",
-      messagingSenderId: "188178811217",
-      appId: "1:188178811217:web:636b61392f7e302b046b70",
-      measurementId: "G-F6DBMTSTLR"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => window.location.href = "forum.html")
-        .catch(err => alert(err.message));
-    }
-  </script>
-</head>
-<body>
-  <h2>Login</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-  <p>Belum punya akun? <a href="register.html">Register</a></p>
-</body>
-</html>
-
-<!-- FILE: register.html -->
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Register - GMI Forum</title>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
-      authDomain: "training-gmiproject.firebaseapp.com",
-      projectId: "training-gmiproject",
-      storageBucket: "training-gmiproject.firebasestorage.app",
-      messagingSenderId: "188178811217",
-      appId: "1:188178811217:web:636b61392f7e302b046b70",
-      measurementId: "G-F6DBMTSTLR"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    function register() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => window.location.href = "forum.html")
-        .catch(err => alert(err.message));
-    }
-  </script>
-</head>
-<body>
-  <h2>Register</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="register()">Register</button>
-</body>
-</html>
-
-<!-- FILE: update.html -->
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Tambah Status - GMI Forum</title>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
-      authDomain: "training-gmiproject.firebaseapp.com",
-      projectId: "training-gmiproject",
-      storageBucket: "training-gmiproject.firebasestorage.app",
-      messagingSenderId: "188178811217",
-      appId: "1:188178811217:web:636b61392f7e302b046b70",
-      measurementId: "G-F6DBMTSTLR"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    auth.onAuthStateChanged(user => {
-      if (!user) window.location.href = "login.html";
-    });
-
-    function submitPost() {
-      const user = auth.currentUser;
-      const desc = document.getElementById("desc").value;
-      if (desc) {
-        db.ref("forum").push({
-          email: user.email,
-          deskripsi: desc,
-          timestamp: Date.now()
-        }).then(() => window.location.href = "forum.html");
-      }
-    }
-  </script>
-</head>
-<body>
-  <h2>Tambah Status</h2>
-  <textarea id="desc" placeholder="Tulis deskripsi..."></textarea>
-  <button onclick="submitPost()">Posting</button>
-</body>
-</html>
-
-<!-- FILE: forum.html -->
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GMI | Forum</title>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .logo { font-weight: bold; }
-    .post { border: 1px solid #ccc; padding: 10px; margin-top: 10px; border-radius: 6px; }
-    .comment-box { margin-top: 10px; }
-  </style>
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+    import { getDatabase, ref, set, push, get } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
       authDomain: "training-gmiproject.firebaseapp.com",
@@ -148,73 +18,140 @@
       appId: "1:188178811217:web:636b61392f7e302b046b70",
       measurementId: "G-F6DBMTSTLR"
     };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
 
-    auth.onAuthStateChanged(user => {
-      if (!user) return window.location.href = "login.html";
-      tampilkanForum();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    // Checking user authentication
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("userName").innerText = `Welcome, ${user.displayName}`;
+        loadPosts();
+      } else {
+        window.location.href = "login.html";
+      }
     });
 
-    function tampilkanForum() {
-      const list = document.getElementById("list");
-      db.ref("forum").on("value", snap => {
-        list.innerHTML = "";
-        const data = snap.val();
-        if (data) {
-          Object.entries(data).reverse().forEach(([id, post]) => {
-            const div = document.createElement("div");
-            div.className = "post";
-            div.innerHTML = `
-              <strong>${post.email}</strong>
-              <p>${post.deskripsi}</p>
-              <div class="comment-box">
-                <input type="text" id="komen-${id}" placeholder="Tulis komentar">
-                <button onclick="kirimKomentar('${id}')">Kirim</button>
-                <div id="komentar-${id}"></div>
-              </div>
-            `;
-            list.appendChild(div);
-            tampilKomentar(id);
-          });
-        }
-      });
-    }
+    // Load posts from the database
+    async function loadPosts() {
+      const postsRef = ref(database, 'posts');
+      const snapshot = await get(postsRef);
+      const postsContainer = document.getElementById("postsContainer");
 
-    function kirimKomentar(postId) {
-      const user = auth.currentUser;
-      const val = document.getElementById(`komen-${postId}`).value;
-      if (val.trim()) {
-        db.ref(`forum/${postId}/komentar`).push({
-          teks: val,
-          email: user.email
-        });
-        document.getElementById(`komen-${postId}`).value = "";
+      if (snapshot.exists()) {
+        const posts = snapshot.val();
+        for (const postId in posts) {
+          const post = posts[postId];
+          const postElement = document.createElement("div");
+          postElement.classList.add("post");
+
+          postElement.innerHTML = `
+            <div class="post-header">
+              <strong>${post.userName}</strong>
+              <p>${post.description}</p>
+            </div>
+            <div class="post-body">
+              <p>${post.content}</p>
+            </div>
+            <div class="post-footer">
+              <button onclick="showCommentForm('${postId}')">Komentar</button>
+              <div class="comments" id="comments-${postId}"></div>
+            </div>
+          `;
+          postsContainer.appendChild(postElement);
+
+          // Load comments for this post
+          loadComments(postId);
+        }
+      } else {
+        postsContainer.innerHTML = "<p>Belum ada postingan.</p>";
       }
     }
 
-    function tampilKomentar(postId) {
-      const el = document.getElementById(`komentar-${postId}`);
-      db.ref(`forum/${postId}/komentar`).on("value", snap => {
-        el.innerHTML = "";
-        const data = snap.val();
-        if (data) {
-          Object.values(data).forEach(k => {
-            const p = document.createElement("p");
-            p.innerHTML = `<small><b>${k.email}</b>: ${k.teks}</small>`;
-            el.appendChild(p);
+    // Show comment form
+    function showCommentForm(postId) {
+      const comment = prompt("Masukkan komentar:");
+      if (comment) {
+        const user = auth.currentUser;
+        if (user) {
+          const commentRef = ref(database, 'comments/' + postId);
+          const newComment = push(commentRef);
+          set(newComment, {
+            userName: user.displayName,
+            commentText: comment
           });
+          loadComments(postId);
         }
-      });
+      }
+    }
+
+    // Load comments for a specific post
+    async function loadComments(postId) {
+      const commentsRef = ref(database, 'comments/' + postId);
+      const snapshot = await get(commentsRef);
+      const commentsContainer = document.getElementById("comments-" + postId);
+      commentsContainer.innerHTML = ""; // Clear existing comments
+
+      if (snapshot.exists()) {
+        const comments = snapshot.val();
+        for (const commentId in comments) {
+          const comment = comments[commentId];
+          const commentElement = document.createElement("div");
+          commentElement.classList.add("comment");
+          commentElement.innerHTML = `
+            <strong>${comment.userName}</strong>: <p>${comment.commentText}</p>
+          `;
+          commentsContainer.appendChild(commentElement);
+        }
+      }
     }
   </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      background-color: #4CAF50;
+      color: white;
+    }
+    .post {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .post-header {
+      font-weight: bold;
+    }
+    .post-footer {
+      margin-top: 10px;
+    }
+    .comments {
+      margin-top: 10px;
+    }
+    .comment {
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
+
   <header>
-    <div class="logo">GMI | forum</div>
-    <button onclick="window.location.href='update.html'">+ Tambah</button>
+    <div>
+      <img src="logo.png" alt="Logo" style="height: 40px;">
+      <span>GMI | Forum</span>
+    </div>
+    <a href="update.html"><button>Posting</button></a>
   </header>
-  <div id="list"></div>
+
+  <div>
+    <p id="userName">Welcome, Guest</p>
+  </div>
+
+  <div id="postsContainer"></div>
+
 </body>
 </html>
