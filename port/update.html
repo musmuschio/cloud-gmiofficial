@@ -1,50 +1,67 @@
-<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Update Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col justify-center items-center p-4">
+  <main class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Update Status</h2>
+    <textarea id="statusText" rows="5" placeholder="Apa yang ingin kamu bagikan?" 
+      class="w-full p-4 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"></textarea>
+    <button onclick="postStatus()" 
+      class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-md shadow-md transition flex justify-center items-center gap-2">
+      <i class="fas fa-paper-plane"></i> Posting
+    </button>
+  </main>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
       authDomain: "training-gmiproject.firebaseapp.com",
       projectId: "training-gmiproject",
-      storageBucket: "training-gmiproject.appspot.com",
-      messagingSenderId: "188178811217",
-      appId: "1:188178811217:web:636b61392f7e302b046b70",
-      measurementId: "G-F6DBMTSTLR"
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      }
+    });
+
     window.postStatus = async function () {
-      const username = document.getElementById("username").value.trim();
+      const user = auth.currentUser;
       const text = document.getElementById("statusText").value.trim();
-      if (text === "") return alert("Status tidak boleh kosong.");
+      if (!text) return alert("Status tidak boleh kosong.");
 
       try {
-        await addDoc(collection(db, "status"), {
-          username: username || "Anonim",
-          text,
+        await addDoc(collection(db, "statuses"), {
+          uid: user.uid,
+          name: user.displayName || "Anonim",
+          text: text,
           timestamp: serverTimestamp()
         });
-        window.location.href = "forum.html"; // ✅ Redirect langsung
+
+        window.location.href = "forum.html";
       } catch (error) {
-        alert("Gagal mengirim status: " + error.message);
+        alert("Gagal posting status: " + error.message);
       }
-    }
+    };
   </script>
-</head>
-<body>
-  <h2>Posting Status Baru</h2>
-  <input type="text" id="username" placeholder="Nama Anda (opsional)">
-  <br><br>
-  <textarea id="statusText" placeholder="Apa yang sedang kamu pikirkan?" rows="5" cols="50"></textarea>
-  <br><br>
-  <button onclick="postStatus()">Posting</button>
-  <a href="forum.html"><button>Kembali</button></a>
 </body>
 </html>
