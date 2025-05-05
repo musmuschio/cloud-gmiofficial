@@ -1,52 +1,154 @@
-<html lang="id" class="scroll-smooth">
+<!DOCTYPE html>
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Update Status</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-    rel="stylesheet"
-  />
+  <title>Login / Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
+      margin: 0;
       font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    main {
+      background-color: #fff;
+      max-width: 400px;
+      width: 100%;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e0e0e0;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+
+    form {
+      display: none;
+      flex-direction: column;
+    }
+
+    form.active {
+      display: flex;
+    }
+
+    label {
+      margin-bottom: 0.5rem;
+      color: #444;
+      font-weight: 500;
+    }
+
+    input {
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 1.25rem;
+      font-size: 1rem;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      border-color: #28a745;
+      outline: none;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .toggle {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .toggle button {
+      background: none;
+      border: none;
+      color: #28a745;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      main {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col justify-center items-center px-4 py-10">
-  <main class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Update Status</h2>
-    <form id="postForm" class="flex flex-col space-y-4">
-      <textarea
-        id="content"
-        placeholder="Tulis sesuatu..."
-        required
-        rows="5"
-        class="resize-none border border-gray-300 rounded-md p-3 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-      ></textarea>
-      <button
-        type="submit"
-        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-md shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-      >
-        Posting
-      </button>
+<body>
+  <main>
+    <h2 id="form-title">Login</h2>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="active">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" placeholder="Email" required />
+
+      <label for="login-password">Kata Sandi</label>
+      <input type="password" id="login-password" placeholder="Kata Sandi" required />
+
+      <button type="submit">Masuk</button>
     </form>
+
+    <!-- Register Form -->
+    <form id="registerForm">
+      <label for="reg-name">Nama</label>
+      <input type="text" id="reg-name" placeholder="Nama" required />
+
+      <label for="reg-email">Email</label>
+      <input type="email" id="reg-email" placeholder="Email" required />
+
+      <label for="reg-password">Kata Sandi</label>
+      <input type="password" id="reg-password" placeholder="Kata Sandi" required />
+
+      <label for="reg-wa">Nomor WhatsApp</label>
+      <input type="text" id="reg-wa" placeholder="Nomor WhatsApp" required />
+
+      <button type="submit">Daftar</button>
+    </form>
+
+    <div class="toggle">
+      <button type="button" id="toggleBtn">Belum punya akun? Daftar di sini</button>
+    </div>
   </main>
 
+  <!-- Firebase Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
       authDomain: "training-gmiproject.firebaseapp.com",
       projectId: "training-gmiproject",
-      storageBucket: "training-gmiproject.firebasestorage.app",
+      storageBucket: "training-gmiproject.appspot.com",
       messagingSenderId: "188178811217",
       appId: "1:188178811217:web:636b61392f7e302b046b70",
       measurementId: "G-F6DBMTSTLR"
@@ -55,25 +157,63 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const user = JSON.parse(sessionStorage.getItem("user"));
-    if (!user) window.location.href = "login.html";
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const title = document.getElementById("form-title");
+    const toggleBtn = document.getElementById("toggleBtn");
 
-    document.getElementById('postForm').addEventListener('submit', async (e) => {
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const content = document.getElementById('content').value.trim();
-      if (!content) return;
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
 
       try {
-        await addDoc(collection(db, "posts"), {
-          name: user.name,
-          content,
-          timestamp: Timestamp.now()
-        });
-        window.location.href = "forum.html";
+        const userRef = doc(db, "users", email);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists() && userSnap.data().password === password) {
+          const userData = userSnap.data();
+          sessionStorage.setItem("user", JSON.stringify({
+            name: userData.name,
+            email: userData.email,
+            wa: userData.wa
+          }));
+          window.location.href = "forum.html";
+        } else {
+          alert("Login gagal. Cek kembali email dan kata sandi.");
+        }
       } catch (error) {
-        alert("Gagal mengirim postingan. Silakan coba lagi.");
+        alert("Terjadi kesalahan saat login.");
         console.error(error);
       }
+    });
+
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("reg-name").value.trim();
+      const email = document.getElementById("reg-email").value.trim();
+      const password = document.getElementById("reg-password").value;
+      const wa = document.getElementById("reg-wa").value.trim();
+
+      try {
+        await setDoc(doc(db, "users", email), {
+          name, email, password, wa
+        });
+
+        sessionStorage.setItem("user", JSON.stringify({ name, email, wa }));
+        window.location.href = "forum.html";
+      } catch (error) {
+        alert("Terjadi kesalahan saat mendaftar.");
+        console.error(error);
+      }
+    });
+
+    toggleBtn.addEventListener("click", () => {
+      const loginVisible = loginForm.classList.contains("active");
+      loginForm.classList.toggle("active", !loginVisible);
+      registerForm.classList.toggle("active", loginVisible);
+      title.textContent = loginVisible ? "Daftar" : "Login";
+      toggleBtn.textContent = loginVisible ? "Sudah punya akun? Masuk di sini" : "Belum punya akun? Daftar di sini";
     });
   </script>
 </body>
