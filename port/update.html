@@ -17,14 +17,9 @@
     <h2>Tulis Status Baru</h2>
     <textarea id="description" rows="5" placeholder="Tulis sesuatu..." required></textarea><br><br>
 
-    <label>
-      📷 Pilih gambar (opsional)
-      <input type="file" id="imageInput" accept="image/*">
-    </label>
-    
+    <input type="file" id="imageInput" accept="image/*">
+    <img id="preview" style="display:none; max-width:100%">
     <div id="uploadStatus"></div>
-    <progress id="progressBar" value="0" max="100" style="width: 100%; display: none;"></progress>
-    <img id="preview" class="preview-img" src="">
 
     <button id="kirim" disabled>📤 Kirim</button>
   </div>
@@ -71,36 +66,36 @@
     });
 
     // Upload gambar otomatis
-    imageInput.addEventListener('change', () => {
-      const file = imageInput.files[0];
-      if (!file) return;
+ document.getElementById('imageInput').addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
 
-      const storageRef = ref(storage, 'images/' + Date.now() + '-' + file.name);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'forum_unsigned'); // pakai preset kamu
 
-      uploadStatus.textContent = '⏳ Mengunggah gambar...';
-      progressBar.style.display = 'block';
+  const uploadStatus = document.getElementById('uploadStatus');
+  uploadStatus.textContent = '⏳ Mengunggah gambar...';
 
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          progressBar.value = progress;
-          uploadStatus.textContent = `⏳ Mengunggah gambar... ${progress.toFixed(0)}%`;
-        },
-        (error) => {
-          console.error(error);
-          uploadStatus.textContent = '❌ Gagal mengunggah gambar.';
-          submitBtn.disabled = false;
-        },
-        async () => {
-          imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          preview.src = imageUrl;
-          preview.style.display = 'block';
-          uploadStatus.textContent = '✅ Gambar berhasil diunggah!';
-          submitBtn.disabled = false;
-        }
-      );
+  try {
+    const response = await fetch('https://api.cloudinary.com/v1_1/namamu/image/upload', {
+      method: 'POST',
+      body: formData
     });
+
+    const data = await response.json();
+    const imageUrl = data.secure_url;
+
+    document.getElementById('preview').src = imageUrl;
+    document.getElementById('preview').style.display = 'block';
+    uploadStatus.textContent = '✅ Gambar berhasil diunggah!';
+
+    console.log('URL Gambar:', imageUrl); // URL ini bisa kamu simpan di Firestore
+  } catch (error) {
+    console.error(error);
+    uploadStatus.textContent = '❌ Gagal mengunggah.';
+  }
+});
 
     // Submit status
     submitBtn.addEventListener("click", async () => {
