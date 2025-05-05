@@ -11,27 +11,63 @@
         font-family: 'Inter', sans-serif;
         background-color: #f3f4f6;
       }
-      /* Styling untuk komentar yang bisa di-scroll */
       .comments-container {
-        overflow-x: auto; /* Membuat komentar bisa di-scroll horizontal */
-        white-space: nowrap; /* Agar komentar tetap berada dalam satu baris */
-        padding: 10px 0; /* Spasi atas dan bawah */
+        overflow-x: auto; 
+        white-space: nowrap;
+        padding: 10px 0;
       }
       .comment-item {
-        display: inline-block; /* Membuat setiap komentar berada dalam satu baris */
+        display: inline-block;
         background-color: #f1f5f9;
         padding: 10px 15px;
         margin-right: 10px;
         border-radius: 8px;
-        max-width: 300px; /* Batasi lebar komentar */
+        max-width: 300px;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 100%;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .modal-body {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .close {
+        cursor: pointer;
+        background-color: transparent;
+        border: none;
+        font-size: 20px;
+        color: #aaa;
       }
     </style>
   </head>
   <body class="min-h-screen flex flex-col">
-    <!-- Header -->
     <header class="flex items-center justify-between bg-white px-4 sm:px-6 md:px-8 py-3 shadow-md sticky top-0 z-50">
       <div class="flex items-center space-x-3">
-        <img alt="Logo GMI, a stylized letter G with blue and white colors" class="w-10 h-10 object-contain" height="40" src="https://storage.googleapis.com/a1aa/image/c4d3b1ab-37a0-4f2b-1822-e5fdfe3ab3a2.jpg" width="40"/>
+        <img alt="Logo GMI" class="w-10 h-10 object-contain" height="40" src="https://storage.googleapis.com/a1aa/image/c4d3b1ab-37a0-4f2b-1822-e5fdfe3ab3a2.jpg" width="40"/>
         <h1 class="text-xl font-semibold text-gray-900 select-none">GMI | FORUM</h1>
       </div>
       <button aria-label="Tombol Posting Status Baru" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" onclick="location.href='update.html'" type="button">
@@ -40,10 +76,26 @@
       </button>
     </header>
 
-    <!-- Main content -->
     <main class="flex-grow max-w-3xl mx-auto w-full px-4 sm:px-6 md:px-8 py-6">
       <div class="space-y-6 text-gray-800" id="statusList"></div>
     </main>
+
+    <!-- Modal untuk menampilkan komentar -->
+    <div id="commentModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="text-lg font-semibold">Komentar</h2>
+          <button id="closeModal" class="close">&times;</button>
+        </div>
+        <div id="modalComments" class="modal-body"></div>
+        <form id="commentFormModal" class="flex space-x-2 mt-4">
+          <input id="commentInput" type="text" placeholder="Tulis komentar..." required class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+            <i class="fas fa-paper-plane"></i><span>Kirim</span>
+          </button>
+        </form>
+      </div>
+    </div>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -61,8 +113,12 @@
       const db = getFirestore(app);
 
       const statusList = document.getElementById("statusList");
+      const commentModal = document.getElementById("commentModal");
+      const modalComments = document.getElementById("modalComments");
+      const commentFormModal = document.getElementById("commentFormModal");
+      const closeModal = document.getElementById("closeModal");
 
-      // Function to calculate how long ago the status was posted
+      // Fungsi untuk menghitung waktu posting status
       function getTimeAgo(timestamp) {
         const diff = new Date() - timestamp.toDate();
         const seconds = Math.floor(diff / 1000);
@@ -76,12 +132,11 @@
         return `${days} hari yang lalu`;
       }
 
-      // Create a status element with time ago
+      // Fungsi untuk membuat elemen status
       function createStatusElement(docId, data) {
         const container = document.createElement("div");
         container.className = "border border-gray-300 rounded-lg p-4 bg-white shadow-sm";
 
-        // Status header with name and timestamp
         const header = document.createElement("div");
         header.className = "mb-2 flex justify-between items-center";
 
@@ -96,71 +151,55 @@
         header.appendChild(nameEl);
         header.appendChild(timeEl);
 
-        // Status text
         const textEl = document.createElement("p");
         textEl.className = "mb-3 whitespace-pre-wrap";
         textEl.textContent = data.text;
 
-        // Comment input form
-        const commentForm = document.createElement("form");
-        commentForm.className = "flex space-x-2";
+        const commentBtn = document.createElement("button");
+        commentBtn.className = "mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md shadow-md focus:outline-none";
+        commentBtn.textContent = "Lihat Komentar";
+        commentBtn.onclick = () => openModal(docId); // Buka modal saat tombol diklik
 
-        const commentInput = document.createElement("input");
-        commentInput.type = "text";
-        commentInput.placeholder = "Tulis komentar...";
-        commentInput.required = true;
-        commentInput.className = "flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+        container.appendChild(header);
+        container.appendChild(textEl);
+        container.appendChild(commentBtn);
 
-        const submitBtn = document.createElement("button");
-        submitBtn.type = "submit";
-        submitBtn.className = "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-4 py-2 rounded-md shadow-md flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1";
-        submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i><span>Kirim</span>`;
+        return container;
+      }
 
-        commentForm.appendChild(commentInput);
-        commentForm.appendChild(submitBtn);
+      // Fungsi untuk membuka modal komentar
+      async function openModal(docId) {
+        commentModal.style.display = "flex";
+        modalComments.innerHTML = ""; // Reset komentar modal
 
-        // Comments container (horizontal scroll)
-        const commentsContainer = document.createElement("div");
-        commentsContainer.className = "comments-container"; // Apply the scrollable class here
-
-        // Load comments from Firestore
-        async function loadComments() {
-          commentsContainer.innerHTML = "";
-          try {
-            const commentsQuery = query(collection(db, "statuses", docId, "comments"), orderBy("timestamp", "asc"));
-            const commentsSnapshot = await getDocs(commentsQuery);
-            if (commentsSnapshot.empty) {
-              const noComments = document.createElement("p");
-              noComments.className = "text-gray-400 italic";
-              noComments.textContent = "Belum ada komentar.";
-              commentsContainer.appendChild(noComments);
-            } else {
-              commentsSnapshot.forEach((commentDoc) => {
-                const commentData = commentDoc.data();
-                const commentEl = document.createElement("div");
-                commentEl.className = "comment-item"; // Each comment will be inline
-                commentEl.innerHTML = `
-                  <div class="flex justify-between items-center mb-1">
-                    <strong class="text-gray-800">${commentData.name || "Anonim"}</strong>
-                    <small class="text-gray-500 text-xs">${getTimeAgo(commentData.timestamp)}</small>
-                  </div>
-                  <p class="whitespace-pre-wrap">${commentData.text}</p>
-                `;
-                commentsContainer.appendChild(commentEl);
-              });
-            }
-          } catch (err) {
-            commentsContainer.innerHTML = `<p class="text-red-600">Gagal memuat komentar: ${err.message}</p>`;
-          }
+        // Memuat semua komentar
+        const commentsQuery = query(collection(db, "statuses", docId, "comments"), orderBy("timestamp", "asc"));
+        const commentsSnapshot = await getDocs(commentsQuery);
+        if (commentsSnapshot.empty) {
+          const noComments = document.createElement("p");
+          noComments.className = "text-gray-400 italic";
+          noComments.textContent = "Belum ada komentar.";
+          modalComments.appendChild(noComments);
+        } else {
+          commentsSnapshot.forEach((commentDoc) => {
+            const commentData = commentDoc.data();
+            const commentEl = document.createElement("div");
+            commentEl.className = "comment-item";
+            commentEl.innerHTML = `
+              <div class="flex justify-between items-center mb-1">
+                <strong class="text-gray-800">${commentData.name || "Anonim"}</strong>
+                <small class="text-gray-500 text-xs">${getTimeAgo(commentData.timestamp)}</small>
+              </div>
+              <p class="whitespace-pre-wrap">${commentData.text}</p>
+            `;
+            modalComments.appendChild(commentEl);
+          });
         }
 
-        // Initial load comments
-        loadComments();
-
-        // Handle comment form submit
-        commentForm.addEventListener("submit", async (e) => {
+        // Set form untuk kirim komentar
+        commentFormModal.onsubmit = async (e) => {
           e.preventDefault();
-          const commentText = commentInput.value.trim();
+          const commentText = document.getElementById("commentInput").value.trim();
           if (!commentText) return;
           const currentUser = auth.currentUser;
           if (!currentUser) {
@@ -174,20 +213,18 @@
               timestamp: serverTimestamp(),
               uid: currentUser.uid,
             });
-            commentInput.value = "";
-            loadComments();
+            document.getElementById("commentInput").value = "";
+            openModal(docId); // Refresh modal setelah kirim komentar
           } catch (err) {
             alert("Gagal mengirim komentar: " + err.message);
           }
-        });
-
-        container.appendChild(header);
-        container.appendChild(textEl);
-        container.appendChild(commentForm);
-        container.appendChild(commentsContainer);
-
-        return container;
+        };
       }
+
+      // Menutup modal
+      closeModal.onclick = () => {
+        commentModal.style.display = "none";
+      };
 
       // Listen for auth state changes
       onAuthStateChanged(auth, async (user) => {
