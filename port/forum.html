@@ -3,47 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Forum Status + Komentar</title>
+  <title>Forum</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-    .status {
-      background: #fff;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .status img {
-      max-width: 100%;
-      margin-top: 10px;
-      border-radius: 8px;
-    }
-    .nama { font-weight: bold; font-size: 1.2em; }
-    .deskripsi { margin-top: 5px; }
-    .komentar { margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px; }
-    .komentar-item { margin-bottom: 10px; }
-    .komentar-nama { font-weight: bold; }
-    .komentar-isi { margin-left: 10px; display: inline-block; }
-    .komentar-form { margin-top: 15px; }
-    .komentar-form input, .komentar-form textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; }
-    .komentar-form button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer; }
-    .komentar-form button:hover { background-color: #0056b3; }
+    body { font-family: sans-serif; padding: 20px; }
+    .card { max-width: 500px; margin: auto; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; background: #fff; margin-bottom: 20px; }
+    .status { display: flex; flex-direction: column; margin-bottom: 20px; }
+    .status img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+    .status p { font-size: 16px; margin-top: 10px; }
+    .status .name { font-weight: bold; }
+    .status .date { font-size: 12px; color: #888; margin-top: 5px; }
+    .status .description { margin-top: 10px; }
+    button { margin-top: 10px; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
   </style>
 </head>
 <body>
-
   <h1>Forum Status</h1>
-  <div id="status-container"></div>
+  <div id="statusContainer"></div>
 
-  <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, getDocs, addDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
@@ -51,98 +31,52 @@
       projectId: "gmi-official21-74326",
       storageBucket: "gmi-official21-74326.appspot.com",
       messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5c0428ccad6952faa544a9"
+      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+      measurementId: "G-KJ0X8CY03M"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
 
-    const statusContainer = document.getElementById("status-container");
+    const statusContainer = document.getElementById("statusContainer");
 
-    // Fungsi untuk memuat komentar
-    async function loadKomentar(statusId, komentarDiv) {
-      const komentarRef = collection(db, "status", statusId, "komentar");
-      const komentarQuery = query(komentarRef, orderBy("timestamp", "asc"));
-      const komentarSnapshot = await getDocs(komentarQuery);
+    // Ambil status dari Firestore
+    async function loadStatuses() {
+      const statusesQuery = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(statusesQuery);
 
-      komentarSnapshot.forEach(kom => {
-        const data = kom.data();
-        const item = document.createElement("div");
-        item.className = "komentar-item";
-        item.innerHTML = `
-          <span class="komentar-nama">${data.nama}:</span>
-          <span class="komentar-isi">${data.isi}</span>
-        `;
-        komentarDiv.appendChild(item);
+      querySnapshot.forEach((doc) => {
+        const statusData = doc.data();
+        const statusElement = createStatusElement(statusData);
+        statusContainer.appendChild(statusElement);
       });
     }
 
-    // Fungsi untuk menambahkan komentar
-    async function addKomentar(statusId, nama, isi) {
-      const komentarRef = collection(db, "status", statusId, "komentar");
-      await addDoc(komentarRef, {
-        nama: nama,
-        isi: isi,
-        timestamp: new Date(),
-      });
+    // Buat elemen status
+    function createStatusElement(status) {
+      const statusCard = document.createElement("div");
+      statusCard.classList.add("card");
+
+      const statusContent = `
+        <div class="status">
+          <div class="name">${status.name}</div>
+          <div class="date">${new Date(status.createdAt.seconds * 1000).toLocaleString()}</div>
+          <div class="description">${status.description}</div>
+          ${status.imageUrl ? `<img src="${status.imageUrl}" alt="Image">` : ""}
+          <button onclick="commentOnStatus('${status.name}')">Komentar</button>
+        </div>
+      `;
+      statusCard.innerHTML = statusContent;
+      return statusCard;
     }
 
-    // Fungsi untuk memuat status
-    async function loadStatus() {
-      const statusQuery = query(collection(db, "status"), orderBy("timestamp", "desc"));
-      const statusSnapshot = await getDocs(statusQuery);
-
-      statusSnapshot.forEach(async (docSnapshot) => {
-        const data = docSnapshot.data();
-        const div = document.createElement("div");
-        div.className = "status";
-
-        const komentarDiv = document.createElement("div");
-        komentarDiv.className = "komentar";
-
-        // Tambahkan status dan form komentar
-        div.innerHTML = `
-          <div class="nama">${data.nama}</div>
-          <div class="deskripsi">${data.deskripsi}</div>
-          ${data.gambarUrl ? `<img src="${data.gambarUrl}" alt="Gambar Status">` : ""}
-          <div class="komentar"><strong>Komentar:</strong></div>
-        `;
-
-        // Form komentar
-        const form = document.createElement("div");
-        form.className = "komentar-form";
-        form.innerHTML = `
-          <input type="text" id="nama-komentar-${docSnapshot.id}" placeholder="Nama" required>
-          <textarea id="komentar-${docSnapshot.id}" placeholder="Tulis komentar..." required></textarea>
-          <button onclick="submitKomentar('${docSnapshot.id}')">Kirim Komentar</button>
-        `;
-
-        div.appendChild(form);
-        div.querySelector(".komentar").appendChild(komentarDiv);
-        statusContainer.appendChild(div);
-
-        // Muat komentar
-        await loadKomentar(docSnapshot.id, komentarDiv);
-      });
+    // Fungsi untuk komentar (opsional)
+    function commentOnStatus(name) {
+      alert(`Komentar untuk status oleh ${name}`);
     }
 
-    // Fungsi untuk menangani pengiriman komentar
-    function submitKomentar(statusId) {
-      const nama = document.getElementById(`nama-komentar-${statusId}`).value;
-      const isi = document.getElementById(`komentar-${statusId}`).value;
-
-      if (nama && isi) {
-        addKomentar(statusId, nama, isi);
-        document.getElementById(`nama-komentar-${statusId}`).value = '';
-        document.getElementById(`komentar-${statusId}`).value = '';
-        loadStatus();  // Reload status untuk menampilkan komentar terbaru
-      } else {
-        alert("Nama dan komentar tidak boleh kosong!");
-      }
-    }
-
-    loadStatus();
+    // Muat status saat halaman dimuat
+    window.onload = loadStatuses;
   </script>
 </body>
 </html>
