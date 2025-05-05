@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
+      authDomain: "training-gmiproject.firebaseapp.com",
+      projectId: "training-gmiproject",
+      storageBucket: "training-gmiproject.firebasestorage.app",
+      messagingSenderId: "188178811217",
+      appId: "1:188178811217:web:636b61392f7e302b046b70",
+      measurementId: "G-F6DBMTSTLR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const name = document.getElementById("name").value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        window.location.href = "forum.html";
+      } catch (error) {
+        alert("Registrasi gagal: " + error.message);
+      }
+    });
+  </script>
+</head>
+<body>
+  <h2>Register</h2>
+  <form id="registerForm">
+    <input type="text" id="name" placeholder="Nama" required /><br />
+    <input type="email" id="email" placeholder="Email" required /><br />
+    <input type="password" id="password" placeholder="Password" required /><br />
+    <button type="submit">Register</button>
+  </form>
+  <p>Sudah punya akun? <a href="login.html">Login</a></p>
+</body>
+</html>
