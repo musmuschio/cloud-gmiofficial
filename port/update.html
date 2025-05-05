@@ -26,29 +26,34 @@
     const auth = getAuth(app);
     const storage = getStorage(app);
 
+    let userName = "";
+
+    // Fetch the logged-in user's name
     onAuthStateChanged(auth, (user) => {
-      if (!user) {
+      if (user) {
+        userName = user.displayName || user.email;  // Use display name or email if name is not available
+        document.getElementById("user-name").textContent = userName;  // Display the name on the page
+      } else {
         alert("Please log in to add posts.");
         window.location.href = "login.html"; // Redirect to login page if not logged in
       }
     });
 
     const addPost = async () => {
-      const name = document.getElementById("name").value;
+      const name = userName;  // Use the logged-in user's name
       const description = document.getElementById("description").value;
       const imageFile = document.getElementById("image-file").files[0];
 
-      if (!name || !description) {
-        alert("Name and Description are required.");
+      if (!description) {
+        alert("Description is required.");
         return;
       }
 
       let imageUrl = "";
       if (imageFile) {
         // Create a unique file name: "nama_user-tanggal_upload-waktu_upload-tokenupload"
-        const userId = auth.currentUser.uid;  // Use user ID or any unique identifier
         const timestamp = new Date();
-        const fileName = `${userId}-${timestamp.toISOString()}-${Math.random().toString(36).substring(2, 15)}.${imageFile.name.split('.').pop()}`;
+        const fileName = `${userName}-${timestamp.toISOString()}-${Math.random().toString(36).substring(2, 15)}.${imageFile.name.split('.').pop()}`;
         
         const storageRef = ref(storage, 'images/' + fileName);
         const uploadTask = uploadBytesResumable(storageRef, imageFile);
@@ -89,10 +94,8 @@
 </head>
 <body>
   <h1>Update Status</h1>
+  <p>Logged in as: <span id="user-name">Loading...</span></p>  <!-- Display the user's name -->
   <form onsubmit="event.preventDefault(); addPost();">
-    <label for="name">Name:</label>
-    <input type="text" id="name" required>
-    <br>
     <label for="description">Description:</label>
     <textarea id="description" required></textarea>
     <br>
