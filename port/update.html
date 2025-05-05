@@ -1,14 +1,23 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Update Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"; 
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js"; 
 
     const firebaseConfig = {
       apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
@@ -17,91 +26,95 @@
       storageBucket: "gmi-official21-74326.appspot.com",
       messagingSenderId: "496607636364",
       appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-      measurementId: "G-KJ0X8CY03M"
+      measurementId: "G-KJ0X8CY03M",
     };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const storage = getStorage(app);
 
     let userName = "";
 
-    // Fetch the logged-in user's name
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        userName = user.displayName || user.email;  // Use display name or email if name is not available
-        document.getElementById("user-name").textContent = userName;  // Display the name on the page
+        userName = user.displayName || user.email;
+        const userNameEl = document.getElementById("user-name");
+        if (userNameEl) userNameEl.textContent = userName;
       } else {
-        alert("Please log in to add posts.");
-        window.location.href = "login.html"; // Redirect to login page if not logged in
+        Swal.fire({
+          icon: "warning",
+          title: "Please log in to add posts.",
+          confirmButtonText: "OK",
+        }).then(() => {
+          window.location.href = "login.html";
+        });
       }
     });
 
-    const addPost = async () => {
-      const description = document.getElementById("description").value;
-      const imageFile = document.getElementById("image-file").files[0];
+    window.addPost = async () => {
+      const description = document.getElementById("description").value.trim();
 
       if (!description) {
-        alert("Description is required.");
+        Swal.fire({
+          icon: "error",
+          title: "Description is required.",
+          confirmButtonText: "OK",
+        });
         return;
       }
 
-      let imageUrl = "";
-      if (imageFile) {
-        // Create a unique file name: "nama_user-tanggal_upload-waktu_upload-tokenupload"
-        const timestamp = new Date();
-        const fileName = `${userName}-${timestamp.toISOString()}-${Math.random().toString(36).substring(2, 15)}.${imageFile.name.split('.').pop()}`;
-        
-        const storageRef = ref(storage, 'images/' + fileName);
-        const uploadTask = uploadBytesResumable(storageRef, imageFile);
-
-        uploadTask.on('state_changed', 
-          (snapshot) => {
-            // Progress monitoring can go here if needed
-          }, 
-          (error) => {
-            alert("Error uploading image");
-          }, 
-          async () => {
-            imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-            savePost(description, imageUrl);
-          }
-        );
-      } else {
-        savePost(description, imageUrl);  // If no image is provided, just save text
-      }
-    };
-
-    const savePost = async (description, imageUrl) => {
       try {
-        const postRef = await addDoc(collection(db, "posts"), {
-          name: userName,  // Automatically use the logged-in user's name
+        await addDoc(collection(db, "posts"), {
+          name: userName,
           description,
-          imageUrl,
           timestamp: serverTimestamp(),
         });
-        alert("Post added successfully!");
-        window.location.href = "forum.html"; // Redirect to forum page after posting
+        Swal.fire({
+          icon: "success",
+          title: "Post added successfully!",
+          confirmButtonText: "OK",
+        }).then(() => {
+          window.location.href = "forum.html";
+        });
       } catch (error) {
         console.error("Error adding post: ", error);
-        alert("Failed to add post.");
+        Swal.fire({
+          icon: "error",
+          title: "Failed to add post.",
+          text: error.message,
+          confirmButtonText: "OK",
+        });
       }
     };
   </script>
 </head>
-<body>
-  <h1>Update Status</h1>
-  <p>Logged in as: <span id="user-name">Loading...</span></p>  <!-- Display the user's name -->
-  <form onsubmit="event.preventDefault(); addPost();">
-    <label for="description">Description:</label>
-    <textarea id="description" required></textarea>
-    <br>
-    <label for="image-file">Upload Image (optional):</label>
-    <input type="file" id="image-file">
-    <br>
-    <button type="submit">Post</button>
-  </form>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <main class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-2xl font-semibold mb-4 text-center text-gray-800">Update Status</h1>
+    <p class="mb-6 text-center text-gray-600">
+      Logged in as: <span id="user-name" class="font-medium text-gray-900">Loading...</span>
+    </p>
+    <form
+      onsubmit="event.preventDefault(); addPost();"
+      class="flex flex-col space-y-4"
+      autocomplete="off"
+    >
+      <label for="description" class="text-gray-700 font-medium">Description:</label>
+      <textarea
+        id="description"
+        required
+        rows="5"
+        placeholder="What's on your mind?"
+        class="resize-none border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      ></textarea>
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition-colors duration-200 flex items-center justify-center"
+      >
+        <i class="fas fa-paper-plane mr-2"></i> Post
+      </button>
+    </form>
+  </main>
 </body>
 </html>
