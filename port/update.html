@@ -2,20 +2,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Update Status</title>
+  <title>Forum</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
   />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import {
       getFirestore,
       collection,
-      addDoc,
-      serverTimestamp,
+      query,
+      orderBy,
+      getDocs,
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
@@ -42,79 +42,68 @@
         const userNameEl = document.getElementById("user-name");
         if (userNameEl) userNameEl.textContent = userName;
       } else {
-        Swal.fire({
-          icon: "warning",
-          title: "Please log in to add posts.",
-          confirmButtonText: "OK",
-        }).then(() => {
-          window.location.href = "login.html";
-        });
+        alert("Please log in to view posts.");
+        window.location.href = "login.html";
       }
     });
 
-    window.addPost = async () => {
-      const description = document.getElementById("description").value.trim();
+    const loadPosts = async () => {
+      const postsRef = collection(db, "posts");
+      const q = query(postsRef, orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
 
-      if (!description) {
-        Swal.fire({
-          icon: "error",
-          title: "Description is required.",
-          confirmButtonText: "OK",
-        });
-        return;
-      }
+      const postsContainer = document.getElementById("posts-container");
+      postsContainer.innerHTML = "";
 
-      try {
-        await addDoc(collection(db, "posts"), {
-          name: userName,
-          description,
-          timestamp: serverTimestamp(),
-        });
-        Swal.fire({
-          icon: "success",
-          title: "Post added successfully!",
-          confirmButtonText: "OK",
-        }).then(() => {
-          window.location.href = "forum.html";
-        });
-      } catch (error) {
-        console.error("Error adding post: ", error);
-        Swal.fire({
-          icon: "error",
-          title: "Failed to add post.",
-          text: error.message,
-          confirmButtonText: "OK",
-        });
-      }
+      querySnapshot.forEach((doc) => {
+        const postData = doc.data();
+        const postElement = document.createElement("div");
+        postElement.classList.add(
+          "bg-white",
+          "shadow-md",
+          "rounded-lg",
+          "p-6",
+          "mb-6",
+          "border",
+          "border-gray-200"
+        );
+        postElement.innerHTML = `
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">${postData.name}</h3>
+          <p class="text-gray-700 mb-4 whitespace-pre-line">${postData.description}</p>
+          <p class="text-sm text-gray-500">Posted on: ${new Date(
+            postData.timestamp.seconds * 1000
+          ).toLocaleString()}</p>
+        `;
+        postsContainer.appendChild(postElement);
+      });
     };
+
+    window.onload = loadPosts;
   </script>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
-  <main class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-    <h1 class="text-2xl font-semibold mb-4 text-center text-gray-800">Update Status</h1>
-    <p class="mb-6 text-center text-gray-600">
-      Logged in as: <span id="user-name" class="font-medium text-gray-900">Loading...</span>
-    </p>
-    <form
-      onsubmit="event.preventDefault(); addPost();"
-      class="flex flex-col space-y-4"
-      autocomplete="off"
-    >
-      <label for="description" class="text-gray-700 font-medium">Description:</label>
-      <textarea
-        id="description"
-        required
-        rows="5"
-        placeholder="What's on your mind?"
-        class="resize-none border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      ></textarea>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <header class="bg-white shadow p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2 sm:mb-0">Forum</h1>
+    <div class="flex items-center space-x-4">
+      <p class="text-gray-700 text-sm sm:text-base">
+        Logged in as: <span id="user-name" class="font-semibold">Loading...</span>
+      </p>
       <button
-        type="submit"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition-colors duration-200 flex items-center justify-center"
+        onclick="window.location.href='update.html'"
+        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        aria-label="Add New Post"
       >
-        <i class="fas fa-paper-plane mr-2"></i> Post
+        <i class="fas fa-plus mr-2"></i> Add New Post
       </button>
-    </form>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-3xl mx-auto p-4 w-full">
+    <div id="posts-container" class="mt-6"></div>
   </main>
+
+  <footer class="bg-white shadow-inner p-4 text-center text-gray-500 text-sm">
+    &copy; 2024 Forum. All rights reserved.
+  </footer>
 </body>
 </html>
