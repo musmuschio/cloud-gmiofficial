@@ -2,10 +2,10 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Update Status</title>
+  <title>Forum Status</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, where, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
@@ -20,28 +20,64 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    window.postStatus = async function () {
-      const username = document.getElementById("username").value;
-      const text = document.getElementById("statusText").value;
-      if (text.trim() === "") return alert("Status tidak boleh kosong.");
+    const container = document.getElementById('forumContainer');
 
-      await addDoc(collection(db, "status"), {
-        username: username || "Anonim",
+    const statusRef = collection(db, "status");
+    const q = query(statusRef, orderBy("timestamp", "desc"));
+
+    onSnapshot(q, async (snapshot) => {
+      container.innerHTML = "";
+      const now = Date.now();
+      snapshot.forEach(async (docSnap) => {
+        const data = docSnap.data();
+        const postTime = data.timestamp?.toMillis?.() || 0;
+        if (now - postTime > 24 * 60 * 60 * 1000) return; // Lewat 24 jam, skip
+
+        const statusDiv = document.createElement("div");
+        statusDiv.className = "status";
+        statusDiv.innerHTML = `
+          <h4>${data.username || "Anonim"}</h4>
+          <p>${data.text}</p>
+          <div id="comments-${docSnap.id}"></div>
+          <input type="text" placeholder="Tulis komentar..." id="input-${docSnap.id}">
+          <button onclick="comment('${docSnap.id}')">Komentari</button>
+          <hr>
+        `;
+        container.appendChild(statusDiv);
+
+        // Load comments
+        const commentsRef = collection(db, "status", docSnap.id, "comments");
+        const commentSnap = await getDocs(commentsRef);
+        const commentBox = document.getElementById("comments-" + docSnap.id);
+        commentSnap.forEach(comment => {
+          const c = comment.data();
+          commentBox.innerHTML += `<p><b>${c.username || "Anon"}:</b> ${c.text}</p>`;
+        });
+      });
+    });
+
+    window.comment = async function (id) {
+      const text = document.getElementById("input-" + id).value;
+      const username = prompt("Nama Anda:");
+      if (text.trim() === "") return;
+      await addDoc(collection(db, "status", id, "comments"), {
         text,
+        username: username || "Anon",
         timestamp: serverTimestamp()
       });
-      alert("Status berhasil diposting!");
-      window.location.href = "forum.html";
-    }
+      document.getElementById("input-" + id).value = "";
+    };
   </script>
+  <style>
+    body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+    .status { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    input[type="text"] { width: 80%; padding: 5px; }
+    button { padding: 5px 10px; }
+  </style>
 </head>
 <body>
-  <h2>Posting Status Baru</h2>
-  <input type="text" id="username" placeholder="Nama Anda (opsional)">
-  <br><br>
-  <textarea id="statusText" placeholder="Apa yang sedang kamu pikirkan?" rows="5" cols="50"></textarea>
-  <br><br>
-  <button onclick="postStatus()">Posting</button>
-  <a href="forum.html"><button>Kembali</button></a>
+  <h2>Forum Status (24 Jam)</h2>
+  <a href="update.html"><button>+ Posting Status</button></a>
+  <div id="forumContainer"></div>
 </body>
 </html>
