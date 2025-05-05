@@ -16,62 +16,21 @@
   </style>
  </head>
  <body class="bg-gray-100 min-h-screen">
-  <!-- Navbar mirip Facebook -->
+  <!-- Header with logo + text and "+ tanyakan" button -->
   <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 md:px-8 h-14 md:h-16">
     <div class="flex items-center space-x-3">
-     <img alt="Logo Facebook biru dengan huruf F putih" class="w-10 h-10 rounded-full" height="40" src="https://storage.googleapis.com/a1aa/image/d52eb1e8-ad2e-4c8b-f2de-12ef05c390c0.jpg" width="40"/>
+     <img alt="Logo GMI forum, gambar logo.png" class="w-10 h-10" height="40" src="https://storage.googleapis.com/a1aa/image/45315b23-9cf5-4c3a-c82f-9be5fa2ee2cf.jpg" width="40"/>
      <h1 class="text-blue-700 font-extrabold text-xl md:text-2xl select-none">
-      Forum Status
+      GMI | forum
      </h1>
     </div>
-    <div class="hidden md:flex items-center space-x-6">
-     <button aria-label="Beranda" class="text-blue-700 hover:bg-gray-100 p-2 rounded-full transition">
-      <i class="fas fa-home fa-lg">
-      </i>
-     </button>
-     <button aria-label="Teman" class="text-gray-600 hover:bg-gray-100 p-2 rounded-full transition">
-      <i class="fas fa-user-friends fa-lg">
-      </i>
-     </button>
-     <button aria-label="Notifikasi" class="text-gray-600 hover:bg-gray-100 p-2 rounded-full transition relative">
-      <i class="fas fa-bell fa-lg">
-      </i>
-      <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-semibold rounded-full px-1.5">
-       3
-      </span>
-     </button>
-     <button aria-label="Pesan" class="text-gray-600 hover:bg-gray-100 p-2 rounded-full transition">
-      <i class="fas fa-comment-alt fa-lg">
-      </i>
-     </button>
-    </div>
-    <div class="flex items-center space-x-3">
-     <a aria-label="Tambah status baru" class="hidden sm:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2 transition" href="update.html">
-      <i class="fas fa-plus">
-      </i>
-      <span>
-       Tambah
-      </span>
-     </a>
-     <button aria-label="Menu profil" class="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded-full">
-      <img alt="Foto profil pengguna berbentuk lingkaran warna abu-abu dengan huruf U" class="w-8 h-8 rounded-full" height="32" src="https://storage.googleapis.com/a1aa/image/a612c2fd-f319-4c20-8557-17d17170458a.jpg" width="32"/>
-      <span class="hidden md:inline text-gray-700 font-medium">
-       User
-      </span>
-      <i class="fas fa-caret-down text-gray-600">
-      </i>
-     </button>
-    </div>
+    <a aria-label="Tambah status baru" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2 transition" href="update.html">
+     + tanyakan
+    </a>
    </div>
   </header>
   <main class="pt-20 max-w-3xl mx-auto px-4 sm:px-6 md:px-8">
-   <section aria-label="Form tambah status baru" class="mb-6 bg-white rounded-lg shadow p-4 md:p-6">
-    <form action="update.html" class="flex items-center space-x-3" method="get">
-     <img alt="Foto profil pengguna berbentuk lingkaran warna abu-abu dengan huruf U" class="w-10 h-10 rounded-full" height="40" src="https://storage.googleapis.com/a1aa/image/a612c2fd-f319-4c20-8557-17d17170458a.jpg" width="40"/>
-     <input class="flex-grow cursor-pointer rounded-full border border-gray-300 px-4 py-2 text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600" onclick="window.location.href='update.html'" placeholder="Apa yang Anda pikirkan?" readonly="" type="text"/>
-    </form>
-   </section>
    <div class="flex flex-col gap-6" id="statusList">
    </div>
   </main>
@@ -149,7 +108,7 @@
 
       item.innerHTML = `
         <header class="flex items-center space-x-3">
-          <img src="https://placehold.co/40x40/cccccc/000000?text=U" alt="Foto profil pengguna berbentuk lingkaran warna abu-abu dengan huruf U" class="w-10 h-10 rounded-full" />
+          <img src="https://placehold.co/40x40/007bff/ffffff?text=👤" alt="Ikon user berwarna biru dengan latar putih berbentuk lingkaran" class="w-10 h-10 rounded-full" />
           <div>
             <h2 class="font-semibold text-gray-900">${data.name}</h2>
             <time class="text-xs text-gray-500">${timeAgo(createdAtDate)}</time>
@@ -204,7 +163,7 @@
       commentDiv.className = 'flex items-start space-x-3';
 
       commentDiv.innerHTML = `
-        <img src="https://placehold.co/32x32/cccccc/000000?text=U" alt="Foto profil pengguna komentar berbentuk lingkaran warna abu-abu dengan huruf U" class="w-8 h-8 rounded-full mt-1" />
+        <img src="https://placehold.co/32x32/007bff/ffffff?text=👤" alt="Ikon user berwarna biru dengan latar putih berbentuk lingkaran untuk komentar" class="w-8 h-8 rounded-full mt-1" />
         <div class="bg-gray-100 rounded-xl px-4 py-2 max-w-[85%]">
           <p class="text-sm"><strong>${data.name}</strong></p>
           <p class="text-gray-700 text-sm">${data.text}</p>
