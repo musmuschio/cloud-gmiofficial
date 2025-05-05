@@ -40,7 +40,6 @@
     });
 
     const addPost = async () => {
-      const name = userName;  // Use the logged-in user's name
       const description = document.getElementById("description").value;
       const imageFile = document.getElementById("image-file").files[0];
 
@@ -67,18 +66,18 @@
           }, 
           async () => {
             imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-            savePost(name, description, imageUrl);
+            savePost(description, imageUrl);
           }
         );
       } else {
-        savePost(name, description, imageUrl);  // If no image is provided, just save text
+        savePost(description, imageUrl);  // If no image is provided, just save text
       }
     };
 
-    const savePost = async (name, description, imageUrl) => {
+    const savePost = async (description, imageUrl) => {
       try {
         const postRef = await addDoc(collection(db, "posts"), {
-          name,
+          name: userName,  // Automatically use the logged-in user's name
           description,
           imageUrl,
           timestamp: serverTimestamp(),
