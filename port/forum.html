@@ -1,35 +1,73 @@
-<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="bg-gray-50 min-h-screen flex items-center justify-center">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login / Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
   <style>
-    .hidden { display: none; }
-    .toggle-btn { margin: 10px 0; cursor: pointer; color: blue; text-decoration: underline; }
-    form { margin-bottom: 20px; }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
   </style>
 </head>
 <body>
-  <h2 id="form-title">Login</h2>
+  <main class="bg-white max-w-md w-full p-8 rounded-xl shadow-lg border border-gray-200">
+    <h2 id="form-title" class="text-3xl font-semibold text-center mb-8 text-gray-800">Login</h2>
 
-  <!-- Login Form -->
-  <form id="loginForm">
-    <input type="email" id="login-email" placeholder="Email" required><br>
-    <input type="password" id="login-password" placeholder="Kata Sandi" required><br>
-    <button type="submit">Masuk</button>
-  </form>
+    <!-- Login Form -->
+    <form id="loginForm" class="space-y-6">
+      <div>
+        <label for="login-email" class="block text-gray-700 font-medium mb-2">Email</label>
+        <input type="email" id="login-email" placeholder="Email" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+      </div>
+      <div>
+        <label for="login-password" class="block text-gray-700 font-medium mb-2">Kata Sandi</label>
+        <input type="password" id="login-password" placeholder="Kata Sandi" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+      </div>
+      <button type="submit"
+        class="w-full bg-green-600 hover:bg-green-700 transition-colors text-white font-semibold py-3 rounded-md focus:outline-none focus:ring-4 focus:ring-green-300">
+        Masuk
+      </button>
+    </form>
 
-  <!-- Register Form -->
-  <form id="registerForm" class="hidden">
-    <input type="text" id="reg-name" placeholder="Nama" required><br>
-    <input type="email" id="reg-email" placeholder="Email" required><br>
-    <input type="password" id="reg-password" placeholder="Kata Sandi" required><br>
-    <input type="text" id="reg-wa" placeholder="Nomor WhatsApp" required><br>
-    <button type="submit">Daftar</button>
-  </form>
+    <!-- Register Form -->
+    <form id="registerForm" class="hidden space-y-6">
+      <div>
+        <label for="reg-name" class="block text-gray-700 font-medium mb-2">Nama</label>
+        <input type="text" id="reg-name" placeholder="Nama" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+      </div>
+      <div>
+        <label for="reg-email" class="block text-gray-700 font-medium mb-2">Email</label>
+        <input type="email" id="reg-email" placeholder="Email" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+      </div>
+      <div>
+        <label for="reg-password" class="block text-gray-700 font-medium mb-2">Kata Sandi</label>
+        <input type="password" id="reg-password" placeholder="Kata Sandi" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+      </div>
+      <div>
+        <label for="reg-wa" class="block text-gray-700 font-medium mb-2">Nomor WhatsApp</label>
+        <input type="text" id="reg-wa" placeholder="Nomor WhatsApp" required
+          class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+      </div>
+      <button type="submit"
+        class="w-full bg-green-600 hover:bg-green-700 transition-colors text-white font-semibold py-3 rounded-md focus:outline-none focus:ring-4 focus:ring-green-300">
+        Daftar
+      </button>
+    </form>
 
-  <div class="toggle-btn" onclick="toggleForm()">Belum punya akun? Daftar di sini</div>
+    <div class="mt-6 text-center">
+      <button type="button" class="text-green-600 hover:underline font-medium" id="toggleBtn">
+        Belum punya akun? Daftar di sini
+      </button>
+    </div>
+  </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
@@ -48,63 +86,70 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Login Handler
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const title = document.getElementById("form-title");
+    const toggleBtn = document.getElementById("toggleBtn");
+
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = document.getElementById("login-email").value;
+      const email = document.getElementById("login-email").value.trim();
       const password = document.getElementById("login-password").value;
 
-      const userRef = doc(db, "users", email);
-      const userSnap = await getDoc(userRef);
+      try {
+        const userRef = doc(db, "users", email);
+        const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists() && userSnap.data().password === password) {
-        const userData = userSnap.data();
-        sessionStorage.setItem("user", JSON.stringify({
-          name: userData.name,
-          email: userData.email,
-          wa: userData.wa
-        }));
-        window.location.href = "forum.html";
-      } else {
-        alert("Login gagal. Cek kembali email dan kata sandi.");
+        if (userSnap.exists() && userSnap.data().password === password) {
+          const userData = userSnap.data();
+          sessionStorage.setItem("user", JSON.stringify({
+            name: userData.name,
+            email: userData.email,
+            wa: userData.wa
+          }));
+          window.location.href = "forum.html";
+        } else {
+          alert("Login gagal. Cek kembali email dan kata sandi.");
+        }
+      } catch (error) {
+        alert("Terjadi kesalahan saat login. Silakan coba lagi.");
+        console.error(error);
       }
     });
 
-    // Register Handler
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    registerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = document.getElementById("reg-name").value;
-      const email = document.getElementById("reg-email").value;
+      const name = document.getElementById("reg-name").value.trim();
+      const email = document.getElementById("reg-email").value.trim();
       const password = document.getElementById("reg-password").value;
-      const wa = document.getElementById("reg-wa").value;
+      const wa = document.getElementById("reg-wa").value.trim();
 
-      await setDoc(doc(db, "users", email), {
-        name, email, password, wa
-      });
+      try {
+        await setDoc(doc(db, "users", email), {
+          name, email, password, wa
+        });
 
-      sessionStorage.setItem("user", JSON.stringify({ name, email, wa }));
-      window.location.href = "forum.html";
+        sessionStorage.setItem("user", JSON.stringify({ name, email, wa }));
+        window.location.href = "forum.html";
+      } catch (error) {
+        alert("Terjadi kesalahan saat pendaftaran. Silakan coba lagi.");
+        console.error(error);
+      }
     });
 
-    // Toggle Form
-    function toggleForm() {
-      const loginForm = document.getElementById("loginForm");
-      const registerForm = document.getElementById("registerForm");
-      const title = document.getElementById("form-title");
-      const toggleText = document.querySelector(".toggle-btn");
-
+    toggleBtn.addEventListener("click", () => {
       if (registerForm.classList.contains("hidden")) {
         loginForm.classList.add("hidden");
         registerForm.classList.remove("hidden");
         title.textContent = "Daftar";
-        toggleText.textContent = "Sudah punya akun? Masuk di sini";
+        toggleBtn.textContent = "Sudah punya akun? Masuk di sini";
       } else {
         loginForm.classList.remove("hidden");
         registerForm.classList.add("hidden");
         title.textContent = "Login";
-        toggleText.textContent = "Belum punya akun? Daftar di sini";
+        toggleBtn.textContent = "Belum punya akun? Daftar di sini";
       }
-    }
+    });
   </script>
 </body>
 </html>
