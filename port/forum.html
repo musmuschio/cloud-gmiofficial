@@ -68,9 +68,10 @@
 </div>
 
 <!-- Firebase logic -->
+<!-- lanjutkan dari forum.html sebelumnya -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { getFirestore, collection, query, orderBy, getDocs, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
@@ -90,8 +91,9 @@
   async function loadStatuses() {
     const q = query(collection(db, 'statuses'), orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
+    for (const docSnap of querySnapshot.docs) {
+      const data = docSnap.data();
+      const statusId = docSnap.id;
       const item = document.createElement('div');
       item.className = 'status-item';
 
@@ -101,8 +103,60 @@
       }
       html += `<h3>${data.name}</h3>`;
       html += `<p>${data.description}</p>`;
+
+      // Form komentar
+      html += `
+        <div class="comments" id="comments-${statusId}"></div>
+        <form data-id="${statusId}" class="comment-form">
+          <input type="text" placeholder="Nama" class="comment-name" required />
+          <input type="text" placeholder="Tulis komentar..." class="comment-text" required />
+          <button type="submit">Kirim</button>
+        </form>
+      `;
+
       item.innerHTML = html;
       statusList.appendChild(item);
+
+      // Tampilkan komentar
+      loadComments(statusId);
+
+      // Event kirim komentar
+      const form = item.querySelector('.comment-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = form.querySelector('.comment-name').value;
+        const text = form.querySelector('.comment-text').value;
+
+        if (!name || !text) return;
+
+        await addDoc(collection(db, 'statuses', statusId, 'comments'), {
+          name,
+          text,
+          createdAt: serverTimestamp()
+        });
+
+        form.reset();
+        loadComments(statusId); // refresh komentar
+      });
+    }
+  }
+
+  async function loadComments(statusId) {
+    const commentsDiv = document.getElementById(`comments-${statusId}`);
+    commentsDiv.innerHTML = ''; // Kosongkan dulu
+
+    const commentsRef = collection(db, 'statuses', statusId, 'comments');
+    const q = query(commentsRef, orderBy('createdAt', 'asc'));
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const div = document.createElement('div');
+      div.style.borderTop = '1px solid #ccc';
+      div.style.marginTop = '10px';
+      div.style.paddingTop = '5px';
+      div.innerHTML = `<strong>${data.name}:</strong> ${data.text}`;
+      commentsDiv.appendChild(div);
     });
   }
 
