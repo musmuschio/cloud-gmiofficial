@@ -72,30 +72,28 @@
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('upload_preset', 'forum_unsigned'); // pakai preset kamu
+  formData.append('upload_preset', 'forum_unsigned'); // preset kamu
 
-  const uploadStatus = document.getElementById('uploadStatus');
   uploadStatus.textContent = '⏳ Mengunggah gambar...';
 
   try {
-    const response = await fetch('https://api.cloudinary.com/v1_1/namamu/image/upload', {
+    const response = await fetch('https://api.cloudinary.com/v1_1/forum-images/upload', {
       method: 'POST',
       body: formData
     });
 
     const data = await response.json();
-    const imageUrl = data.secure_url;
+    imageUrl = data.secure_url; // GANTI INI, hapus "const"
 
-    document.getElementById('preview').src = imageUrl;
-    document.getElementById('preview').style.display = 'block';
+    preview.src = imageUrl;
+    preview.style.display = 'block';
     uploadStatus.textContent = '✅ Gambar berhasil diunggah!';
-
-    console.log('URL Gambar:', imageUrl); // URL ini bisa kamu simpan di Firestore
   } catch (error) {
     console.error(error);
     uploadStatus.textContent = '❌ Gagal mengunggah.';
   }
 });
+
 
     // Submit status
     submitBtn.addEventListener("click", async () => {
