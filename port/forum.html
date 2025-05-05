@@ -10,9 +10,8 @@
       padding: 10px;
       margin-bottom: 20px;
     }
-    .post img {
-      max-width: 100%;
-      height: auto;
+    .post p {
+      margin: 10px 0;
     }
   </style>
   <script type="module">
@@ -35,10 +34,15 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    let userName = "";
+
+    // Fetch the logged-in user's name
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         alert("Please log in to view posts.");
         window.location.href = "login.html"; // Redirect to login page if not logged in
+      } else {
+        userName = user.displayName || user.email;  // Use display name or email if name is not available
       }
     });
 
@@ -55,7 +59,6 @@
         postElement.innerHTML = `
           <h3>${postData.name}</h3>
           <p>${postData.description}</p>
-          ${postData.imageUrl ? `<img src="${postData.imageUrl}" alt="Post Image">` : ""}
           <p>Posted on: ${new Date(postData.timestamp.seconds * 1000).toLocaleString()}</p>
         `;
         postsContainer.appendChild(postElement);
