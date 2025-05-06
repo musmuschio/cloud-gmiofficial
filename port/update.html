@@ -1,15 +1,35 @@
-<!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Posting Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
 </head>
-<body>
-  <h2>Posting Status</h2>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
+  <main class="w-full max-w-xl bg-white rounded-lg shadow-md p-6 mt-10">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Posting Status</h2>
 
-  <textarea id="desc" placeholder="Tulis sesuatu..." rows="5" cols="30"></textarea><br>
-  <input type="file" id="image" accept="image/*"><br>
-  <button onclick="postStatus()">Post</button>
+    <label for="desc" class="block text-gray-700 font-medium mb-2">Tulis sesuatu...</label>
+    <textarea id="desc" rows="5" placeholder="Tulis sesuatu..." class="w-full rounded-md border border-gray-300 p-3 resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"></textarea>
+
+    <label for="image" class="block text-gray-700 font-medium mt-5 mb-2">Unggah gambar (opsional)</label>
+    <input type="file" id="image" accept="image/*" class="block w-full text-gray-700" />
+
+    <button
+      onclick="postStatus()"
+      class="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-md shadow-md transition focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-center gap-2"
+      aria-label="Post status"
+    >
+      <i class="fas fa-paper-plane"></i> Post
+    </button>
+  </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -38,60 +58,59 @@
         return;
       }
 
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          alert("Silakan login terlebih dahulu.");
-          return;
-        }
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Silakan login terlebih dahulu.");
+        return;
+      }
 
-        let imageUrl = null;
+      let imageUrl = null;
 
-        if (file) {
-          const formData = new FormData();
-          const username = user.email.split('@')[0];
-          const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-          const randomToken = Math.random().toString(36).substring(2, 8);
-          const fileName = `${username}-${timestamp}-${randomToken}.${file.name.split('.').pop()}`;
+      if (file) {
+        const formData = new FormData();
+        const username = user.email.split('@')[0];
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const randomToken = Math.random().toString(36).substring(2, 8);
+        const fileName = `${username}-${timestamp}-${randomToken}.${file.name.split('.').pop()}`;
 
-          formData.append("image", file, fileName);
-
-          try {
-            const res = await fetch("https://api.imgur.com/3/image", {
-              method: "POST",
-              headers: {
-                Authorization: "Client-ID 1c6ad60250b3421"
-              },
-              body: formData
-            });
-
-            const data = await res.json();
-            if (data.success) {
-              imageUrl = data.data.link;
-            } else {
-              alert("Upload gambar gagal.");
-              return;
-            }
-          } catch (err) {
-            alert("Terjadi kesalahan saat upload gambar.");
-            console.error(err);
-            return;
-          }
-        }
+        formData.append("image", file, fileName);
 
         try {
-          await addDoc(collection(db, "statuses"), {
-            name: user.email,
-            description: desc,
-            imageUrl: imageUrl || null,
-            createdAt: serverTimestamp()
+          const res = await fetch("https://api.imgur.com/3/image", {
+            method: "POST",
+            headers: {
+              Authorization: "Client-ID 1c6ad60250b3421"
+            },
+            body: formData
           });
-          alert("Status berhasil diposting!");
-          window.location.href = "forum.html";
-        } catch (e) {
-          alert("Gagal menyimpan ke database.");
-          console.error(e);
+
+          const data = await res.json();
+          if (data.success) {
+            imageUrl = data.data.link;
+          } else {
+            alert("Upload gambar gagal.");
+            return;
+          }
+        } catch (err) {
+          alert("Terjadi kesalahan saat upload gambar.");
+          console.error(err);
+          return;
         }
-      });
+      }
+
+      try {
+        await addDoc(collection(db, "statuses"), {
+          name: user.email,
+          description: desc,
+          imageUrl: imageUrl || null,
+          createdAt: serverTimestamp()
+        });
+        alert("Status berhasil diposting!");
+        window.location.href = "forum.html";
+      } catch (e) {
+        alert("Gagal menyimpan ke database.");
+        console.error(e);
+      }
     };
   </script>
 </body>
