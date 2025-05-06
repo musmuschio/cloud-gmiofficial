@@ -225,10 +225,110 @@
       }
     };
 
-    // Placeholder komentar
-    window.openComments = (postId) => {
-      alert("Komentar untuk post ID: " + postId);
-    };
+// Fungsi untuk menampilkan komentar
+async function loadComments(postId) {
+  const commentsContainer = document.getElementById(`comments-${postId}`);
+  commentsContainer.innerHTML = ""; // Menghapus komentar yang ada
+
+  // Ambil komentar dari Firestore
+  const commentsQuery = query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "desc"));
+  const commentsSnapshot = await getDocs(commentsQuery);
+
+  // Loop melalui komentar dan menampilkannya
+  commentsSnapshot.forEach((doc) => {
+    const commentData = doc.data();
+    const commentEl = createCommentElement(doc.id, commentData.username, commentData.text);
+    commentsContainer.appendChild(commentEl);
+  });
+}
+
+// Fungsi untuk membuat elemen komentar
+function createCommentElement(commentId, username, text) {
+  const commentEl = document.createElement("div");
+  commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3 mb-3";
+
+  const commentHeader = document.createElement("div");
+  commentHeader.className = "flex items-center space-x-3";
+
+  const userIcon = document.createElement("div");
+  userIcon.className = "w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
+  userIcon.textContent = username.charAt(0).toUpperCase();
+
+  const userNameEl = document.createElement("p");
+  userNameEl.className = "font-semibold text-green-700";
+  userNameEl.textContent = username;
+
+  commentHeader.appendChild(userIcon);
+  commentHeader.appendChild(userNameEl);
+
+  const commentText = document.createElement("p");
+  commentText.className = "text-gray-800 mt-2";
+  commentText.textContent = text;
+
+  commentEl.appendChild(commentHeader);
+  commentEl.appendChild(commentText);
+
+  // Add reply button
+  const replyBtn = document.createElement("button");
+  replyBtn.className = "mt-2 text-sm text-green-600 hover:text-green-800";
+  replyBtn.textContent = "Balas";
+  replyBtn.onclick = () => openReplyForm(commentId);
+
+  commentEl.appendChild(replyBtn);
+
+  return commentEl;
+}
+
+// Fungsi untuk membuka form balasan
+function openReplyForm(commentId) {
+  const replyFormContainer = document.getElementById(`reply-form-${commentId}`);
+  replyFormContainer.classList.remove("hidden");
+
+  const submitBtn = replyFormContainer.querySelector("button");
+  submitBtn.onclick = () => submitReply(commentId);
+}
+
+// Fungsi untuk mengirim balasan
+async function submitReply(commentId) {
+  const replyInput = document.getElementById(`reply-input-${commentId}`);
+  const replyText = replyInput.value.trim();
+  const user = auth.currentUser;
+
+  if (!replyText) {
+    alert("Balasan tidak boleh kosong!");
+    return;
+  }
+
+  try {
+    // Simpan balasan di Firestore sebagai sub-koleksi dari komentar
+    await setDoc(doc(db, "posts", postId, "comments", commentId, "replies", new Date().toISOString()), {
+      username: user.displayName || user.email,
+      text: replyText,
+      createdAt: new Date(),
+    });
+
+    // Menutup form balasan dan memuat komentar lagi
+    replyInput.value = "";
+    loadComments(postId);
+  } catch (error) {
+    console.error("Gagal mengirim balasan: ", error);
+  }
+}
+
+// Fungsi untuk menampilkan komentar pada postingan
+async function openComments(postId) {
+  const postEl = document.getElementById(postId);
+  const commentSection = postEl.querySelector(".comments-section");
+
+  // Jika komentar belum dimuat, muat komentar
+  if (!commentSection.hasChildNodes()) {
+    loadComments(postId);
+  }
+
+  // Toggle tampilan komentar
+  commentSection.classList.toggle("hidden");
+}
+
 </script>
 
  </body>
