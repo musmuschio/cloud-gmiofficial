@@ -1,67 +1,110 @@
-<html lang="id" class="scroll-smooth">
+<!DOCTYPE html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Update Status</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Posting Status</title>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col justify-center items-center p-4">
-  <main class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Update Status</h2>
-    <textarea id="statusText" rows="5" placeholder="Apa yang ingin kamu bagikan?" 
-      class="w-full p-4 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"></textarea>
-    <button onclick="postStatus()" 
-      class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-md shadow-md transition flex justify-center items-center gap-2">
-      <i class="fas fa-paper-plane"></i> Posting
-    </button>
-  </main>
+<body>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+<h2>Posting Status</h2>
+<textarea id="description" placeholder="Tulis deskripsi..."></textarea>
+<br>
+<input type="file" id="imageInput">
+<br>
+<button onclick="postStatus()">Posting</button>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD6Xx37x_IOCh67eoq3CdVNwEchvfiCgBA",
-      authDomain: "training-gmiproject.firebaseapp.com",
-      projectId: "training-gmiproject",
-    };
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+    authDomain: "gmi-official21-74326.firebaseapp.com",
+    projectId: "gmi-official21-74326",
+    storageBucket: "gmi-official21-74326.firebasestorage.app",
+    messagingSenderId: "496607636364",
+    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+    measurementId: "G-KJ0X8CY03M"
+  };
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  let currentUser = null;
+
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      currentUser = user;
+    } else {
+      alert("Harap login terlebih dahulu!");
+      window.location.href = "forum.html";
+    }
+  });
+
+  async function postStatus() {
+    const deskripsi = document.getElementById("description").value.trim();
+    const file = document.getElementById("imageInput").files[0];
+
+    if (!deskripsi) {
+      alert("Deskripsi tidak boleh kosong.");
+      return;
+    }
+
+    let imageUrl = null;
+
+    if (file) {
+      const base64 = await fileToBase64(file);
+      const ext = file.name.split('.').pop();
+      const token = Math.random().toString(36).substring(2, 8);
+      const tanggal = new Date().toISOString().replace(/[:.]/g, '-');
+      const namaUser = currentUser.email.split('@')[0];
+      const namaFile = `${namaUser}-${tanggal}-${token}.${ext}`;
+
+      const response = await fetch("https://api.imgur.com/3/image", {
+        method: "POST",
+        headers: {
+          Authorization: "Client-ID 1c6ad60250b3421"
+        },
+        body: new URLSearchParams({
+          image: base64,
+          type: "base64",
+          name: namaFile,
+          title: namaFile
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        imageUrl = result.data.link;
+      } else {
+        alert("Gagal mengupload gambar ke Imgur");
+        return;
       }
+    }
+
+    await addDoc(collection(db, "statuses"), {
+      name: currentUser.email,
+      description: deskripsi,
+      imageUrl: imageUrl,
+      createdAt: serverTimestamp()
     });
 
-    window.postStatus = async function () {
-      const user = auth.currentUser;
-      const text = document.getElementById("statusText").value.trim();
-      if (!text) return alert("Status tidak boleh kosong.");
+    alert("Status berhasil diposting!");
+    document.getElementById("description").value = "";
+    document.getElementById("imageInput").value = "";
+  }
 
-      try {
-        await addDoc(collection(db, "statuses"), {
-          uid: user.uid,
-          name: user.displayName || "Anonim",
-          text: text,
-          timestamp: serverTimestamp()
-        });
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
 
-        window.location.href = "forum.html";
-      } catch (error) {
-        alert("Gagal posting status: " + error.message);
-      }
-    };
-  </script>
 </body>
 </html>
