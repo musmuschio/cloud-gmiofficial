@@ -51,210 +51,184 @@
     </form>
    </div>
   </div>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  <script type="module">
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-    authDomain: "gmi-official21-74326.firebaseapp.com",
-    projectId: "gmi-official21-74326",
-    storageBucket: "gmi-official21-74326.appspot.com",
-    messagingSenderId: "496607636364",
-    appId: "1:496607636364:web:5c0428ccad6952faa544a9"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  const postsDiv = document.getElementById("posts");
-  const loginModal = document.getElementById("loginModal");
-
-  // Fungsi untuk membuat elemen postingan
-  function createPostElement(id, username, description, imageUrl) {
-    const postEl = document.createElement("article");
-    postEl.className = "bg-white rounded-lg shadow-md p-5 space-y-3";
-
-    const userHeader = document.createElement("div");
-    userHeader.className = "flex items-center space-x-3";
-
-    const userIcon = document.createElement("div");
-    userIcon.className = "flex items-center justify-center bg-green-100 text-green-700 rounded-full w-10 h-10 text-lg font-bold select-none";
-    userIcon.textContent = username.charAt(0).toUpperCase();
-
-    const userNameEl = document.createElement("p");
-    userNameEl.className = "font-semibold text-green-800 text-lg truncate";
-    userNameEl.textContent = username;
-
-    userHeader.appendChild(userIcon);
-    userHeader.appendChild(userNameEl);
-
-    const descEl = document.createElement("p");
-    descEl.className = "text-gray-800 whitespace-pre-wrap break-words";
-    descEl.textContent = description;
-
-    postEl.appendChild(userHeader);
-    postEl.appendChild(descEl);
-
-    if (imageUrl) {
-      const imgEl = document.createElement("img");
-      imgEl.src = imageUrl;
-      imgEl.alt = `Gambar postingan oleh ${username}`;
-      imgEl.className = "w-full max-h-96 object-cover rounded-md mt-2";
-      postEl.appendChild(imgEl);
-    }
-
-    const btnContainer = document.createElement("div");
-    btnContainer.className = "flex space-x-3";
-
-    const commentBtn = document.createElement("button");
-    commentBtn.type = "button";
-    commentBtn.className = "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition";
-    commentBtn.setAttribute("aria-label", `Komentar untuk postingan oleh ${username}`);
-    commentBtn.innerHTML = `<i class="fas fa-comments"></i><span>Komentar</span>`;
-    commentBtn.onclick = () => openComments(id);
-
-    btnContainer.appendChild(commentBtn);
-    postEl.appendChild(btnContainer);
-
-    return postEl;
-  }
-
-  // Fungsi untuk membuka modal komentar
-  async function openComments(postId) {
-    const commentsModal = document.createElement("div");
-    commentsModal.className = "fixed inset-0 bg-white flex flex-col p-6 z-50";
-    const commentsContainer = document.createElement("div");
-    commentsContainer.className = "overflow-y-auto space-y-4";
-
-    const closeBtn = document.createElement("button");
-    closeBtn.className = "self-end text-red-600 font-semibold";
-    closeBtn.textContent = "Tutup";
-    closeBtn.onclick = () => commentsModal.remove();
-
-    const newCommentInput = document.createElement("textarea");
-    newCommentInput.className = "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500";
-    newCommentInput.placeholder = "Tulis komentar...";
-
-    const submitCommentBtn = document.createElement("button");
-    submitCommentBtn.className = "bg-green-600 text-white font-semibold rounded-md py-2 mt-2";
-    submitCommentBtn.textContent = "Kirim Komentar";
-    submitCommentBtn.onclick = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        await addDoc(collection(db, "comments"), {
-          postId: postId,
-          uid: user.uid,
-          content: newCommentInput.value,
-          timestamp: new Date()
-        });
-        loadComments(postId);
-        newCommentInput.value = "";  // Clear input
-      } else {
-        alert("Silakan login terlebih dahulu.");
-      }
+    const firebaseConfig = {
+      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+      authDomain: "gmi-official21-74326.firebaseapp.com",
+      projectId: "gmi-official21-74326",
+      storageBucket: "gmi-official21-74326.appspot.com",
+      messagingSenderId: "496607636364",
+      appId: "1:496607636364:web:5c0428ccad6952faa544a9"
     };
 
-    commentsModal.appendChild(closeBtn);
-    commentsModal.appendChild(newCommentInput);
-    commentsModal.appendChild(submitCommentBtn);
-    commentsModal.appendChild(commentsContainer);
-    document.body.appendChild(commentsModal);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    await loadComments(postId);
-  }
+    const postsDiv = document.getElementById("posts");
+    const loginModal = document.getElementById("loginModal");
 
-  // Fungsi untuk memuat komentar
-  async function loadComments(postId) {
-    const commentsContainer = document.querySelector("div[aria-live='commentsContainer']");
-    commentsContainer.innerHTML = ""; // Clear previous comments
+    // Clear posts container
+    function clearPosts() {
+      postsDiv.innerHTML = "";
+    }
 
-    const q = query(collection(db, "comments"), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
+    // Create post element
+    function createPostElement(id, username, description, imageUrl) {
+      const postEl = document.createElement("article");
+      postEl.className = "bg-white rounded-lg shadow-md p-5 space-y-3";
 
-    for (const docSnap of querySnapshot.docs) {
-      const data = docSnap.data();
-      if (data.postId === postId) {
+      // Username and icon
+      const userHeader = document.createElement("div");
+      userHeader.className = "flex items-center space-x-3";
+
+      const userIcon = document.createElement("div");
+      userIcon.className = "flex items-center justify-center bg-green-100 text-green-700 rounded-full w-10 h-10 text-lg font-bold select-none";
+      userIcon.textContent = username.charAt(0).toUpperCase();
+
+      const userNameEl = document.createElement("p");
+      userNameEl.className = "font-semibold text-green-800 text-lg truncate";
+      userNameEl.textContent = username;
+
+      userHeader.appendChild(userIcon);
+      userHeader.appendChild(userNameEl);
+
+      // Description
+      const descEl = document.createElement("p");
+      descEl.className = "text-gray-800 whitespace-pre-wrap break-words";
+      descEl.textContent = description;
+
+      postEl.appendChild(userHeader);
+      postEl.appendChild(descEl);
+
+      // Image if exists
+      if (imageUrl) {
+        const imgEl = document.createElement("img");
+        imgEl.src = imageUrl;
+        imgEl.alt = Gambar postingan oleh ${username} yang menggambarkan konten postingan;
+        imgEl.className = "w-full max-h-96 object-cover rounded-md mt-2";
+        postEl.appendChild(imgEl);
+      }
+
+      // Buttons container
+      const btnContainer = document.createElement("div");
+      btnContainer.className = "flex space-x-3";
+
+      // Komentar button
+      const commentBtn = document.createElement("button");
+      commentBtn.type = "button";
+      commentBtn.className = "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition";
+      commentBtn.setAttribute("aria-label", Komentar untuk postingan oleh ${username});
+      commentBtn.innerHTML = <i class="fas fa-comments"></i><span>Komentar</span>;
+      commentBtn.onclick = () => openComments(id);
+
+      // Laporkan button wrapped in anchor
+      const reportLink = document.createElement("a");
+      reportLink.href = https://wa.me/?text=Laporkan konten ini: ${window.location.href};
+      reportLink.target = "_blank";
+      reportLink.rel = "noopener noreferrer";
+      reportLink.className = "flex-1";
+
+      const reportBtn = document.createElement("button");
+      reportBtn.type = "button";
+      reportBtn.className = "w-full flex items-center justify-center space-x-2 bg-red-600 text-white font-semibold rounded-md py-2 hover:bg-red-700 transition";
+      reportBtn.setAttribute("aria-label", Laporkan postingan oleh ${username});
+      reportBtn.innerHTML = <i class="fas fa-flag"></i><span>Laporkan!</span>;
+
+      reportLink.appendChild(reportBtn);
+
+      btnContainer.appendChild(commentBtn);
+      btnContainer.appendChild(reportLink);
+
+      postEl.appendChild(btnContainer);
+
+      return postEl;
+    }
+
+    // Load posts
+    async function loadPosts() {
+      clearPosts();
+      const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+
+        // Ambil username dari koleksi users
         const userRef = doc(db, "users", data.uid);
         const userSnap = await getDoc(userRef);
         const username = userSnap.exists() ? userSnap.data().username : "Anonim";
 
-        const commentEl = document.createElement("div");
-        commentEl.className = "bg-gray-100 p-3 rounded-md space-y-2";
-
-        const userNameEl = document.createElement("p");
-        userNameEl.className = "font-semibold text-green-800";
-        userNameEl.textContent = username;
-
-        const contentEl = document.createElement("p");
-        contentEl.className = "text-gray-800";
-        contentEl.textContent = data.content;
-
-        commentEl.appendChild(userNameEl);
-        commentEl.appendChild(contentEl);
-
-        commentsContainer.appendChild(commentEl);
+        const postEl = createPostElement(docSnap.id, username, data.description, data.imageUrl || null);
+        postsDiv.appendChild(postEl);
       }
     }
-  }
 
-  // Cek login
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      loginModal.classList.remove("hidden");
-      loginModal.classList.add("flex");
-    } else {
-      loginModal.classList.add("hidden");
-      loginModal.classList.remove("flex");
-      await loadPosts();
-    }
-  });
+    // Cek login
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        loginModal.classList.remove("hidden");
+        loginModal.classList.add("flex");
+      } else {
+        loginModal.classList.add("hidden");
+        loginModal.classList.remove("flex");
+        await loadPosts();
+      }
+    });
 
-  // Login
-  window.login = async () => {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      loginModal.classList.add("hidden");
-      loginModal.classList.remove("flex");
-      location.reload();
-    } catch (e) {
-      alert("Login gagal: " + e.message);
-    }
-  };
+    // Login
+    window.login = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        loginModal.classList.add("hidden");
+        loginModal.classList.remove("flex");
+        location.reload();
+      } catch (e) {
+        alert("Login gagal: " + e.message);
+      }
+    };
 
-  // Register
-  window.register = async () => {
-    const username = document.getElementById("username").value.trim();
-    const alamat = document.getElementById("alamat").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
+    // Register
+    window.register = async () => {
+      const username = document.getElementById("username").value.trim();
+      const alamat = document.getElementById("alamat").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
 
-    if (!username || !alamat || !email || !password) {
-      alert("Lengkapi semua data!");
-      return;
-    }
+      if (!username || !alamat || !email || !password) {
+        alert("Lengkapi semua data!");
+        return;
+      }
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-      await setDoc(doc(db, "users", user.uid), {
-        username,
-        email,
-        alamat
-      });
+        // Simpan data tambahan ke Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          username,
+          email,
+          alamat
+        });
 
-      loginModal.classList.add("hidden");
-      loginModal.classList.remove("flex");
-      location.reload();
-    } catch (e) {
-      alert("Registrasi gagal: " + e.message);
-    }
-  };
+        loginModal.classList.add("hidden");
+        loginModal.classList.remove("flex");
+        location.reload();
+      } catch (e) {
+        alert("Registrasi gagal: " + e.message);
+      }
+    };
+
+    // Placeholder komentar
+    window.openComments = (postId) => {
+      alert("Komentar untuk post ID: " + postId);
+    };
 </script>
 
  </body>
