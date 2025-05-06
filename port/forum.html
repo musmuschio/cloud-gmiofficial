@@ -5,8 +5,7 @@
   <title>
    FORUM
   </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter&amp;display=swap" rel="stylesheet"/>
   <style>
@@ -29,6 +28,24 @@
   </header>
   <main class="flex-grow max-w-3xl mx-auto w-full px-4 py-6 space-y-6" id="posts">
   </main>
+
+  <!-- Modal Komentar -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="commentModal" aria-modal="true" role="dialog" aria-labelledby="commentModalTitle" aria-describedby="commentModalDesc">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <header class="flex justify-between items-center border-b border-gray-200 px-5 py-3">
+        <h2 class="text-xl font-semibold text-green-700" id="commentModalTitle">Komentar</h2>
+        <button aria-label="Tutup modal komentar" id="closeCommentModal" class="text-gray-500 hover:text-gray-700 transition text-2xl font-bold">&times;</button>
+      </header>
+      <div id="commentModalContent" class="flex-grow overflow-y-auto px-5 py-3 space-y-4">
+        <!-- Comments and replies will be dynamically inserted here -->
+      </div>
+      <form id="commentReplyForm" class="border-t border-gray-200 px-5 py-3 flex space-x-3">
+        <input type="text" id="commentReplyInput" placeholder="Tulis balasan..." aria-label="Input balasan komentar" class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"/>
+        <button type="submit" id="commentReplySendBtn" class="bg-green-600 text-white font-semibold rounded-md px-4 py-2 hover:bg-green-700 transition">Kirim</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal Login/Daftar -->
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="loginModal">
    <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-6" id="loginModalContent">
@@ -51,9 +68,10 @@
     </form>
    </div>
   </div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, updateDoc, arrayUnion, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -71,15 +89,23 @@
 
   const postsDiv = document.getElementById("posts");
   const loginModal = document.getElementById("loginModal");
+  const commentModal = document.getElementById("commentModal");
+  const commentModalContent = document.getElementById("commentModalContent");
+  const commentReplyForm = document.getElementById("commentReplyForm");
+  const commentReplyInput = document.getElementById("commentReplyInput");
+  const closeCommentModalBtn = document.getElementById("closeCommentModal");
+
+  let currentPostId = null;
+  let currentReplyToCommentId = null;
 
   function clearPosts() {
     postsDiv.innerHTML = "";
   }
 
-  // Fungsi untuk membuat elemen komentar
-  function createCommentElement(commentId, username, text) {
+  // Fungsi untuk membuat elemen komentar dan balasan secara rekursif
+  function createCommentElement(commentId, username, text, replies = []) {
     const commentEl = document.createElement("div");
-    commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3 mb-3";
+    commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3";
 
     const commentHeader = document.createElement("div");
     commentHeader.className = "flex items-center space-x-3";
@@ -96,7 +122,7 @@
     commentHeader.appendChild(userNameEl);
 
     const commentText = document.createElement("p");
-    commentText.className = "text-gray-800 mt-2";
+    commentText.className = "text-gray-800 mt-2 whitespace-pre-wrap break-words";
     commentText.textContent = text;
 
     commentEl.appendChild(commentHeader);
@@ -104,76 +130,151 @@
 
     // Button reply
     const replyBtn = document.createElement("button");
-    replyBtn.className = "mt-2 text-sm text-green-600 hover:text-green-800";
+    replyBtn.className = "mt-2 text-sm text-green-600 hover:text-green-800 font-semibold";
     replyBtn.textContent = "Balas";
-    replyBtn.onclick = () => openReplyForm(commentId);
+    replyBtn.onclick = () => {
+      currentReplyToCommentId = commentId;
+      commentReplyInput.focus();
+    };
 
     commentEl.appendChild(replyBtn);
+
+    // Container for replies
+    if (replies.length > 0) {
+      const repliesContainer = document.createElement("div");
+      repliesContainer.className = "mt-3 ml-8 space-y-3 border-l-2 border-green-200 pl-4";
+
+      replies.forEach(reply => {
+        const replyEl = createCommentElement(reply.id, reply.username, reply.text, reply.replies || []);
+        repliesContainer.appendChild(replyEl);
+      });
+
+      commentEl.appendChild(repliesContainer);
+    }
 
     return commentEl;
   }
 
-  // Fungsi untuk memuat komentar
+  // Fungsi untuk memuat komentar dan balasan secara nested
   async function loadComments(postId) {
-    const commentsContainer = document.getElementById(`comments-${postId}`);
-    commentsContainer.innerHTML = "";
+    commentModalContent.innerHTML = "";
+    currentPostId = postId;
+    currentReplyToCommentId = null;
 
-    const commentsQuery = query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "desc"));
+    // Ambil komentar utama
+    const commentsQuery = query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc"));
     const commentsSnapshot = await getDocs(commentsQuery);
 
-    commentsSnapshot.forEach((doc) => {
-      const commentData = doc.data();
-      const commentEl = createCommentElement(doc.id, commentData.username, commentData.text);
-      commentsContainer.appendChild(commentEl);
+    // Ambil semua komentar dan balasan secara nested
+    // Karena Firestore tidak mendukung join, kita ambil balasan per komentar secara terpisah
+    const commentsData = [];
+
+    for (const commentDoc of commentsSnapshot.docs) {
+      const commentData = commentDoc.data();
+      const commentId = commentDoc.id;
+
+      // Ambil balasan untuk komentar ini
+      const repliesQuery = query(collection(db, "posts", postId, "comments", commentId, "replies"), orderBy("createdAt", "asc"));
+      const repliesSnapshot = await getDocs(repliesQuery);
+
+      const repliesData = [];
+      for (const replyDoc of repliesSnapshot.docs) {
+        const replyData = replyDoc.data();
+        repliesData.push({
+          id: replyDoc.id,
+          username: replyData.username,
+          text: replyData.text,
+          replies: [] // No nested replies for replies (1 level nesting)
+        });
+      }
+
+      commentsData.push({
+        id: commentId,
+        username: commentData.username,
+        text: commentData.text,
+        replies: repliesData
+      });
+    }
+
+    if (commentsData.length === 0) {
+      const noCommentsEl = document.createElement("p");
+      noCommentsEl.className = "text-gray-500 text-center py-10";
+      noCommentsEl.textContent = "Belum ada komentar.";
+      commentModalContent.appendChild(noCommentsEl);
+      return;
+    }
+
+    commentsData.forEach(comment => {
+      const commentEl = createCommentElement(comment.id, comment.username, comment.text, comment.replies);
+      commentModalContent.appendChild(commentEl);
     });
   }
 
-  // Fungsi untuk menambahkan balasan komentar
-  async function submitReply(postId, commentId) {
-    const replyInput = document.getElementById(`reply-input-${commentId}`);
-    const replyText = replyInput.value.trim();
+  // Fungsi untuk mengirim balasan komentar
+  async function submitReply(event) {
+    event.preventDefault();
+    const replyText = commentReplyInput.value.trim();
     const user = auth.currentUser;
+
+    if (!user) {
+      alert("Anda harus login untuk mengirim balasan.");
+      return;
+    }
 
     if (!replyText) {
       alert("Balasan tidak boleh kosong!");
       return;
     }
 
-    try {
-      await setDoc(doc(db, "posts", postId, "comments", commentId, "replies", new Date().toISOString()), {
-        username: user.displayName || user.email,
-        text: replyText,
-        createdAt: new Date(),
-      });
+    if (!currentPostId) {
+      alert("Tidak ada postingan yang dipilih.");
+      return;
+    }
 
-      replyInput.value = "";
-      loadComments(postId); // Memuat komentar dan balasan setelah submit
+    try {
+      if (currentReplyToCommentId) {
+        // Kirim balasan ke komentar tertentu
+        await addDoc(collection(db, "posts", currentPostId, "comments", currentReplyToCommentId, "replies"), {
+          username: user.displayName || user.email || "Anonim",
+          text: replyText,
+          createdAt: serverTimestamp()
+        });
+      } else {
+        // Jika tidak ada komentar yang dipilih untuk reply, kirim komentar baru (optional)
+        await addDoc(collection(db, "posts", currentPostId, "comments"), {
+          username: user.displayName || user.email || "Anonim",
+          text: replyText,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      commentReplyInput.value = "";
+      currentReplyToCommentId = null;
+      await loadComments(currentPostId);
+      commentReplyInput.focus();
     } catch (error) {
       console.error("Gagal mengirim balasan: ", error);
+      alert("Gagal mengirim balasan, coba lagi.");
     }
   }
 
-  // Fungsi untuk membuka form balasan
-  function openReplyForm(commentId) {
-    const replyFormContainer = document.getElementById(`reply-form-${commentId}`);
-    replyFormContainer.classList.remove("hidden");
-
-    const submitBtn = replyFormContainer.querySelector("button");
-    submitBtn.onclick = () => submitReply(commentId);
-  }
-
-  // Fungsi untuk menampilkan komentar pada postingan
+  // Fungsi untuk membuka modal komentar
   async function openComments(postId) {
-    const postEl = document.getElementById(postId);
-    const commentSection = postEl.querySelector(".comments-section");
+    await loadComments(postId);
+    commentModal.classList.remove("hidden");
+    commentModal.classList.add("flex");
+    commentReplyInput.value = "";
+    currentReplyToCommentId = null;
+    commentReplyInput.focus();
+  }
 
-    // Jika komentar belum dimuat, muat komentar
-    if (!commentSection.hasChildNodes()) {
-      loadComments(postId);
-    }
-
-    // Toggle tampilan komentar
-    commentSection.classList.toggle("hidden");
+  // Fungsi untuk menutup modal komentar
+  function closeComments() {
+    commentModal.classList.add("hidden");
+    commentModal.classList.remove("flex");
+    currentPostId = null;
+    currentReplyToCommentId = null;
+    commentModalContent.innerHTML = "";
   }
 
   // Fungsi untuk membuat elemen postingan
@@ -215,31 +316,25 @@
 
     const commentBtn = document.createElement("button");
     commentBtn.type = "button";
-    commentBtn.className = "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition";
-    commentBtn.innerHTML = `<i class="fas fa-comments"></i><span>Komentar</span>`;
+    commentBtn.className = "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition text-lg px-4 py-2 border border-green-600 rounded-md hover:bg-green-50";
+    commentBtn.innerHTML = `<i class="fas fa-comments text-xl"></i><span>Komentar</span>`;
     commentBtn.onclick = () => openComments(id);
 
     const reportLink = document.createElement("a");
     reportLink.href = `https://wa.me/?text=Laporkan konten ini: ${window.location.href}`;
     reportLink.target = "_blank";
-    reportLink.className = "flex-1";
+    reportLink.className = "flex";
 
     const reportBtn = document.createElement("button");
     reportBtn.type = "button";
-    reportBtn.className = "w-full flex items-center justify-center space-x-2 bg-red-600 text-white font-semibold rounded-md py-2 hover:bg-red-700 transition";
-    reportBtn.innerHTML = `<i class="fas fa-flag"></i><span>Laporkan!</span>`;
+    reportBtn.className = "flex items-center justify-center space-x-1 bg-red-600 text-white font-semibold rounded-md px-2 py-1 text-xs hover:bg-red-700 transition";
+    reportBtn.innerHTML = `<i class="fas fa-flag text-sm"></i><span>Laporkan!</span>`;
 
     reportLink.appendChild(reportBtn);
     btnContainer.appendChild(commentBtn);
     btnContainer.appendChild(reportLink);
 
     postEl.appendChild(btnContainer);
-
-    // Add comments container
-    const commentsContainer = document.createElement("div");
-    commentsContainer.id = `comments-${id}`;
-    commentsContainer.className = "comments-section hidden space-y-3";
-    postEl.appendChild(commentsContainer);
 
     return postEl;
   }
@@ -250,14 +345,14 @@
     const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
 
-    querySnapshot.forEach(async (docSnap) => {
+    for (const docSnap of querySnapshot.docs) {
       const data = docSnap.data();
       const userRef = doc(db, "users", data.uid);
       const userSnap = await getDoc(userRef);
       const username = userSnap.exists() ? userSnap.data().username : "Anonim";
       const postEl = createPostElement(docSnap.id, username, data.description, data.imageUrl || null);
       postsDiv.appendChild(postEl);
-    });
+    }
   }
 
   // Auth state listener
@@ -271,8 +366,28 @@
       await loadPosts();
     }
   });
+
+  // Event listeners
+  commentReplyForm.addEventListener("submit", submitReply);
+  closeCommentModalBtn.addEventListener("click", closeComments);
+
+  // Close modal on outside click
+  commentModal.addEventListener("click", (e) => {
+    if (e.target === commentModal) {
+      closeComments();
+    }
+  });
+
+  // Close modal on Escape key
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !commentModal.classList.contains("hidden")) {
+      closeComments();
+    }
+  });
+
+  // Dummy login and register functions to avoid errors (implement as needed)
+  window.login = () => alert("Fungsi login belum diimplementasikan.");
+  window.register = () => alert("Fungsi daftar belum diimplementasikan.");
 </script>
-
-
  </body>
 </html>
