@@ -71,7 +71,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, updateDoc, arrayUnion, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, updateDoc, arrayUnion, addDoc, serverTimestamp, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -277,8 +277,8 @@
     commentModalContent.innerHTML = "";
   }
 
-  // Fungsi untuk membuat elemen postingan
-  function createPostElement(id, username, description, imageUrl) {
+  // Fungsi untuk membuat elemen postingan dengan fitur like
+  function createPostElement(id, username, description, imageUrl, likes = []) {
     const postEl = document.createElement("article");
     postEl.className = "bg-white rounded-lg shadow-md p-5 space-y-3";
 
@@ -312,7 +312,63 @@
     }
 
     const btnContainer = document.createElement("div");
-    btnContainer.className = "flex space-x-3";
+    btnContainer.className = "flex space-x-3 items-center";
+
+    // Like button container
+    const likeBtn = document.createElement("button");
+    likeBtn.type = "button";
+    likeBtn.className = "flex items-center space-x-2 font-semibold transition rounded-md px-4 py-2 border select-none";
+
+    // Determine if current user liked this post
+    const user = auth.currentUser;
+    const userId = user ? user.uid : null;
+    const userLiked = userId ? likes.includes(userId) : false;
+
+    likeBtn.classList.add(userLiked ? "bg-green-600 text-white border-green-600 hover:bg-green-700" : "text-green-600 border-green-600 hover:bg-green-50");
+
+    likeBtn.innerHTML = `<i class="fas fa-thumbs-up ${userLiked ? "text-white" : "text-green-600"}"></i><span id="likeCount-${id}">${likes.length}</span>`;
+
+    likeBtn.onclick = async () => {
+      if (!auth.currentUser) {
+        alert("Anda harus login untuk menyukai postingan.");
+        return;
+      }
+      try {
+        const postRef = doc(db, "statuses", id);
+        const currentUserId = auth.currentUser.uid;
+        const currentLikesSnapshot = await getDoc(postRef);
+        if (!currentLikesSnapshot.exists()) return;
+
+        const currentLikes = currentLikesSnapshot.data().likes || [];
+
+        if (currentLikes.includes(currentUserId)) {
+          // Unlike
+          await updateDoc(postRef, {
+            likes: arrayRemove(currentUserId)
+          });
+          likeBtn.classList.remove("bg-green-600", "text-white", "border-green-600", "hover:bg-green-700");
+          likeBtn.classList.add("text-green-600", "border-green-600", "hover:bg-green-50");
+          likeBtn.querySelector("i").classList.remove("text-white");
+          likeBtn.querySelector("i").classList.add("text-green-600");
+          const newCount = currentLikes.length - 1;
+          likeBtn.querySelector(`#likeCount-${id}`).textContent = newCount >= 0 ? newCount : 0;
+        } else {
+          // Like
+          await updateDoc(postRef, {
+            likes: arrayUnion(currentUserId)
+          });
+          likeBtn.classList.remove("text-green-600", "border-green-600", "hover:bg-green-50");
+          likeBtn.classList.add("bg-green-600", "text-white", "border-green-600", "hover:bg-green-700");
+          likeBtn.querySelector("i").classList.remove("text-green-600");
+          likeBtn.querySelector("i").classList.add("text-white");
+          const newCount = currentLikes.length + 1;
+          likeBtn.querySelector(`#likeCount-${id}`).textContent = newCount;
+        }
+      } catch (error) {
+        console.error("Gagal memperbarui like: ", error);
+        alert("Gagal memperbarui like, coba lagi.");
+      }
+    };
 
     const commentBtn = document.createElement("button");
     commentBtn.type = "button";
@@ -331,6 +387,7 @@
     reportBtn.innerHTML = `<i class="fas fa-flag text-sm"></i><span>Laporkan!</span>`;
 
     reportLink.appendChild(reportBtn);
+    btnContainer.appendChild(likeBtn);
     btnContainer.appendChild(commentBtn);
     btnContainer.appendChild(reportLink);
 
@@ -350,7 +407,8 @@
       const userRef = doc(db, "users", data.uid);
       const userSnap = await getDoc(userRef);
       const username = userSnap.exists() ? userSnap.data().username : "Anonim";
-      const postEl = createPostElement(docSnap.id, username, data.description, data.imageUrl || null);
+      const likes = data.likes || [];
+      const postEl = createPostElement(docSnap.id, username, data.description, data.imageUrl || null, likes);
       postsDiv.appendChild(postEl);
     }
   }
