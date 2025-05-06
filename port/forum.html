@@ -1,138 +1,217 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Forum</title>
+<html class="scroll-smooth" lang="id">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Forum
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .status-box { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; border-radius: 5px; }
-    .status-image { max-width: 100%; height: auto; margin-top: 10px; }
-    .actions button { margin-right: 10px; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-    .modal-content { background: white; padding: 20px; border-radius: 5px; width: 90%; max-width: 400px; }
+   body {
+      font-family: 'Inter', sans-serif;
+    }
   </style>
-</head>
-<body>
-
-<header>
-  <div>
-    <img src="logo.png" alt="logo" style="height: 40px; vertical-align: middle;">
-    <span style="font-size: 24px; font-weight: bold;">FORUM</span>
+ </head>
+ <body class="bg-gray-50 min-h-screen flex flex-col">
+  <header class="flex items-center justify-between px-4 py-3 bg-white shadow-md sticky top-0 z-30">
+   <div class="flex items-center space-x-3">
+    <img alt="Logo forum with stylized letter F in blue and white background" class="h-10 w-10 object-contain" height="40" loading="lazy" src="https://storage.googleapis.com/a1aa/image/4b9edf72-0ecc-47f1-a51f-3256738ee7ed.jpg" width="40"/>
+    <span class="text-2xl font-extrabold text-gray-900 select-none">
+     FORUM
+    </span>
+   </div>
+   <button aria-label="Posting" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" onclick="window.location.href='update.html'">
+    Posting
+   </button>
+  </header>
+  <main class="flex-grow max-w-3xl mx-auto w-full px-4 py-6">
+   <div class="space-y-6" id="statusList">
+   </div>
+  </main>
+  <!-- Modal Login/Register -->
+  <div aria-labelledby="loginModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden" id="loginModal" role="dialog">
+   <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6" tabindex="-1">
+    <h3 class="text-xl font-semibold text-gray-900 mb-6 text-center" id="loginModalTitle">
+     Login / Daftar
+    </h3>
+    <form class="space-y-4" id="authForm" onsubmit="event.preventDefault(); login();">
+     <input aria-label="Email" autocomplete="username" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="email" placeholder="Email" required="" type="email"/>
+     <input aria-label="Password" autocomplete="current-password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="password" placeholder="Password" required="" type="password"/>
+     <div class="flex justify-between space-x-4">
+      <button aria-label="Login" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition focus:outline-none focus:ring-2 focus:ring-blue-500" type="submit">
+       Login
+      </button>
+      <button aria-label="Daftar" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-md transition focus:outline-none focus:ring-2 focus:ring-green-500" onclick="register()" type="button">
+       Daftar
+      </button>
+     </div>
+    </form>
+   </div>
   </div>
-  <button onclick="window.location.href='update.html'">Posting</button>
-</header>
+  <script type="module">
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      getDocs,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-<div id="statusList"></div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+      authDomain: "gmi-official21-74326.firebaseapp.com",
+      projectId: "gmi-official21-74326",
+      storageBucket: "gmi-official21-74326.firebasestorage.app",
+      messagingSenderId: "496607636364",
+      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+      measurementId: "G-KJ0X8CY03M",
+    };
 
-<!-- Modal Login/Register -->
-<div id="loginModal" class="modal">
-  <div class="modal-content">
-    <h3>Login / Daftar</h3>
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Daftar</button>
-  </div>
-</div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    const loginModal = document.getElementById("loginModal");
+    let currentUser = null;
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-    authDomain: "gmi-official21-74326.firebaseapp.com",
-    projectId: "gmi-official21-74326",
-    storageBucket: "gmi-official21-74326.firebasestorage.app",
-    messagingSenderId: "496607636364",
-    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-    measurementId: "G-KJ0X8CY03M"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  const loginModal = document.getElementById("loginModal");
-  let currentUser = null;
-
-  onAuthStateChanged(auth, async user => {
-    if (user) {
-      currentUser = user;
-      loginModal.style.display = "none";
-      loadStatuses();
-    } else {
-      loginModal.style.display = "flex";
-    }
-  });
-
-  async function login() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (e) {
-      alert("Login gagal: " + e.message);
-    }
-  }
-
-  async function register() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (e) {
-      alert("Registrasi gagal: " + e.message);
-    }
-  }
-
-  async function loadStatuses() {
-    const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
-    const statusList = document.getElementById("statusList");
-    statusList.innerHTML = "";
-
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
-      const box = document.createElement("div");
-      box.className = "status-box";
-
-      const desc = document.createElement("p");
-      desc.textContent = data.description;
-
-      box.appendChild(desc);
-
-      if (data.imageUrl) {
-        const img = document.createElement("img");
-        img.src = data.imageUrl;
-        img.className = "status-image";
-        box.appendChild(img);
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        loginModal.classList.add("hidden");
+        await loadStatuses();
+      } else {
+        loginModal.classList.remove("hidden");
       }
-
-      const actions = document.createElement("div");
-      actions.className = "actions";
-
-      const commentBtn = document.createElement("button");
-      commentBtn.textContent = "Komentar";
-      commentBtn.onclick = () => alert("Fitur komentar akan ditambahkan.");
-
-      const reportBtn = document.createElement("button");
-      reportBtn.textContent = "Laporkan!";
-      reportBtn.onclick = () => {
-        const waText = encodeURIComponent(`Saya ingin melaporkan status:\n\n"${data.description}"\n\noleh: ${data.name}`);
-        window.open(`https://wa.me/6281234567890?text=${waText}`, '_blank');
-      };
-
-      actions.appendChild(commentBtn);
-      actions.appendChild(reportBtn);
-      box.appendChild(actions);
-
-      statusList.appendChild(box);
     });
-  }
-</script>
 
-</body>
+    async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        alert("Login gagal: " + e.message);
+      }
+    }
+
+    async function register() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        alert("Registrasi gagal: " + e.message);
+      }
+    }
+
+    async function loadStatuses() {
+      const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      const statusList = document.getElementById("statusList");
+      statusList.innerHTML = "";
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+
+        // Container
+        const box = document.createElement("article");
+        box.className =
+          "bg-white rounded-lg shadow-md p-5 flex flex-col space-y-4";
+
+        // Header with name and date if available
+        const header = document.createElement("header");
+        header.className = "flex items-center justify-between";
+
+        const nameEl = document.createElement("h2");
+        nameEl.className = "font-semibold text-lg text-gray-900 truncate";
+        nameEl.textContent = data.name || "Pengguna";
+
+        const dateEl = document.createElement("time");
+        dateEl.className = "text-sm text-gray-500";
+        if (data.createdAt && data.createdAt.toDate) {
+          const dateObj = data.createdAt.toDate();
+          dateEl.dateTime = dateObj.toISOString();
+          dateEl.textContent = dateObj.toLocaleString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        } else {
+          dateEl.textContent = "";
+        }
+
+        header.appendChild(nameEl);
+        header.appendChild(dateEl);
+        box.appendChild(header);
+
+        // Description
+        const desc = document.createElement("p");
+        desc.className = "text-gray-800 whitespace-pre-line break-words";
+        desc.textContent = data.description || "";
+        box.appendChild(desc);
+
+        // Image if exists
+        if (data.imageUrl) {
+          const img = document.createElement("img");
+          img.src = data.imageUrl;
+          img.alt =
+            "Gambar status yang diunggah oleh pengguna dengan deskripsi: " +
+            (data.description || "tidak ada deskripsi");
+          img.className =
+            "w-full max-h-96 object-contain rounded-md border border-gray-200";
+          img.loading = "lazy";
+          box.appendChild(img);
+        }
+
+        // Actions
+        const actions = document.createElement("div");
+        actions.className = "flex space-x-3";
+
+        const commentBtn = document.createElement("button");
+        commentBtn.type = "button";
+        commentBtn.className =
+          "flex items-center space-x-2 px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition focus:outline-none focus:ring-2 focus:ring-blue-500";
+        commentBtn.innerHTML = '<i class="fas fa-comment-alt"></i><span>Komentar</span>';
+        commentBtn.onclick = () => alert("Fitur komentar akan ditambahkan.");
+
+        const reportBtn = document.createElement("button");
+        reportBtn.type = "button";
+        reportBtn.className =
+          "flex items-center space-x-2 px-3 py-1.5 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition focus:outline-none focus:ring-2 focus:ring-red-500";
+        reportBtn.innerHTML = '<i class="fas fa-flag"></i><span>Laporkan!</span>';
+        reportBtn.onclick = () => {
+          const waText = encodeURIComponent(
+            `Saya ingin melaporkan status:\n\n"${data.description}"\n\noleh: ${data.name || "Pengguna"}`
+          );
+          window.open(`https://wa.me/6281234567890?text=${waText}`, "_blank");
+        };
+
+        actions.appendChild(commentBtn);
+        actions.appendChild(reportBtn);
+        box.appendChild(actions);
+
+        statusList.appendChild(box);
+      });
+
+      if (statusList.children.length === 0) {
+        const emptyMsg = document.createElement("p");
+        emptyMsg.className = "text-center text-gray-500 mt-10";
+        emptyMsg.textContent = "Belum ada status yang diposting.";
+        statusList.appendChild(emptyMsg);
+      }
+    }
+  </script>
+ </body>
 </html>
