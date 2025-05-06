@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Gambar ke Imgur</title>
+</head>
+<body>
+  <h2>Upload Gambar ke Imgur</h2>
+  <input type="file" id="uploadInput"><br><br>
+  <button onclick="uploadToImgur()">Upload</button>
+
+  <div id="preview"></div>
+
+  <script>
+    async function uploadToImgur() {
+      const fileInput = document.getElementById('uploadInput');
+      const file = fileInput.files[0];
+      if (!file) return alert("Pilih gambar dulu!");
+
+      const reader = new FileReader();
+      reader.onload = async function () {
+        const base64Image = reader.result.split(',')[1]; // Hapus header base64
+
+        const response = await fetch("https://api.imgur.com/3/image", {
+          method: "POST",
+          headers: {
+            Authorization: "Client-ID 1c6ad60250b3421"
+          },
+          body: new URLSearchParams({
+            image: base64Image,
+            type: "base64"
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          const imageUrl = data.data.link;
+          document.getElementById("preview").innerHTML = `
+            <p>Upload sukses! Gambar:</p>
+            <a href="${imageUrl}" target="_blank">${imageUrl}</a><br>
+            <img src="${imageUrl}" width="300">
+          `;
+
+          // 👉 Kirim URL ke Firestore atau tempat lain sesuai kebutuhanmu di sini
+          console.log("URL Gambar:", imageUrl);
+        } else {
+          alert("Upload gagal: " + data.data.error);
+          console.error(data);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
