@@ -5,47 +5,63 @@
   <title>
    FORUM
   </title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter&amp;display=swap" rel="stylesheet"/>
   <style>
    body {
-      font-family: 'Inter', sans-serif;
+      font-family: "Inter", sans-serif;
     }
   </style>
  </head>
  <body class="bg-gray-100 min-h-screen flex flex-col">
-  <header class="bg-green-600 text-white flex items-center justify-between px-5 py-3 shadow-md sticky top-0 z-30">
+  <!-- Navbar mirip Facebook tanpa tombol beranda, tambah teman, garis 3, dan lingkaran akun -->
+  <header class="bg-white border-b border-gray-300 sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 py-2 shadow-sm">
    <div class="flex items-center space-x-3">
-    <img alt="Logo FORUM berupa lingkaran hijau dengan tulisan FORUM di tengah" class="h-10 w-10 object-contain rounded-full" height="40" src="https://storage.googleapis.com/a1aa/image/c8d86706-e7b9-461e-8b0f-ad684bfca71b.jpg" width="40"/>
-    <h1 class="font-extrabold text-xl sm:text-2xl select-none">
+    <img alt="Logo FORUM berupa lingkaran hijau dengan tulisan FORUM di tengah" class="h-10 w-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/fa0ae365-c3e6-492a-8bc7-b921a19731c4.jpg" width="40"/>
+    <h1 class="font-extrabold text-2xl text-green-700 select-none tracking-wide">
      FORUM
     </h1>
    </div>
-   <button aria-label="Posting" class="bg-white text-green-600 font-semibold px-4 py-2 rounded-md shadow hover:bg-green-50 transition" onclick="window.location.href='update.html'">
-    Posting
-   </button>
+   <!-- Search bar mirip FB -->
+   <div class="hidden sm:flex flex-grow max-w-xl mx-4">
+    <div class="flex items-center bg-gray-100 rounded-full px-3 py-2 w-full focus-within:ring-2 focus-within:ring-green-600">
+     <i class="fas fa-search text-gray-500 mr-2">
+     </i>
+     <input aria-label="Cari di FORUM" class="bg-transparent outline-none w-full text-gray-700 placeholder-gray-500" placeholder="Cari di FORUM" type="search"/>
+    </div>
+   </div>
+   <!-- Hanya tombol Posting di kanan -->
+   <nav class="flex items-center space-x-3">
+    <button aria-label="Posting" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-md shadow hover:bg-green-700 transition" onclick="window.location.href='update.html'">
+     Posting
+    </button>
+   </nav>
   </header>
   <main class="flex-grow max-w-3xl mx-auto w-full px-4 py-6 space-y-6" id="posts">
   </main>
-
   <!-- Modal Komentar -->
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="commentModal" aria-modal="true" role="dialog" aria-labelledby="commentModalTitle" aria-describedby="commentModalDesc">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
-      <header class="flex justify-between items-center border-b border-gray-200 px-5 py-3">
-        <h2 class="text-xl font-semibold text-green-700" id="commentModalTitle">Komentar</h2>
-        <button aria-label="Tutup modal komentar" id="closeCommentModal" class="text-gray-500 hover:text-gray-700 transition text-2xl font-bold">&times;</button>
-      </header>
-      <div id="commentModalContent" class="flex-grow overflow-y-auto px-5 py-3 space-y-4">
-        <!-- Comments and replies will be dynamically inserted here -->
-      </div>
-      <form id="commentReplyForm" class="border-t border-gray-200 px-5 py-3 flex space-x-3">
-        <input type="text" id="commentReplyInput" placeholder="Tulis balasan..." aria-label="Input balasan komentar" class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"/>
-        <button type="submit" id="commentReplySendBtn" class="bg-green-600 text-white font-semibold rounded-md px-4 py-2 hover:bg-green-700 transition">Kirim</button>
-      </form>
+  <div aria-describedby="commentModalDesc" aria-labelledby="commentModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="commentModal" role="dialog">
+   <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+    <header class="flex justify-between items-center border-b border-gray-200 px-5 py-3">
+     <h2 class="text-xl font-semibold text-green-700" id="commentModalTitle">
+      Komentar
+     </h2>
+     <button aria-label="Tutup modal komentar" class="text-gray-500 hover:text-gray-700 transition text-2xl font-bold" id="closeCommentModal">
+      ×
+     </button>
+    </header>
+    <div class="flex-grow overflow-y-auto px-5 py-3 space-y-4" id="commentModalContent">
     </div>
+    <form class="border-t border-gray-200 px-5 py-3 flex space-x-3" id="commentReplyForm">
+     <input aria-label="Input balasan komentar" class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" id="commentReplyInput" placeholder="Tulis balasan..." type="text"/>
+     <button class="bg-green-600 text-white font-semibold rounded-md px-4 py-2 hover:bg-green-700 transition" id="commentReplySendBtn" type="submit">
+      Kirim
+     </button>
+    </form>
+   </div>
   </div>
-
   <!-- Modal Login/Daftar -->
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="loginModal">
    <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-6" id="loginModalContent">
@@ -68,326 +84,359 @@
     </form>
    </div>
   </div>
+  <script type="module">
+   import {
+      initializeApp,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      orderBy,
+      doc,
+      getDoc,
+      addDoc,
+      serverTimestamp,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, updateDoc, arrayUnion, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-    authDomain: "gmi-official21-74326.firebaseapp.com",
-    projectId: "gmi-official21-74326",
-    storageBucket: "gmi-official21-74326.appspot.com",
-    messagingSenderId: "496607636364",
-    appId: "1:496607636364:web:5c0428ccad6952faa544a9"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  const postsDiv = document.getElementById("posts");
-  const loginModal = document.getElementById("loginModal");
-  const commentModal = document.getElementById("commentModal");
-  const commentModalContent = document.getElementById("commentModalContent");
-  const commentReplyForm = document.getElementById("commentReplyForm");
-  const commentReplyInput = document.getElementById("commentReplyInput");
-  const closeCommentModalBtn = document.getElementById("closeCommentModal");
-
-  let currentPostId = null;
-  let currentReplyToCommentId = null;
-
-  function clearPosts() {
-    postsDiv.innerHTML = "";
-  }
-
-  // Fungsi untuk membuat elemen komentar dan balasan secara rekursif
-  function createCommentElement(commentId, username, text, replies = []) {
-    const commentEl = document.createElement("div");
-    commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3";
-
-    const commentHeader = document.createElement("div");
-    commentHeader.className = "flex items-center space-x-3";
-
-    const userIcon = document.createElement("div");
-    userIcon.className = "w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
-    userIcon.textContent = username.charAt(0).toUpperCase();
-
-    const userNameEl = document.createElement("p");
-    userNameEl.className = "font-semibold text-green-700";
-    userNameEl.textContent = username;
-
-    commentHeader.appendChild(userIcon);
-    commentHeader.appendChild(userNameEl);
-
-    const commentText = document.createElement("p");
-    commentText.className = "text-gray-800 mt-2 whitespace-pre-wrap break-words";
-    commentText.textContent = text;
-
-    commentEl.appendChild(commentHeader);
-    commentEl.appendChild(commentText);
-
-    // Button reply
-    const replyBtn = document.createElement("button");
-    replyBtn.className = "mt-2 text-sm text-green-600 hover:text-green-800 font-semibold";
-    replyBtn.textContent = "Balas";
-    replyBtn.onclick = () => {
-      currentReplyToCommentId = commentId;
-      commentReplyInput.focus();
+    const firebaseConfig = {
+      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+      authDomain: "gmi-official21-74326.firebaseapp.com",
+      projectId: "gmi-official21-74326",
+      storageBucket: "gmi-official21-74326.appspot.com",
+      messagingSenderId: "496607636364",
+      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
     };
 
-    commentEl.appendChild(replyBtn);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    // Container for replies
-    if (replies.length > 0) {
-      const repliesContainer = document.createElement("div");
-      repliesContainer.className = "mt-3 ml-8 space-y-3 border-l-2 border-green-200 pl-4";
+    const postsDiv = document.getElementById("posts");
+    const loginModal = document.getElementById("loginModal");
+    const commentModal = document.getElementById("commentModal");
+    const commentModalContent = document.getElementById("commentModalContent");
+    const commentReplyForm = document.getElementById("commentReplyForm");
+    const commentReplyInput = document.getElementById("commentReplyInput");
+    const closeCommentModalBtn = document.getElementById("closeCommentModal");
 
-      replies.forEach(reply => {
-        const replyEl = createCommentElement(reply.id, reply.username, reply.text, reply.replies || []);
-        repliesContainer.appendChild(replyEl);
-      });
+    let currentPostId = null;
+    let currentReplyToCommentId = null;
 
-      commentEl.appendChild(repliesContainer);
+    function clearPosts() {
+      postsDiv.innerHTML = "";
     }
 
-    return commentEl;
-  }
+    function createCommentElement(commentId, username, text, replies = []) {
+      const commentEl = document.createElement("div");
+      commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3";
 
-  // Fungsi untuk memuat komentar dan balasan secara nested
-  async function loadComments(postId) {
-    commentModalContent.innerHTML = "";
-    currentPostId = postId;
-    currentReplyToCommentId = null;
+      const commentHeader = document.createElement("div");
+      commentHeader.className = "flex items-center space-x-3";
 
-    // Ambil komentar utama
-    const commentsQuery = query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc"));
-    const commentsSnapshot = await getDocs(commentsQuery);
+      const userIcon = document.createElement("div");
+      userIcon.className =
+        "w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
+      userIcon.textContent = username.charAt(0).toUpperCase();
 
-    // Ambil semua komentar dan balasan secara nested
-    // Karena Firestore tidak mendukung join, kita ambil balasan per komentar secara terpisah
-    const commentsData = [];
+      const userNameEl = document.createElement("p");
+      userNameEl.className = "font-semibold text-green-700";
+      userNameEl.textContent = username;
 
-    for (const commentDoc of commentsSnapshot.docs) {
-      const commentData = commentDoc.data();
-      const commentId = commentDoc.id;
+      commentHeader.appendChild(userIcon);
+      commentHeader.appendChild(userNameEl);
 
-      // Ambil balasan untuk komentar ini
-      const repliesQuery = query(collection(db, "posts", postId, "comments", commentId, "replies"), orderBy("createdAt", "asc"));
-      const repliesSnapshot = await getDocs(repliesQuery);
+      const commentText = document.createElement("p");
+      commentText.className = "text-gray-800 mt-2 whitespace-pre-wrap break-words";
+      commentText.textContent = text;
 
-      const repliesData = [];
-      for (const replyDoc of repliesSnapshot.docs) {
-        const replyData = replyDoc.data();
-        repliesData.push({
-          id: replyDoc.id,
-          username: replyData.username,
-          text: replyData.text,
-          replies: [] // No nested replies for replies (1 level nesting)
+      commentEl.appendChild(commentHeader);
+      commentEl.appendChild(commentText);
+
+      const replyBtn = document.createElement("button");
+      replyBtn.className =
+        "mt-2 text-sm text-green-600 hover:text-green-800 font-semibold";
+      replyBtn.textContent = "Balas";
+      replyBtn.onclick = () => {
+        currentReplyToCommentId = commentId;
+        commentReplyInput.focus();
+      };
+
+      commentEl.appendChild(replyBtn);
+
+      if (replies.length > 0) {
+        const repliesContainer = document.createElement("div");
+        repliesContainer.className =
+          "mt-3 ml-8 space-y-3 border-l-2 border-green-200 pl-4";
+
+        replies.forEach((reply) => {
+          const replyEl = createCommentElement(
+            reply.id,
+            reply.username,
+            reply.text,
+            reply.replies || []
+          );
+          repliesContainer.appendChild(replyEl);
+        });
+
+        commentEl.appendChild(repliesContainer);
+      }
+
+      return commentEl;
+    }
+
+    async function loadComments(postId) {
+      commentModalContent.innerHTML = "";
+      currentPostId = postId;
+      currentReplyToCommentId = null;
+
+      const commentsQuery = query(
+        collection(db, "posts", postId, "comments"),
+        orderBy("createdAt", "asc")
+      );
+      const commentsSnapshot = await getDocs(commentsQuery);
+
+      const commentsData = [];
+
+      for (const commentDoc of commentsSnapshot.docs) {
+        const commentData = commentDoc.data();
+        const commentId = commentDoc.id;
+
+        const repliesQuery = query(
+          collection(db, "posts", postId, "comments", commentId, "replies"),
+          orderBy("createdAt", "asc")
+        );
+        const repliesSnapshot = await getDocs(repliesQuery);
+
+        const repliesData = [];
+        for (const replyDoc of repliesSnapshot.docs) {
+          const replyData = replyDoc.data();
+          repliesData.push({
+            id: replyDoc.id,
+            username: replyData.username,
+            text: replyData.text,
+            replies: [],
+          });
+        }
+
+        commentsData.push({
+          id: commentId,
+          username: commentData.username,
+          text: commentData.text,
+          replies: repliesData,
         });
       }
 
-      commentsData.push({
-        id: commentId,
-        username: commentData.username,
-        text: commentData.text,
-        replies: repliesData
+      if (commentsData.length === 0) {
+        const noCommentsEl = document.createElement("p");
+        noCommentsEl.className = "text-gray-500 text-center py-10";
+        noCommentsEl.textContent = "Belum ada komentar.";
+        commentModalContent.appendChild(noCommentsEl);
+        return;
+      }
+
+      commentsData.forEach((comment) => {
+        const commentEl = createCommentElement(
+          comment.id,
+          comment.username,
+          comment.text,
+          comment.replies
+        );
+        commentModalContent.appendChild(commentEl);
       });
     }
 
-    if (commentsData.length === 0) {
-      const noCommentsEl = document.createElement("p");
-      noCommentsEl.className = "text-gray-500 text-center py-10";
-      noCommentsEl.textContent = "Belum ada komentar.";
-      commentModalContent.appendChild(noCommentsEl);
-      return;
-    }
+    async function submitReply(event) {
+      event.preventDefault();
+      const replyText = commentReplyInput.value.trim();
+      const user = auth.currentUser;
 
-    commentsData.forEach(comment => {
-      const commentEl = createCommentElement(comment.id, comment.username, comment.text, comment.replies);
-      commentModalContent.appendChild(commentEl);
-    });
-  }
-
-  // Fungsi untuk mengirim balasan komentar
-  async function submitReply(event) {
-    event.preventDefault();
-    const replyText = commentReplyInput.value.trim();
-    const user = auth.currentUser;
-
-    if (!user) {
-      alert("Anda harus login untuk mengirim balasan.");
-      return;
-    }
-
-    if (!replyText) {
-      alert("Balasan tidak boleh kosong!");
-      return;
-    }
-
-    if (!currentPostId) {
-      alert("Tidak ada postingan yang dipilih.");
-      return;
-    }
-
-    try {
-      if (currentReplyToCommentId) {
-        // Kirim balasan ke komentar tertentu
-        await addDoc(collection(db, "posts", currentPostId, "comments", currentReplyToCommentId, "replies"), {
-          username: user.displayName || user.email || "Anonim",
-          text: replyText,
-          createdAt: serverTimestamp()
-        });
-      } else {
-        // Jika tidak ada komentar yang dipilih untuk reply, kirim komentar baru (optional)
-        await addDoc(collection(db, "posts", currentPostId, "comments"), {
-          username: user.displayName || user.email || "Anonim",
-          text: replyText,
-          createdAt: serverTimestamp()
-        });
+      if (!user) {
+        alert("Anda harus login untuk mengirim balasan.");
+        return;
       }
 
+      if (!replyText) {
+        alert("Balasan tidak boleh kosong!");
+        return;
+      }
+
+      if (!currentPostId) {
+        alert("Tidak ada postingan yang dipilih.");
+        return;
+      }
+
+      try {
+        if (currentReplyToCommentId) {
+          await addDoc(
+            collection(
+              db,
+              "posts",
+              currentPostId,
+              "comments",
+              currentReplyToCommentId,
+              "replies"
+            ),
+            {
+              username: user.displayName || user.email || "Anonim",
+              text: replyText,
+              createdAt: serverTimestamp(),
+            }
+          );
+        } else {
+          await addDoc(collection(db, "posts", currentPostId, "comments"), {
+            username: user.displayName || user.email || "Anonim",
+            text: replyText,
+            createdAt: serverTimestamp(),
+          });
+        }
+
+        commentReplyInput.value = "";
+        currentReplyToCommentId = null;
+        await loadComments(currentPostId);
+        commentReplyInput.focus();
+      } catch (error) {
+        console.error("Gagal mengirim balasan: ", error);
+        alert("Gagal mengirim balasan, coba lagi.");
+      }
+    }
+
+    async function openComments(postId) {
+      await loadComments(postId);
+      commentModal.classList.remove("hidden");
+      commentModal.classList.add("flex");
       commentReplyInput.value = "";
       currentReplyToCommentId = null;
-      await loadComments(currentPostId);
       commentReplyInput.focus();
-    } catch (error) {
-      console.error("Gagal mengirim balasan: ", error);
-      alert("Gagal mengirim balasan, coba lagi.");
-    }
-  }
-
-  // Fungsi untuk membuka modal komentar
-  async function openComments(postId) {
-    await loadComments(postId);
-    commentModal.classList.remove("hidden");
-    commentModal.classList.add("flex");
-    commentReplyInput.value = "";
-    currentReplyToCommentId = null;
-    commentReplyInput.focus();
-  }
-
-  // Fungsi untuk menutup modal komentar
-  function closeComments() {
-    commentModal.classList.add("hidden");
-    commentModal.classList.remove("flex");
-    currentPostId = null;
-    currentReplyToCommentId = null;
-    commentModalContent.innerHTML = "";
-  }
-
-  // Fungsi untuk membuat elemen postingan
-  function createPostElement(id, username, description, imageUrl) {
-    const postEl = document.createElement("article");
-    postEl.className = "bg-white rounded-lg shadow-md p-5 space-y-3";
-
-    const userHeader = document.createElement("div");
-    userHeader.className = "flex items-center space-x-3";
-
-    const userIcon = document.createElement("div");
-    userIcon.className = "flex items-center justify-center bg-green-100 text-green-700 rounded-full w-10 h-10 text-lg font-bold select-none";
-    userIcon.textContent = username.charAt(0).toUpperCase();
-
-    const userNameEl = document.createElement("p");
-    userNameEl.className = "font-semibold text-green-800 text-lg truncate";
-    userNameEl.textContent = username;
-
-    userHeader.appendChild(userIcon);
-    userHeader.appendChild(userNameEl);
-
-    const descEl = document.createElement("p");
-    descEl.className = "text-gray-800 whitespace-pre-wrap break-words";
-    descEl.textContent = description;
-
-    postEl.appendChild(userHeader);
-    postEl.appendChild(descEl);
-
-    if (imageUrl) {
-      const imgEl = document.createElement("img");
-      imgEl.src = imageUrl;
-      imgEl.alt = `Gambar postingan oleh ${username} yang menggambarkan konten postingan`;
-      imgEl.className = "w-full max-h-96 object-cover rounded-md mt-2";
-      postEl.appendChild(imgEl);
     }
 
-    const btnContainer = document.createElement("div");
-    btnContainer.className = "flex space-x-3";
-
-    const commentBtn = document.createElement("button");
-    commentBtn.type = "button";
-    commentBtn.className = "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition text-lg px-4 py-2 border border-green-600 rounded-md hover:bg-green-50";
-    commentBtn.innerHTML = `<i class="fas fa-comments text-xl"></i><span>Komentar</span>`;
-    commentBtn.onclick = () => openComments(id);
-
-    const reportLink = document.createElement("a");
-    reportLink.href = `https://wa.me/?text=Laporkan konten ini: ${window.location.href}`;
-    reportLink.target = "_blank";
-    reportLink.className = "flex";
-
-    const reportBtn = document.createElement("button");
-    reportBtn.type = "button";
-    reportBtn.className = "flex items-center justify-center space-x-1 bg-red-600 text-white font-semibold rounded-md px-2 py-1 text-xs hover:bg-red-700 transition";
-    reportBtn.innerHTML = `<i class="fas fa-flag text-sm"></i><span>Laporkan!</span>`;
-
-    reportLink.appendChild(reportBtn);
-    btnContainer.appendChild(commentBtn);
-    btnContainer.appendChild(reportLink);
-
-    postEl.appendChild(btnContainer);
-
-    return postEl;
-  }
-
-  // Load posts function
-  async function loadPosts() {
-    clearPosts();
-    const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
-
-    for (const docSnap of querySnapshot.docs) {
-      const data = docSnap.data();
-      const userRef = doc(db, "users", data.uid);
-      const userSnap = await getDoc(userRef);
-      const username = userSnap.exists() ? userSnap.data().username : "Anonim";
-      const postEl = createPostElement(docSnap.id, username, data.description, data.imageUrl || null);
-      postsDiv.appendChild(postEl);
+    function closeComments() {
+      commentModal.classList.add("hidden");
+      commentModal.classList.remove("flex");
+      currentPostId = null;
+      currentReplyToCommentId = null;
+      commentModalContent.innerHTML = "";
     }
-  }
 
-  // Auth state listener
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      loginModal.classList.remove("hidden");
-      loginModal.classList.add("flex");
-    } else {
-      loginModal.classList.add("hidden");
-      loginModal.classList.remove("flex");
-      await loadPosts();
+    function createPostElement(id, username, description, imageUrl) {
+      const postEl = document.createElement("article");
+      postEl.className =
+        "bg-white rounded-lg shadow-md p-5 space-y-3 border border-gray-300";
+
+      const userHeader = document.createElement("div");
+      userHeader.className = "flex items-center space-x-3";
+
+      const userIcon = document.createElement("div");
+      userIcon.className =
+        "flex items-center justify-center bg-green-100 text-green-700 rounded-full w-10 h-10 text-lg font-bold select-none";
+      userIcon.textContent = username.charAt(0).toUpperCase();
+
+      const userNameEl = document.createElement("p");
+      userNameEl.className =
+        "font-semibold text-green-800 text-lg truncate max-w-xs sm:max-w-sm";
+      userNameEl.textContent = username;
+
+      userHeader.appendChild(userIcon);
+      userHeader.appendChild(userNameEl);
+
+      const descEl = document.createElement("p");
+      descEl.className = "text-gray-800 whitespace-pre-wrap break-words";
+      descEl.textContent = description;
+
+      postEl.appendChild(userHeader);
+      postEl.appendChild(descEl);
+
+      if (imageUrl) {
+        const imgEl = document.createElement("img");
+        imgEl.src = imageUrl;
+        imgEl.alt = `Gambar postingan oleh ${username} yang menggambarkan konten postingan`;
+        imgEl.className = "w-full max-h-96 object-cover rounded-md mt-2";
+        postEl.appendChild(imgEl);
+      }
+
+      const btnContainer = document.createElement("div");
+      btnContainer.className = "flex space-x-3";
+
+      const commentBtn = document.createElement("button");
+      commentBtn.type = "button";
+      commentBtn.className =
+        "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition text-lg px-4 py-2 border border-green-600 rounded-md hover:bg-green-50";
+      commentBtn.innerHTML = `<i class="fas fa-comments text-xl"></i><span>Komentar</span>`;
+      commentBtn.onclick = () => openComments(id);
+
+      const reportLink = document.createElement("a");
+      reportLink.href = `https://wa.me/?text=Laporkan konten ini: ${window.location.href}`;
+      reportLink.target = "_blank";
+      reportLink.className = "flex";
+
+      const reportBtn = document.createElement("button");
+      reportBtn.type = "button";
+      reportBtn.className =
+        "flex items-center justify-center space-x-1 bg-red-600 text-white font-semibold rounded-md px-2 py-1 text-xs hover:bg-red-700 transition";
+      reportBtn.innerHTML = `<i class="fas fa-flag text-sm"></i><span>Laporkan!</span>`;
+
+      reportLink.appendChild(reportBtn);
+      btnContainer.appendChild(commentBtn);
+      btnContainer.appendChild(reportLink);
+
+      postEl.appendChild(btnContainer);
+
+      return postEl;
     }
-  });
 
-  // Event listeners
-  commentReplyForm.addEventListener("submit", submitReply);
-  closeCommentModalBtn.addEventListener("click", closeComments);
+    async function loadPosts() {
+      clearPosts();
+      const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
 
-  // Close modal on outside click
-  commentModal.addEventListener("click", (e) => {
-    if (e.target === commentModal) {
-      closeComments();
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        const userRef = doc(db, "users", data.uid);
+        const userSnap = await getDoc(userRef);
+        const username = userSnap.exists() ? userSnap.data().username : "Anonim";
+        const postEl = createPostElement(
+          docSnap.id,
+          username,
+          data.description,
+          data.imageUrl || null
+        );
+        postsDiv.appendChild(postEl);
+      }
     }
-  });
 
-  // Close modal on Escape key
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !commentModal.classList.contains("hidden")) {
-      closeComments();
-    }
-  });
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        loginModal.classList.remove("hidden");
+        loginModal.classList.add("flex");
+      } else {
+        loginModal.classList.add("hidden");
+        loginModal.classList.remove("flex");
+        await loadPosts();
+      }
+    });
 
-  // Dummy login and register functions to avoid errors (implement as needed)
-  window.login = () => alert("Fungsi login belum diimplementasikan.");
-  window.register = () => alert("Fungsi daftar belum diimplementasikan.");
-</script>
+    commentReplyForm.addEventListener("submit", submitReply);
+    closeCommentModalBtn.addEventListener("click", closeComments);
+
+    commentModal.addEventListener("click", (e) => {
+      if (e.target === commentModal) {
+        closeComments();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !commentModal.classList.contains("hidden")) {
+        closeComments();
+      }
+    });
+
+    window.login = () => alert("Fungsi login belum diimplementasikan.");
+    window.register = () => alert("Fungsi daftar belum diimplementasikan.");
+  </script>
  </body>
 </html>
