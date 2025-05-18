@@ -43,9 +43,9 @@
           <i class="fas fa-newspaper fa-fw w-5"></i>
           <span class="font-medium">Posts</span>
         </button>
-        <button onclick="loadPoints()" class="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 w-full text-left">
+        <button onclick="loadpoint()" class="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 w-full text-left">
           <i class="fas fa-coins fa-fw w-5"></i>
-          <span class="font-medium">Points</span>
+          <span class="font-medium">point</span>
         </button>
         <button onclick="loadReferral()" class="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700 w-full text-left">
           <i class="fas fa-link fa-fw w-5"></i>
@@ -113,7 +113,7 @@
           <ul class="space-y-3">`;
         usersSnap.forEach((docu) => {
           const d = docu.data();
-          const points = d.points ?? 0;
+          const point = d.point ?? 0;
           html += `
             <li class="bg-white shadow rounded-md p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center">
               <div>
@@ -121,9 +121,9 @@
                 <p class="text-sm text-gray-500">${d.email || ""}</p>
               </div>
               <div class="flex items-center space-x-4 mt-3 sm:mt-0">
-                <span class="text-indigo-700 font-semibold text-sm whitespace-nowrap">Points: ${points}</span>
-                <button aria-label="Edit points user ${d.username || ''}" onclick="loadPoints('${docu.id}', '${d.username || ''}')" class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded px-3 py-1 text-sm whitespace-nowrap">
-                  Edit Points
+                <span class="text-indigo-700 font-semibold text-sm whitespace-nowrap">point: ${point}</span>
+                <button aria-label="Edit point user ${d.username || ''}" onclick="loadpoint('${docu.id}', '${d.username || ''}')" class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded px-3 py-1 text-sm whitespace-nowrap">
+                  Edit point
                 </button>
                 <button aria-label="Hapus user ${d.username || ''}" onclick="deleteUserData('${docu.id}')" class="text-white bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded px-3 py-1 text-sm whitespace-nowrap">
                   Hapus
@@ -151,11 +151,11 @@
       }
     };
 
-    // ---------- POINTS per User ----------
-    window.loadPoints = async (userId = null, username = '') => {
+    // ---------- point per User ----------
+    window.loadpoint = async (userId = null, username = '') => {
       const area = document.getElementById("content-area");
       if (!userId) {
-        area.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-gray-900">Loading users for points...</h3>`;
+        area.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-gray-900">Loading users for point...</h3>`;
         try {
           const usersSnap = await getDocs(collection(db, "users"));
           if (usersSnap.empty) {
@@ -163,11 +163,11 @@
             return;
           }
           let html = `
-            <h3 class="text-xl font-semibold mb-6 text-gray-900">Users Points</h3>
+            <h3 class="text-xl font-semibold mb-6 text-gray-900">Users point</h3>
             <ul class="space-y-3">`;
           usersSnap.forEach((docu) => {
             const d = docu.data();
-            const points = d.points ?? 0;
+            const point = d.point ?? 0;
             html += `
               <li class="bg-white shadow rounded-md p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center">
                 <div>
@@ -175,9 +175,9 @@
                   <p class="text-sm text-gray-500">${d.email || ""}</p>
                 </div>
                 <div class="flex items-center space-x-4 mt-3 sm:mt-0">
-                  <span class="text-indigo-700 font-semibold text-sm whitespace-nowrap">Points: ${points}</span>
-                  <button aria-label="Edit points user ${d.username || ''}" onclick="loadPoints('${docu.id}', '${d.username || ''}')" class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded px-3 py-1 text-sm whitespace-nowrap">
-                    Edit Points
+                  <span class="text-indigo-700 font-semibold text-sm whitespace-nowrap">point: ${point}</span>
+                  <button aria-label="Edit point user ${d.username || ''}" onclick="loadpoint('${docu.id}', '${d.username || ''}')" class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 rounded px-3 py-1 text-sm whitespace-nowrap">
+                    Edit point
                   </button>
                 </div>
               </li>`;
@@ -191,7 +191,7 @@
         return;
       }
 
-      area.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-gray-900">Loading points data for ${username}...</h3>`;
+      area.innerHTML = `<h3 class="text-lg font-semibold mb-4 text-gray-900">Loading point data for ${username}...</h3>`;
       try {
         const userDocRef = doc(db, "users", userId);
         const userDocSnap = await getDoc(userDocRef);
@@ -200,15 +200,15 @@
           return;
         }
         const userData = userDocSnap.data();
-        const points = userData.points ?? 0;
-        const description = userData.pointsDescription || '';
+        const point = userData.point ?? 0;
+        const description = userData.pointDescription || '';
 
         area.innerHTML = `
-          <h3 class="text-xl font-semibold mb-6 text-gray-900">Edit Points for ${username}</h3>
-          <form id="pointsForm" class="space-y-5 max-w-md bg-white p-6 rounded-md shadow">
+          <h3 class="text-xl font-semibold mb-6 text-gray-900">Edit point for ${username}</h3>
+          <form id="pointForm" class="space-y-5 max-w-md bg-white p-6 rounded-md shadow">
             <div>
               <label for="score" class="block text-gray-700 font-medium mb-1">Score</label>
-              <input type="number" id="score" name="score" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" value="${points}" required />
+              <input type="number" id="score" name="score" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" value="${point}" required />
             </div>
             <div>
               <label for="description" class="block text-gray-700 font-medium mb-1">Deskripsi</label>
@@ -216,21 +216,21 @@
             </div>
             <div class="flex space-x-3">
               <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-1">Simpan</button>
-              <button type="button" onclick="loadPoints()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:ring-2 focus:ring-gray-400 focus:ring-offset-1">Batal</button>
+              <button type="button" onclick="loadpoint()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:ring-2 focus:ring-gray-400 focus:ring-offset-1">Batal</button>
             </div>
           </form>
         `;
 
-        document.getElementById("pointsForm").addEventListener("submit", async (e) => {
+        document.getElementById("pointForm").addEventListener("submit", async (e) => {
           e.preventDefault();
           const score = Number(document.getElementById("score").value);
           const description = document.getElementById("description").value;
           try {
-            await updateDoc(userDocRef, { points: score, pointsDescription: description });
-            alert(`Points untuk user ${username} berhasil disimpan.`);
-            loadPoints();
+            await updateDoc(userDocRef, { point: score, pointDescription: description });
+            alert(`point untuk user ${username} berhasil disimpan.`);
+            loadpoint();
           } catch (err) {
-            alert("Gagal menyimpan data points: " + err.message);
+            alert("Gagal menyimpan data point: " + err.message);
           }
         });
       } catch (error) {
