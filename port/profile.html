@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -14,7 +16,7 @@
       apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
       authDomain: "gmi-official21-74326.firebaseapp.com",
       projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.firebasestorage.app",
+      storageBucket: "gmi-official21-74326.appspot.com",
       messagingSenderId: "496607636364",
       appId: "1:496607636364:web:5c0428ccad6952faa544a9",
       measurementId: "G-KJ0X8CY03M"
@@ -44,7 +46,7 @@
             usernameEl.textContent = data.username || "(tanpa nama)";
             emailEl.textContent = data.email || "(tanpa email)";
             kodeReferralEl.textContent = data.kode_referral || "Belum ada kode";
-            pointEl.textContent = data. !== undefined ? data. : 0;
+            pointEl.textContent = data.point !== undefined ? data.point : 0;
 
             salinBtn.onclick = () => {
               navigator.clipboard.writeText(data.kode_referral || "").then(() => {
@@ -74,25 +76,25 @@
     <div id="profileData" class="space-y-6" style="display:none;">
       <div>
         <label for="username" class="block font-semibold text-gray-700 mb-1">Username</label>
-        <p id="username" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="Username pengguna">-</p>
+        <p id="username" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0">-</p>
       </div>
       <div>
         <label for="email" class="block font-semibold text-gray-700 mb-1">Email</label>
-        <p id="email" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="Email pengguna">-</p>
+        <p id="email" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0">-</p>
       </div>
       <div>
         <label for="kodeReferral" class="block font-semibold text-gray-700 mb-1">Kode Referral</label>
         <div class="flex items-center space-x-3">
-          <p id="kodeReferral" class="bg-gray-100 p-3 rounded flex-grow text-gray-900 truncate" tabindex="0" aria-label="Kode referral pengguna">-</p>
-          <button id="salinKode" class="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1" aria-label="Salin kode referral">
+          <p id="kodeReferral" class="bg-gray-100 p-3 rounded flex-grow text-gray-900 truncate" tabindex="0">-</p>
+          <button id="salinKode" class="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
             <i class="fas fa-copy"></i>
             <span>Salin Kode</span>
           </button>
         </div>
       </div>
       <div>
-        <label for="point" class="block font-semibold text-gray-700 mb-1">point</label>
-        <p id="point" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="point pengguna">0</p>
+        <label for="point" class="block font-semibold text-gray-700 mb-1">Point</label>
+        <p id="point" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0">0</p>
       </div>
     </div>
   </div>
