@@ -44,7 +44,7 @@
             usernameEl.textContent = data.username || "(tanpa nama)";
             emailEl.textContent = data.email || "(tanpa email)";
             kodeReferralEl.textContent = data.kode_referral || "Belum ada kode";
-            poinEl.textContent = data.points !== undefined ? data.points : 0;
+            poinEl.textContent = data. !== undefined ? data. : 0;
 
             salinBtn.onclick = () => {
               navigator.clipboard.writeText(data.kode_referral || "").then(() => {
