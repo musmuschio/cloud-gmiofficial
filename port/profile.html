@@ -1,42 +1,37 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Profil Pengguna</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
-    import {
-      getAuth,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
       authDomain: "gmi-official21-74326.firebaseapp.com",
       projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.appspot.com",
+      storageBucket: "gmi-official21-74326.firebasestorage.app",
       messagingSenderId: "496607636364",
       appId: "1:496607636364:web:5c0428ccad6952faa544a9",
       measurementId: "G-KJ0X8CY03M"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
     window.addEventListener("DOMContentLoaded", () => {
+      const loadingEl = document.getElementById("loading");
+      const profileData = document.getElementById("profileData");
       const usernameEl = document.getElementById("username");
       const emailEl = document.getElementById("email");
       const kodeReferralEl = document.getElementById("kodeReferral");
-      const salinBtn = document.getElementById("salinBtn");
-      const loadingEl = document.getElementById("loading");
+      const poinEl = document.getElementById("poin");
+      const salinBtn = document.getElementById("salinKode");
 
       onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -49,6 +44,7 @@
             usernameEl.textContent = data.username || "(tanpa nama)";
             emailEl.textContent = data.email || "(tanpa email)";
             kodeReferralEl.textContent = data.referralCode || "Belum ada kode";
+            poinEl.textContent = data.poin !== undefined ? data.poin : 0;
 
             salinBtn.onclick = () => {
               navigator.clipboard.writeText(data.referralCode || "").then(() => {
@@ -57,39 +53,46 @@
             };
 
             loadingEl.style.display = "none";
+            profileData.style.display = "block";
           } else {
             loadingEl.textContent = "Data pengguna tidak ditemukan.";
+            profileData.style.display = "none";
           }
         } else {
           loadingEl.textContent = "Belum login.";
+          profileData.style.display = "none";
         }
       });
     });
   </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
   <div class="bg-white rounded-xl shadow-md p-6 w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-4 text-green-700">Profil Anda</h1>
-    
-    <div id="loading" class="text-center text-gray-500 mb-4">Memuat profil...</div>
+    <h2 class="text-2xl font-bold mb-6 text-center text-green-700">Profil Pengguna</h2>
+    <div id="loading" class="text-center text-gray-500 mb-6">Memuat data...</div>
 
-    <div class="space-y-4">
+    <div id="profileData" class="space-y-6" style="display:none;">
       <div>
-        <label for="username" class="font-semibold text-gray-700">Username</label>
-        <p id="username" class="bg-gray-100 p-2 rounded mt-1 text-gray-900" tabindex="0" aria-label="Username pengguna">-</p>
+        <label for="username" class="block font-semibold text-gray-700 mb-1">Username</label>
+        <p id="username" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="Username pengguna">-</p>
       </div>
       <div>
-        <label for="email" class="font-semibold text-gray-700">Email</label>
-        <p id="email" class="bg-gray-100 p-2 rounded mt-1 text-gray-900" tabindex="0" aria-label="Email pengguna">-</p>
+        <label for="email" class="block font-semibold text-gray-700 mb-1">Email</label>
+        <p id="email" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="Email pengguna">-</p>
       </div>
       <div>
-        <label for="kodeReferral" class="font-semibold text-gray-700">Kode Referral</label>
-        <div class="flex items-center mt-1">
-          <p id="kodeReferral" class="bg-gray-100 p-2 rounded flex-grow text-gray-900 truncate" tabindex="0" aria-label="Kode referral pengguna">-</p>
-          <button id="salinBtn" class="ml-2 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1" aria-label="Salin kode referral">
-            <i class="fas fa-copy"></i> Salin
+        <label for="kodeReferral" class="block font-semibold text-gray-700 mb-1">Kode Referral</label>
+        <div class="flex items-center space-x-3">
+          <p id="kodeReferral" class="bg-gray-100 p-3 rounded flex-grow text-gray-900 truncate" tabindex="0" aria-label="Kode referral pengguna">-</p>
+          <button id="salinKode" class="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1" aria-label="Salin kode referral">
+            <i class="fas fa-copy"></i>
+            <span>Salin Kode</span>
           </button>
         </div>
+      </div>
+      <div>
+        <label for="poin" class="block font-semibold text-gray-700 mb-1">Poin</label>
+        <p id="poin" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="Poin pengguna">0</p>
       </div>
     </div>
   </div>
