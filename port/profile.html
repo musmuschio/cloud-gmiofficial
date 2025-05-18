@@ -30,7 +30,7 @@
       const usernameEl = document.getElementById("username");
       const emailEl = document.getElementById("email");
       const kodeReferralEl = document.getElementById("kodeReferral");
-      const poinEl = document.getElementById("poin");
+      const pointtEl = document.getElementById("pointt");
       const salinBtn = document.getElementById("salinKode");
 
       onAuthStateChanged(auth, async (user) => {
@@ -44,7 +44,7 @@
             usernameEl.textContent = data.username || "(tanpa nama)";
             emailEl.textContent = data.email || "(tanpa email)";
             kodeReferralEl.textContent = data.kode_referral || "Belum ada kode";
-            poinEl.textContent = data. !== undefined ? data. : 0;
+            pointtEl.textContent = data. !== undefined ? data. : 0;
 
             salinBtn.onclick = () => {
               navigator.clipboard.writeText(data.kode_referral || "").then(() => {
@@ -91,8 +91,8 @@
         </div>
       </div>
       <div>
-        <label for="poin" class="block font-semibold text-gray-700 mb-1">Poin</label>
-        <p id="poin" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="Poin pengguna">0</p>
+        <label for="pointt" class="block font-semibold text-gray-700 mb-1">pointt</label>
+        <p id="pointt" class="bg-gray-100 p-3 rounded text-gray-900" tabindex="0" aria-label="pointt pengguna">0</p>
       </div>
     </div>
   </div>
