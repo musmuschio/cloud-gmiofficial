@@ -43,11 +43,11 @@
             const data = docSnap.data();
             usernameEl.textContent = data.username || "(tanpa nama)";
             emailEl.textContent = data.email || "(tanpa email)";
-            kodeReferralEl.textContent = data.referralCode || "Belum ada kode";
-            poinEl.textContent = data.poin !== undefined ? data.poin : 0;
+            kodeReferralEl.textContent = data.kode_referral || "Belum ada kode";
+            poinEl.textContent = data.points !== undefined ? data.points : 0;
 
             salinBtn.onclick = () => {
-              navigator.clipboard.writeText(data.referralCode || "").then(() => {
+              navigator.clipboard.writeText(data.kode_referral || "").then(() => {
                 alert("Kode referral berhasil disalin!");
               });
             };
