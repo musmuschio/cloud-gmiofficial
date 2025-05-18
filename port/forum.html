@@ -54,381 +54,352 @@
     </form>
    </div>
   </div>
-  <!-- Modal Login/Daftar -->
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="loginModal">
-   <div class="bg-white rounded-xl shadow-lg w-full max-w-sm p-6" id="loginModalContent">
-    <h3 class="text-2xl font-semibold mb-5 text-center text-green-700" id="formTitle">
-     Login / Daftar
-    </h3>
-    <form class="space-y-4" id="authForm" onsubmit="return false;">
-     <input aria-label="Username saat daftar" autocomplete="username" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" id="username" placeholder="Username (saat daftar)" type="text"/>
-     <input aria-label="Alamat saat daftar" autocomplete="street-address" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" id="alamat" placeholder="Alamat (saat daftar)" type="text"/>
-     <input aria-label="Email" autocomplete="email" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" id="email" placeholder="Email" required="" type="email"/>
-     <input aria-label="Password" autocomplete="current-password" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" id="password" placeholder="Password" required="" type="password"/>
-     <div class="flex justify-between space-x-3">
-      <button aria-label="Login" class="flex-1 bg-green-600 text-white font-semibold rounded-md py-2 hover:bg-green-700 transition" onclick="login()" type="button">
-       Login
-      </button>
-      <button aria-label="Daftar" class="flex-1 bg-green-100 text-green-700 font-semibold rounded-md py-2 hover:bg-green-200 transition" onclick="register()" type="button">
-       Daftar
-      </button>
-     </div>
-    </form>
-   </div>
-  </div>
-  <script type="module">
-   import {
-      initializeApp,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      query,
-      orderBy,
-      doc,
-      getDoc,
-      addDoc,
-      serverTimestamp,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+<script type="module">
+  import {
+    initializeApp,
+  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    query,
+    orderBy,
+    doc,
+    getDoc,
+    addDoc,
+    serverTimestamp,
+  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-      authDomain: "gmi-official21-74326.firebaseapp.com",
-      projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+  const firebaseConfig = {
+    apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
+    authDomain: "gmi-official21-74326.firebaseapp.com",
+    projectId: "gmi-official21-74326",
+    storageBucket: "gmi-official21-74326.appspot.com",
+    messagingSenderId: "496607636364",
+    appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const postsDiv = document.getElementById("posts");
+  const commentModal = document.getElementById("commentModal");
+  const commentModalContent = document.getElementById("commentModalContent");
+  const commentReplyForm = document.getElementById("commentReplyForm");
+  const commentReplyInput = document.getElementById("commentReplyInput");
+  const closeCommentModalBtn = document.getElementById("closeCommentModal");
+
+  let currentPostId = null;
+  let currentReplyToCommentId = null;
+
+  function clearPosts() {
+    postsDiv.innerHTML = "";
+  }
+
+  function createCommentElement(commentId, username, text, replies = []) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3";
+
+    const commentHeader = document.createElement("div");
+    commentHeader.className = "flex items-center space-x-3";
+
+    const userIcon = document.createElement("div");
+    userIcon.className =
+      "w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
+    userIcon.textContent = username.charAt(0).toUpperCase();
+
+    const userNameEl = document.createElement("p");
+    userNameEl.className = "font-semibold text-green-700";
+    userNameEl.textContent = username;
+
+    commentHeader.appendChild(userIcon);
+    commentHeader.appendChild(userNameEl);
+
+    const commentText = document.createElement("p");
+    commentText.className = "text-gray-800 mt-2 whitespace-pre-wrap break-words";
+    commentText.textContent = text;
+
+    commentEl.appendChild(commentHeader);
+    commentEl.appendChild(commentText);
+
+    const replyBtn = document.createElement("button");
+    replyBtn.className =
+      "mt-2 text-sm text-green-600 hover:text-green-800 font-semibold";
+    replyBtn.textContent = "Balas";
+    replyBtn.onclick = () => {
+      currentReplyToCommentId = commentId;
+      commentReplyInput.focus();
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    commentEl.appendChild(replyBtn);
 
-    const postsDiv = document.getElementById("posts");
-    const loginModal = document.getElementById("loginModal");
-    const commentModal = document.getElementById("commentModal");
-    const commentModalContent = document.getElementById("commentModalContent");
-    const commentReplyForm = document.getElementById("commentReplyForm");
-    const commentReplyInput = document.getElementById("commentReplyInput");
-    const closeCommentModalBtn = document.getElementById("closeCommentModal");
+    if (replies.length > 0) {
+      const repliesContainer = document.createElement("div");
+      repliesContainer.className =
+        "mt-3 ml-8 space-y-3 border-l-2 border-green-200 pl-4";
 
-    let currentPostId = null;
-    let currentReplyToCommentId = null;
+      replies.forEach((reply) => {
+        const replyEl = createCommentElement(
+          reply.id,
+          reply.username,
+          reply.text,
+          reply.replies || []
+        );
+        repliesContainer.appendChild(replyEl);
+      });
 
-    function clearPosts() {
-      postsDiv.innerHTML = "";
+      commentEl.appendChild(repliesContainer);
     }
 
-    function createCommentElement(commentId, username, text, replies = []) {
-      const commentEl = document.createElement("div");
-      commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3";
+    return commentEl;
+  }
 
-      const commentHeader = document.createElement("div");
-      commentHeader.className = "flex items-center space-x-3";
+  async function loadComments(postId) {
+    commentModalContent.innerHTML = "";
+    currentPostId = postId;
+    currentReplyToCommentId = null;
 
-      const userIcon = document.createElement("div");
-      userIcon.className =
-        "w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
-      userIcon.textContent = username.charAt(0).toUpperCase();
+    const commentsQuery = query(
+      collection(db, "posts", postId, "comments"),
+      orderBy("createdAt", "asc")
+    );
+    const commentsSnapshot = await getDocs(commentsQuery);
 
-      const userNameEl = document.createElement("p");
-      userNameEl.className = "font-semibold text-green-700";
-      userNameEl.textContent = username;
+    const commentsData = [];
 
-      commentHeader.appendChild(userIcon);
-      commentHeader.appendChild(userNameEl);
+    for (const commentDoc of commentsSnapshot.docs) {
+      const commentData = commentDoc.data();
+      const commentId = commentDoc.id;
 
-      const commentText = document.createElement("p");
-      commentText.className = "text-gray-800 mt-2 whitespace-pre-wrap break-words";
-      commentText.textContent = text;
-
-      commentEl.appendChild(commentHeader);
-      commentEl.appendChild(commentText);
-
-      const replyBtn = document.createElement("button");
-      replyBtn.className =
-        "mt-2 text-sm text-green-600 hover:text-green-800 font-semibold";
-      replyBtn.textContent = "Balas";
-      replyBtn.onclick = () => {
-        currentReplyToCommentId = commentId;
-        commentReplyInput.focus();
-      };
-
-      commentEl.appendChild(replyBtn);
-
-      if (replies.length > 0) {
-        const repliesContainer = document.createElement("div");
-        repliesContainer.className =
-          "mt-3 ml-8 space-y-3 border-l-2 border-green-200 pl-4";
-
-        replies.forEach((reply) => {
-          const replyEl = createCommentElement(
-            reply.id,
-            reply.username,
-            reply.text,
-            reply.replies || []
-          );
-          repliesContainer.appendChild(replyEl);
-        });
-
-        commentEl.appendChild(repliesContainer);
-      }
-
-      return commentEl;
-    }
-
-    async function loadComments(postId) {
-      commentModalContent.innerHTML = "";
-      currentPostId = postId;
-      currentReplyToCommentId = null;
-
-      const commentsQuery = query(
-        collection(db, "posts", postId, "comments"),
+      const repliesQuery = query(
+        collection(db, "posts", postId, "comments", commentId, "replies"),
         orderBy("createdAt", "asc")
       );
-      const commentsSnapshot = await getDocs(commentsQuery);
+      const repliesSnapshot = await getDocs(repliesQuery);
 
-      const commentsData = [];
-
-      for (const commentDoc of commentsSnapshot.docs) {
-        const commentData = commentDoc.data();
-        const commentId = commentDoc.id;
-
-        const repliesQuery = query(
-          collection(db, "posts", postId, "comments", commentId, "replies"),
-          orderBy("createdAt", "asc")
-        );
-        const repliesSnapshot = await getDocs(repliesQuery);
-
-        const repliesData = [];
-        for (const replyDoc of repliesSnapshot.docs) {
-          const replyData = replyDoc.data();
-          repliesData.push({
-            id: replyDoc.id,
-            username: replyData.username,
-            text: replyData.text,
-            replies: [],
-          });
-        }
-
-        commentsData.push({
-          id: commentId,
-          username: commentData.username,
-          text: commentData.text,
-          replies: repliesData,
+      const repliesData = [];
+      for (const replyDoc of repliesSnapshot.docs) {
+        const replyData = replyDoc.data();
+        repliesData.push({
+          id: replyDoc.id,
+          username: replyData.username,
+          text: replyData.text,
+          replies: [],
         });
       }
 
-      if (commentsData.length === 0) {
-        const noCommentsEl = document.createElement("p");
-        noCommentsEl.className = "text-gray-500 text-center py-10";
-        noCommentsEl.textContent = "Belum ada komentar.";
-        commentModalContent.appendChild(noCommentsEl);
-        return;
-      }
-
-      commentsData.forEach((comment) => {
-        const commentEl = createCommentElement(
-          comment.id,
-          comment.username,
-          comment.text,
-          comment.replies
-        );
-        commentModalContent.appendChild(commentEl);
+      commentsData.push({
+        id: commentId,
+        username: commentData.username,
+        text: commentData.text,
+        replies: repliesData,
       });
     }
 
-    async function submitReply(event) {
-      event.preventDefault();
-      const replyText = commentReplyInput.value.trim();
-      const user = auth.currentUser;
+    if (commentsData.length === 0) {
+      const noCommentsEl = document.createElement("p");
+      noCommentsEl.className = "text-gray-500 text-center py-10";
+      noCommentsEl.textContent = "Belum ada komentar.";
+      commentModalContent.appendChild(noCommentsEl);
+      return;
+    }
 
-      if (!user) {
-        alert("Anda harus login untuk mengirim balasan.");
-        return;
-      }
+    commentsData.forEach((comment) => {
+      const commentEl = createCommentElement(
+        comment.id,
+        comment.username,
+        comment.text,
+        comment.replies
+      );
+      commentModalContent.appendChild(commentEl);
+    });
+  }
 
-      if (!replyText) {
-        alert("Balasan tidak boleh kosong!");
-        return;
-      }
+  async function submitReply(event) {
+    event.preventDefault();
+    const replyText = commentReplyInput.value.trim();
+    const user = auth.currentUser;
 
-      if (!currentPostId) {
-        alert("Tidak ada postingan yang dipilih.");
-        return;
-      }
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
 
-      try {
-        if (currentReplyToCommentId) {
-          await addDoc(
-            collection(
-              db,
-              "posts",
-              currentPostId,
-              "comments",
-              currentReplyToCommentId,
-              "replies"
-            ),
-            {
-              username: user.displayName || user.email || "Anonim",
-              text: replyText,
-              createdAt: serverTimestamp(),
-            }
-          );
-        } else {
-          await addDoc(collection(db, "posts", currentPostId, "comments"), {
+    if (!replyText) {
+      alert("Balasan tidak boleh kosong!");
+      return;
+    }
+
+    if (!currentPostId) {
+      alert("Tidak ada postingan yang dipilih.");
+      return;
+    }
+
+    try {
+      if (currentReplyToCommentId) {
+        await addDoc(
+          collection(
+            db,
+            "posts",
+            currentPostId,
+            "comments",
+            currentReplyToCommentId,
+            "replies"
+          ),
+          {
             username: user.displayName || user.email || "Anonim",
             text: replyText,
             createdAt: serverTimestamp(),
-          });
-        }
-
-        commentReplyInput.value = "";
-        currentReplyToCommentId = null;
-        await loadComments(currentPostId);
-        commentReplyInput.focus();
-      } catch (error) {
-        console.error("Gagal mengirim balasan: ", error);
-        alert("Gagal mengirim balasan, coba lagi.");
+          }
+        );
+      } else {
+        await addDoc(collection(db, "posts", currentPostId, "comments"), {
+          username: user.displayName || user.email || "Anonim",
+          text: replyText,
+          createdAt: serverTimestamp(),
+        });
       }
-    }
 
-    async function openComments(postId) {
-      await loadComments(postId);
-      commentModal.classList.remove("hidden");
-      commentModal.classList.add("flex");
       commentReplyInput.value = "";
       currentReplyToCommentId = null;
+      await loadComments(currentPostId);
       commentReplyInput.focus();
+    } catch (error) {
+      console.error("Gagal mengirim balasan: ", error);
+      alert("Gagal mengirim balasan, coba lagi.");
+    }
+  }
+
+  async function openComments(postId) {
+    await loadComments(postId);
+    commentModal.classList.remove("hidden");
+    commentModal.classList.add("flex");
+    commentReplyInput.value = "";
+    currentReplyToCommentId = null;
+    commentReplyInput.focus();
+  }
+
+  function closeComments() {
+    commentModal.classList.add("hidden");
+    commentModal.classList.remove("flex");
+    currentPostId = null;
+    currentReplyToCommentId = null;
+    commentModalContent.innerHTML = "";
+  }
+
+  function createPostElement(id, username, description, imageUrl) {
+    const postEl = document.createElement("article");
+    postEl.className =
+      "bg-white rounded-lg shadow-md p-5 space-y-3 border border-gray-300";
+
+    const userHeader = document.createElement("div");
+    userHeader.className = "flex items-center space-x-3";
+
+    const userIcon = document.createElement("div");
+    userIcon.className =
+      "flex items-center justify-center bg-green-100 text-green-700 rounded-full w-10 h-10 text-lg font-bold select-none";
+    userIcon.textContent = username.charAt(0).toUpperCase();
+
+    const userNameEl = document.createElement("p");
+    userNameEl.className =
+      "font-semibold text-green-800 text-lg truncate max-w-xs sm:max-w-sm";
+    userNameEl.textContent = username;
+
+    userHeader.appendChild(userIcon);
+    userHeader.appendChild(userNameEl);
+
+    const descEl = document.createElement("p");
+    descEl.className = "text-gray-800 whitespace-pre-wrap break-words";
+    descEl.textContent = description;
+
+    postEl.appendChild(userHeader);
+    postEl.appendChild(descEl);
+
+    if (imageUrl) {
+      const imgEl = document.createElement("img");
+      imgEl.src = imageUrl;
+      imgEl.alt = `Gambar postingan oleh ${username} yang menggambarkan konten postingan`;
+      imgEl.className = "w-full max-h-96 object-cover rounded-md mt-2";
+      postEl.appendChild(imgEl);
     }
 
-    function closeComments() {
-      commentModal.classList.add("hidden");
-      commentModal.classList.remove("flex");
-      currentPostId = null;
-      currentReplyToCommentId = null;
-      commentModalContent.innerHTML = "";
+    const btnContainer = document.createElement("div");
+    btnContainer.className = "flex space-x-3";
+
+    const commentBtn = document.createElement("button");
+    commentBtn.type = "button";
+    commentBtn.className =
+      "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition text-lg px-4 py-2 border border-green-600 rounded-md hover:bg-green-50";
+    commentBtn.innerHTML = `<i class="fas fa-comments text-xl"></i><span>Komentar</span>`;
+    commentBtn.onclick = () => openComments(id);
+
+    const reportLink = document.createElement("a");
+    reportLink.href = `https://wa.me/?text=Laporkan konten ini: ${window.location.href}`;
+    reportLink.target = "_blank";
+    reportLink.className = "flex";
+
+    const reportBtn = document.createElement("button");
+    reportBtn.type = "button";
+    reportBtn.className =
+      "flex items-center justify-center space-x-1 bg-red-600 text-white font-semibold rounded-md px-2 py-1 text-xs hover:bg-red-700 transition";
+    reportBtn.innerHTML = `<i class="fas fa-flag text-sm"></i><span>Laporkan!</span>`;
+
+    reportLink.appendChild(reportBtn);
+    btnContainer.appendChild(commentBtn);
+    btnContainer.appendChild(reportLink);
+
+    postEl.appendChild(btnContainer);
+
+    return postEl;
+  }
+
+  async function loadPosts() {
+    clearPosts();
+    const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
+
+    for (const docSnap of querySnapshot.docs) {
+      const data = docSnap.data();
+      const userRef = doc(db, "users", data.uid);
+      const userSnap = await getDoc(userRef);
+      const username = userSnap.exists() ? userSnap.data().username : "Anonim";
+      const postEl = createPostElement(
+        docSnap.id,
+        username,
+        data.description,
+        data.imageUrl || null
+      );
+      postsDiv.appendChild(postEl);
     }
+  }
 
-    function createPostElement(id, username, description, imageUrl) {
-      const postEl = document.createElement("article");
-      postEl.className =
-        "bg-white rounded-lg shadow-md p-5 space-y-3 border border-gray-300";
-
-      const userHeader = document.createElement("div");
-      userHeader.className = "flex items-center space-x-3";
-
-      const userIcon = document.createElement("div");
-      userIcon.className =
-        "flex items-center justify-center bg-green-100 text-green-700 rounded-full w-10 h-10 text-lg font-bold select-none";
-      userIcon.textContent = username.charAt(0).toUpperCase();
-
-      const userNameEl = document.createElement("p");
-      userNameEl.className =
-        "font-semibold text-green-800 text-lg truncate max-w-xs sm:max-w-sm";
-      userNameEl.textContent = username;
-
-      userHeader.appendChild(userIcon);
-      userHeader.appendChild(userNameEl);
-
-      const descEl = document.createElement("p");
-      descEl.className = "text-gray-800 whitespace-pre-wrap break-words";
-      descEl.textContent = description;
-
-      postEl.appendChild(userHeader);
-      postEl.appendChild(descEl);
-
-      if (imageUrl) {
-        const imgEl = document.createElement("img");
-        imgEl.src = imageUrl;
-        imgEl.alt = `Gambar postingan oleh ${username} yang menggambarkan konten postingan`;
-        imgEl.className = "w-full max-h-96 object-cover rounded-md mt-2";
-        postEl.appendChild(imgEl);
-      }
-
-      const btnContainer = document.createElement("div");
-      btnContainer.className = "flex space-x-3";
-
-      const commentBtn = document.createElement("button");
-      commentBtn.type = "button";
-      commentBtn.className =
-        "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition text-lg px-4 py-2 border border-green-600 rounded-md hover:bg-green-50";
-      commentBtn.innerHTML = `<i class="fas fa-comments text-xl"></i><span>Komentar</span>`;
-      commentBtn.onclick = () => openComments(id);
-
-      const reportLink = document.createElement("a");
-      reportLink.href = `https://wa.me/?text=Laporkan konten ini: ${window.location.href}`;
-      reportLink.target = "_blank";
-      reportLink.className = "flex";
-
-      const reportBtn = document.createElement("button");
-      reportBtn.type = "button";
-      reportBtn.className =
-        "flex items-center justify-center space-x-1 bg-red-600 text-white font-semibold rounded-md px-2 py-1 text-xs hover:bg-red-700 transition";
-      reportBtn.innerHTML = `<i class="fas fa-flag text-sm"></i><span>Laporkan!</span>`;
-
-      reportLink.appendChild(reportBtn);
-      btnContainer.appendChild(commentBtn);
-      btnContainer.appendChild(reportLink);
-
-      postEl.appendChild(btnContainer);
-
-      return postEl;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      await loadPosts();
     }
+  });
 
-    async function loadPosts() {
-      clearPosts();
-      const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
+  commentReplyForm.addEventListener("submit", submitReply);
+  closeCommentModalBtn.addEventListener("click", closeComments);
 
-      for (const docSnap of querySnapshot.docs) {
-        const data = docSnap.data();
-        const userRef = doc(db, "users", data.uid);
-        const userSnap = await getDoc(userRef);
-        const username = userSnap.exists() ? userSnap.data().username : "Anonim";
-        const postEl = createPostElement(
-          docSnap.id,
-          username,
-          data.description,
-          data.imageUrl || null
-        );
-        postsDiv.appendChild(postEl);
-      }
+  commentModal.addEventListener("click", (e) => {
+    if (e.target === commentModal) {
+      closeComments();
     }
+  });
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        loginModal.classList.remove("hidden");
-        loginModal.classList.add("flex");
-      } else {
-        loginModal.classList.add("hidden");
-        loginModal.classList.remove("flex");
-        await loadPosts();
-      }
-    });
-
-    commentReplyForm.addEventListener("submit", submitReply);
-    closeCommentModalBtn.addEventListener("click", closeComments);
-
-    commentModal.addEventListener("click", (e) => {
-      if (e.target === commentModal) {
-        closeComments();
-      }
-    });
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !commentModal.classList.contains("hidden")) {
-        closeComments();
-      }
-    });
-
-    window.login = () => alert("Fungsi login belum diimplementasikan.");
-    window.register = () => alert("Fungsi daftar belum diimplementasikan.");
-  </script>
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !commentModal.classList.contains("hidden")) {
+      closeComments();
+    }
+  });
+</script>
  </body>
 </html>
