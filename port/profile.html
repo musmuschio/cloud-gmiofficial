@@ -41,47 +41,9 @@
       const kodeReferralEl = document.getElementById("kodeReferral");
       const salinBtn = document.getElementById("salinKode");
       const pointEl = document.getElementById("point");
-      const balanceEl = document.getElementById("balance");
-      const transactionsEl = document.getElementById("transactions");
 
       function formatRupiah(number) {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
-      }
-
-      function createTransactionItem(tx) {
-        const div = document.createElement("div");
-        div.className = "flex justify-between items-center py-3 border-b border-gray-200";
-
-        const left = document.createElement("div");
-        left.className = "flex items-center space-x-3";
-
-        const icon = document.createElement("i");
-        icon.className = tx.type === "in" ? "fas fa-arrow-down text-green-500 text-lg" : "fas fa-arrow-up text-red-500 text-lg";
-        left.appendChild(icon);
-
-        const info = document.createElement("div");
-        info.className = "text-sm";
-
-        const desc = document.createElement("p");
-        desc.className = "font-semibold text-gray-800";
-        desc.textContent = tx.description;
-        info.appendChild(desc);
-
-        const date = document.createElement("p");
-        date.className = "text-gray-500";
-        date.textContent = tx.date;
-        info.appendChild(date);
-
-        left.appendChild(info);
-
-        const right = document.createElement("div");
-        right.className = tx.type === "in" ? "text-green-600 font-semibold" : "text-red-600 font-semibold";
-        right.textContent = (tx.type === "in" ? "+ " : "- ") + formatRupiah(tx.amount);
-
-        div.appendChild(left);
-        div.appendChild(right);
-
-        return div;
       }
 
       onAuthStateChanged(auth, async (user) => {
@@ -95,33 +57,13 @@
             usernameEl.textContent = data.username || "(tanpa nama)";
             emailEl.textContent = data.email || "(tanpa email)";
             kodeReferralEl.textContent = data.kode_referral || "Belum ada kode";
-            pointEl.textContent = data.point !== undefined ? data.point : 0;
-            balanceEl.textContent = formatRupiah(data.balance !== undefined ? data.balance : 0);
+            pointEl.textContent = formatRupiah(data.point !== undefined ? data.point : 0);
 
             salinBtn.onclick = () => {
               navigator.clipboard.writeText(data.kode_referral || "").then(() => {
                 alert("Kode referral berhasil disalin!");
               });
             };
-
-            // Example transactions data (replace with real data if available)
-            const transactions = data.transactions || [
-              { id: 1, type: "in", description: "Top Up Saldo", amount: 150000, date: "2024-06-10" },
-              { id: 2, type: "out", description: "Pembayaran Listrik", amount: 75000, date: "2024-06-09" },
-              { id: 3, type: "in", description: "Cashback Promo", amount: 20000, date: "2024-06-08" },
-              { id: 4, type: "out", description: "Pembayaran Internet", amount: 100000, date: "2024-06-07" },
-              { id: 5, type: "out", description: "Transfer ke Teman", amount: 50000, date: "2024-06-06" },
-              { id: 6, type: "in", description: "Refund Pembayaran", amount: 30000, date: "2024-06-05" },
-              { id: 7, type: "out", description: "Pembelian Pulsa", amount: 50000, date: "2024-06-04" },
-              { id: 8, type: "in", description: "Top Up Saldo", amount: 100000, date: "2024-06-03" },
-              { id: 9, type: "out", description: "Pembayaran Air", amount: 40000, date: "2024-06-02" },
-              { id: 10, type: "in", description: "Bonus Referral", amount: 25000, date: "2024-06-01" }
-            ];
-
-            transactionsEl.innerHTML = "";
-            transactions.forEach(tx => {
-              transactionsEl.appendChild(createTransactionItem(tx));
-            });
 
             loadingEl.style.display = "none";
             walletEl.style.display = "block";
@@ -156,29 +98,12 @@
       <p class="text-gray-500 font-semibold">
        Saldo e-Wallet
       </p>
-      <p class="text-3xl font-extrabold text-green-700" id="balance" tabindex="0">
+      <p class="text-3xl font-extrabold text-green-700" id="point" tabindex="0">
        Rp0
       </p>
      </div>
-     <div class="bg-green-100 rounded-full px-4 py-2 text-green-700 font-semibold flex items-center space-x-2 select-none">
-      <i class="fas fa-coins">
-      </i>
-      <span id="point" tabindex="0">
-       0
-      </span>
-      <span>
-       Points
-      </span>
-     </div>
     </div>
-    <div class="bg-gray-100 rounded-xl p-4">
-     <h2 class="text-lg font-semibold text-gray-700 mb-4">
-      Riwayat Transaksi
-     </h2>
-     <div class="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-green-400 scrollbar-track-green-100" id="transactions">
-     </div>
-    </div>
-    <div class="bg-green-50 rounded-xl p-4 flex items-center justify-between">
+    <div class="bg-green-50 rounded-xl p-6 flex items-center justify-between">
      <div>
       <p class="text-gray-600 font-semibold">
        Kode Referral Anda
