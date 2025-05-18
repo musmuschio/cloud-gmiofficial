@@ -42,10 +42,6 @@
       const salinBtn = document.getElementById("salinKode");
       const pointEl = document.getElementById("point");
 
-      function formatRupiah(number) {
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
-      }
-
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           const uid = user.uid;
@@ -57,7 +53,7 @@
             usernameEl.textContent = data.username || "(tanpa nama)";
             emailEl.textContent = data.email || "(tanpa email)";
             kodeReferralEl.textContent = data.kode_referral || "Belum ada kode";
-            pointEl.textContent = formatRupiah(data.point !== undefined ? data.point : 0);
+            pointEl.textContent = data.point !== undefined ? data.point : 0;
 
             salinBtn.onclick = () => {
               navigator.clipboard.writeText(data.kode_referral || "").then(() => {
