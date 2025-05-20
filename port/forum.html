@@ -1,40 +1,25 @@
-<html class="scroll-smooth" lang="id">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1" name="viewport"/>
-  <title>
-   FORUM
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter&amp;display=swap" rel="stylesheet"/>
-  <style>
-   body {
-      font-family: "Inter", sans-serif;
-    }
-  </style>
- </head>
- <body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Navbar mirip Facebook tanpa tombol beranda, tambah teman, garis 3, dan lingkaran akun -->
-  <header class="bg-[#185c54] text-white border-b border-gray-300 sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 py-2 shadow-sm">
-   <div class="flex items-center space-x-3">
-    <img alt="Logo FORUM berupa lingkaran hijau dengan tulisan FORUM di tengah" class="h-10 w-10 rounded-full object-cover" height="40" src="ikon_kecil.png" width="40"/>
-    <h1 class="font-extrabold text-2xl text-white-700 select-none tracking-wide">
-     FORUM
-    </h1>
-   </div>
-   <!-- Tombol Posting dan Profil di kanan -->
-   <nav class="flex items-center space-x-3">
-    <button aria-label="Posting" class="bg-[#16a34a] text-white font-semibold px-4 py-2 rounded-md shadow hover:bg-[#13803d] transition" onclick="window.location.href='update.html'">
-     Posting
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <title>
+         SPA with Fixed Header and Footer - Logo Left, Text Right
+        </title>
+        <script src="https://cdn.tailwindcss.com">
+        </script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+    </head>
+<body>
+<main class="flex-grow max-w-3xl mx-auto w-full px-4 py-4 space-y-6">
+   <section aria-label="Area untuk membuat posting baru" class="bg-white rounded-lg shadow-md p-4 flex items-center space-x-3 border border-gray-300">
+    <img alt="Avatar pengguna berwarna hijau dengan inisial U" class="w-10 h-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/6a2f67de-42cf-4de8-2bf0-fc5f274012d5.jpg" width="40"/>
+    <button aria-label="Mulai membuat posting baru" class="flex-grow text-left bg-gray-100 text-gray-600 rounded-full px-4 py-2 hover:bg-gray-200 transition font-medium select-none" id="newPostBtn">
+     Apa yang Anda pikirkan?
     </button>
-    <button aria-label="Profil" class="bg-[#16a34a] hover:bg-[#13803d] transition rounded-md px-4 py-2 shadow font-semibold text-white select-none" id="profileBtn">
-     Profil
-    </button>
-   </nav>
-  </header>
-  <main class="flex-grow max-w-3xl mx-auto w-full px-4 py-6 space-y-6" id="posts">
+   </section>
+   <section aria-label="Daftar postingan" class="space-y-6" id="posts">
+   </section>
   </main>
   <!-- Modal Komentar -->
   <div aria-describedby="commentModalDesc" aria-labelledby="commentModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="commentModal" role="dialog">
@@ -96,6 +81,7 @@
   const commentReplyForm = document.getElementById("commentReplyForm");
   const commentReplyInput = document.getElementById("commentReplyInput");
   const closeCommentModalBtn = document.getElementById("closeCommentModal");
+  const newPostBtn = document.getElementById("newPostBtn");
 
   let currentPostId = null;
   let currentReplyToCommentId = null;
@@ -404,17 +390,9 @@
     }
   });
 
-  const profileBtn = document.getElementById("profileBtn");
-profileBtn.addEventListener("click", () => {
-  const user = auth.currentUser;
-  if (user) {
-    // Redirect ke halaman profile.html dengan menyertakan UID sebagai query
-    window.location.href = `profile.html?uid=${user.uid}`;
-  } else {
-    alert("Silakan login terlebih dahulu.");
-  }
-});
-
+  newPostBtn.addEventListener("click", () => {
+    window.location.href = "update.html";
+  });
   </script>
- </body>
+</body>
 </html>
