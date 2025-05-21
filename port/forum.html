@@ -45,17 +45,14 @@
    import {
     initializeApp,
   } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    getDocs,
-    query,
-    orderBy,
-    doc,
-    getDoc,
-    addDoc,
-    serverTimestamp,
-  } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import {
+  getDatabase,
+  ref,
+  push,
+  onValue,
+  serverTimestamp as rtdbServerTimestamp,
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
   import {
     getAuth,
     onAuthStateChanged,
@@ -73,6 +70,7 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
+  const rtdb = getDatabase(app);
 
   const postsDiv = document.getElementById("posts");
   const commentModal = document.getElementById("commentModal");
@@ -147,49 +145,23 @@
     return commentEl;
   }
 
-  async function loadComments(postId) {
+function loadCommentsRealtime(postId) {
+  commentModalContent.innerHTML = "";
+  currentPostId = postId;
+  currentReplyToCommentId = null;
+
+  const commentsRef = ref(rtdb, `comments/${postId}`);
+  onValue(commentsRef, (snapshot) => {
     commentModalContent.innerHTML = "";
-    currentPostId = postId;
-    currentReplyToCommentId = null;
+    const comments = snapshot.val() || {};
 
-    const commentsQuery = query(
-      collection(db, "posts", postId, "comments"),
-      orderBy("createdAt", "asc")
-    );
-    const commentsSnapshot = await getDocs(commentsQuery);
+    const commentsArray = Object.entries(comments).map(([id, data]) => ({
+      id,
+      ...data,
+      replies: data.replies ? Object.entries(data.replies).map(([rid, rdata]) => ({ id: rid, ...rdata })) : [],
+    }));
 
-    const commentsData = [];
-
-    for (const commentDoc of commentsSnapshot.docs) {
-      const commentData = commentDoc.data();
-      const commentId = commentDoc.id;
-
-      const repliesQuery = query(
-        collection(db, "posts", postId, "comments", commentId, "replies"),
-        orderBy("createdAt", "asc")
-      );
-      const repliesSnapshot = await getDocs(repliesQuery);
-
-      const repliesData = [];
-      for (const replyDoc of repliesSnapshot.docs) {
-        const replyData = replyDoc.data();
-        repliesData.push({
-          id: replyDoc.id,
-          username: replyData.username,
-          text: replyData.text,
-          replies: [],
-        });
-      }
-
-      commentsData.push({
-        id: commentId,
-        username: commentData.username,
-        text: commentData.text,
-        replies: repliesData,
-      });
-    }
-
-    if (commentsData.length === 0) {
+    if (commentsArray.length === 0) {
       const noCommentsEl = document.createElement("p");
       noCommentsEl.className = "text-gray-500 text-center py-10";
       noCommentsEl.textContent = "Belum ada komentar.";
@@ -197,7 +169,7 @@
       return;
     }
 
-    commentsData.forEach((comment) => {
+    commentsArray.forEach((comment) => {
       const commentEl = createCommentElement(
         comment.id,
         comment.username,
@@ -206,71 +178,59 @@
       );
       commentModalContent.appendChild(commentEl);
     });
+  });
+}
+
+async function submitReply(event) {
+  event.preventDefault();
+  const replyText = commentReplyInput.value.trim();
+  const user = auth.currentUser;
+
+  if (!user) {
+    window.location.href = "login.html";
+    return;
   }
 
-  async function submitReply(event) {
-    event.preventDefault();
-    const replyText = commentReplyInput.value.trim();
-    const user = auth.currentUser;
-
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    if (!replyText) {
-      alert("Balasan tidak boleh kosong!");
-      return;
-    }
-
-    if (!currentPostId) {
-      alert("Tidak ada postingan yang dipilih.");
-      return;
-    }
-
-    try {
-      if (currentReplyToCommentId) {
-        await addDoc(
-          collection(
-            db,
-            "posts",
-            currentPostId,
-            "comments",
-            currentReplyToCommentId,
-            "replies"
-          ),
-          {
-            username: user.displayName || user.email || "Anonim",
-            text: replyText,
-            createdAt: serverTimestamp(),
-          }
-        );
-      } else {
-        await addDoc(collection(db, "posts", currentPostId, "comments"), {
-          username: user.displayName || user.email || "Anonim",
-          text: replyText,
-          createdAt: serverTimestamp(),
-        });
-      }
-
-      commentReplyInput.value = "";
-      currentReplyToCommentId = null;
-      await loadComments(currentPostId);
-      commentReplyInput.focus();
-    } catch (error) {
-      console.error("Gagal mengirim balasan: ", error);
-      alert("Gagal mengirim balasan, coba lagi.");
-    }
+  if (!replyText) {
+    alert("Balasan tidak boleh kosong!");
+    return;
   }
 
-  async function openComments(postId) {
-    await loadComments(postId);
-    commentModal.classList.remove("hidden");
-    commentModal.classList.add("flex");
+  try {
+    const username = user.displayName || user.email || "Anonim";
+
+    if (currentReplyToCommentId) {
+      const repliesRef = ref(rtdb, `comments/${currentPostId}/${currentReplyToCommentId}/replies`);
+      await push(repliesRef, {
+        username,
+        text: replyText,
+        createdAt: Date.now(),
+      });
+    } else {
+      const commentsRef = ref(rtdb, `comments/${currentPostId}`);
+      await push(commentsRef, {
+        username,
+        text: replyText,
+        createdAt: Date.now(),
+      });
+    }
+
     commentReplyInput.value = "";
     currentReplyToCommentId = null;
-    commentReplyInput.focus();
+  } catch (error) {
+    console.error("Gagal mengirim balasan: ", error);
+    alert("Gagal mengirim balasan, coba lagi.");
   }
+}
+
+ function openComments(postId) {
+  loadCommentsRealtime(postId);
+  commentModal.classList.remove("hidden");
+  commentModal.classList.add("flex");
+  commentReplyInput.value = "";
+  currentReplyToCommentId = null;
+  commentReplyInput.focus();
+}
 
   function closeComments() {
     commentModal.classList.add("hidden");
