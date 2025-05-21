@@ -1,67 +1,14 @@
 <html lang="id">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1" name="viewport"/>
-  <title>
-   SPA with Fixed Header and Footer - Logo Left, Text Right
-  </title>
-  <script src="https://cdn.tailwindcss.com">
-  </script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
- </head>
- <body class="bg-gray-50 flex flex-col min-h-screen font-inter">
-  <main class="flex-grow max-w-3xl mx-auto w-full px-4 py-6 space-y-6" role="main">
-   <section aria-label="Area untuk membuat posting baru" class="bg-white rounded-lg shadow-md p-4 flex items-center space-x-3 border border-gray-300">
-    <img alt="Avatar pengguna berwarna hijau dengan inisial U" class="w-10 h-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/6a2f67de-42cf-4de8-2bf0-fc5f274012d5.jpg" width="40"/>
-    <button aria-label="Mulai membuat posting baru" class="flex-grow text-left bg-gray-100 text-gray-600 rounded-full px-4 py-2 hover:bg-gray-200 transition font-medium select-none" id="newPostBtn">
-     Apa yang Anda pikirkan?
-    </button>
-   </section>
-   <section aria-label="Daftar postingan" class="space-y-6" id="posts">
-   </section>
-  </main>
-  <!-- Modal Komentar -->
-  <div aria-describedby="commentModalDesc" aria-labelledby="commentModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="commentModal" role="dialog">
-   <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
-    <header class="flex justify-between items-center border-b border-gray-200 px-5 py-3">
-     <h2 class="text-xl font-semibold text-green-700" id="commentModalTitle">
-      Komentar
-     </h2>
-     <button aria-label="Tutup modal komentar" class="text-gray-500 hover:text-gray-700 transition text-2xl font-bold" id="closeCommentModal">
-      ×
-     </button>
-    </header>
-    <div class="flex-grow overflow-y-auto px-5 py-3 space-y-4" id="commentModalContent">
-    </div>
-    <form class="border-t border-gray-200 px-5 py-3 flex space-x-3" id="commentReplyForm">
-     <input aria-label="Input balasan komentar" autocomplete="off" class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" id="commentReplyInput" placeholder="Tulis balasan..." type="text"/>
-     <button class="bg-green-600 text-white font-semibold rounded-md px-4 py-2 hover:bg-green-700 transition" id="commentReplySendBtn" type="submit">
-      Kirim
-     </button>
-    </form>
-   </div>
-  </div>
-  <script type="module">
-   import {
-      initializeApp,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      query,
-      orderBy,
-      doc,
-      getDoc,
-      addDoc,
-      serverTimestamp,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
+<head>
+  <meta charset="UTF-8" />
+  <title>Forum</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    // Konfigurasi Firebase kamu
     const firebaseConfig = {
       apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
       authDomain: "gmi-official21-74326.firebaseapp.com",
@@ -71,474 +18,199 @@
       appId: "1:496607636364:web:5c0428ccad6952faa544a9",
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    const postsDiv = document.getElementById("posts");
-    const commentModal = document.getElementById("commentModal");
-    const commentModalContent = document.getElementById("commentModalContent");
-    const commentReplyForm = document.getElementById("commentReplyForm");
-    const commentReplyInput = document.getElementById("commentReplyInput");
-    const closeCommentModalBtn = document.getElementById("closeCommentModal");
-    const newPostBtn = document.getElementById("newPostBtn");
-
-    let currentPostId = null;
-    let currentReplyToCommentId = null;
-
-    // Untuk interval polling
-    let postsPollingInterval = null;
-    let commentsPollingInterval = null;
-
-    function clearPosts() {
-      postsDiv.innerHTML = "";
-    }
-
-    function createCommentElement(commentId, username, text, replies = []) {
-      const commentEl = document.createElement("div");
-      commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3";
-
-      const commentHeader = document.createElement("div");
-      commentHeader.className = "flex items-center space-x-3";
-
-      const userIcon = document.createElement("div");
-      userIcon.className =
-        "w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
-      userIcon.textContent = username.charAt(0).toUpperCase();
-
-      const userNameEl = document.createElement("p");
-      userNameEl.className = "font-semibold text-green-700";
-      userNameEl.textContent = username;
-
-      commentHeader.appendChild(userIcon);
-      commentHeader.appendChild(userNameEl);
-
-      const commentText = document.createElement("p");
-      commentText.className = "text-gray-800 mt-2 whitespace-pre-wrap break-words";
-      commentText.textContent = text;
-
-      commentEl.appendChild(commentHeader);
-      commentEl.appendChild(commentText);
-
-      const replyBtn = document.createElement("button");
-      replyBtn.className =
-        "mt-2 text-sm text-green-600 hover:text-green-800 font-semibold";
-      replyBtn.textContent = "Balas";
-      replyBtn.onclick = () => {
-        currentReplyToCommentId = commentId;
-        commentReplyInput.focus();
-      };
-
-      commentEl.appendChild(replyBtn);
-
-      if (replies.length > 0) {
-        const repliesContainer = document.createElement("div");
-        repliesContainer.className =
-          "mt-3 ml-8 space-y-3 border-l-2 border-green-200 pl-4";
-
-        replies.forEach((reply) => {
-          const replyEl = createCommentElement(
-            reply.id,
-            reply.username,
-            reply.text,
-            reply.replies || []
-          );
-          repliesContainer.appendChild(replyEl);
-        });
-
-        commentEl.appendChild(repliesContainer);
-      }
-
-      return commentEl;
-    }
-
-    async function loadComments(postId) {
-      commentModalContent.innerHTML = "";
-      currentPostId = postId;
-      currentReplyToCommentId = null;
-
-      try {
-        const commentsQuery = query(
-          collection(db, "posts", postId, "comments"),
-          orderBy("createdAt", "asc")
-        );
-        const commentsSnapshot = await getDocs(commentsQuery);
-
-        const commentsData = [];
-
-        for (const commentDoc of commentsSnapshot.docs) {
-          const commentData = commentDoc.data();
-          const commentId = commentDoc.id;
-
-          const repliesQuery = query(
-            collection(db, "posts", postId, "comments", commentId, "replies"),
-            orderBy("createdAt", "asc")
-          );
-          const repliesSnapshot = await getDocs(repliesQuery);
-
-          const repliesData = [];
-          for (const replyDoc of repliesSnapshot.docs) {
-            const replyData = replyDoc.data();
-            repliesData.push({
-              id: replyDoc.id,
-              username: replyData.username,
-              text: replyData.text,
-              replies: [],
-            });
-          }
-
-          commentsData.push({
-            id: commentId,
-            username: commentData.username,
-            text: commentData.text,
-            replies: repliesData,
-          });
-        }
-
-        if (commentsData.length === 0) {
-          const noCommentsEl = document.createElement("p");
-          noCommentsEl.className = "text-gray-500 text-center py-10";
-          noCommentsEl.textContent = "Belum ada komentar.";
-          commentModalContent.appendChild(noCommentsEl);
-          return;
-        }
-
-        commentsData.forEach((comment) => {
-          const commentEl = createCommentElement(
-            comment.id,
-            comment.username,
-            comment.text,
-            comment.replies
-          );
-          commentModalContent.appendChild(commentEl);
-        });
-      } catch (error) {
-        console.error("Error load comments:", error);
-      }
-    }
-
-    async function submitReply(event) {
-      event.preventDefault();
-      const replyText = commentReplyInput.value.trim();
-      const user = auth.currentUser;
-
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      if (!replyText) {
-        alert("Balasan tidak boleh kosong!");
-        return;
-      }
-
-      if (!currentPostId) {
-        alert("Tidak ada postingan yang dipilih.");
-        return;
-      }
-
-      try {
-        if (currentReplyToCommentId) {
-          await addDoc(
-            collection(
-              db,
-              "posts",
-              currentPostId,
-              "comments",
-              currentReplyToCommentId,
-              "replies"
-            ),
-            {
-              username: user.displayName || user.email.split("@")[0],
-              text: replyText,
-              createdAt: serverTimestamp(),
-            }
-          );
-        } else {
-          // Jika tidak ada comment yang dibalas, buat komentar baru di post
-          await addDoc(collection(db, "posts", currentPostId, "comments"), {
-            username: user.displayName || user.email.split("@")[0],
-            text: replyText,
-            createdAt: serverTimestamp(),
-          });
-        }
-
-        commentReplyInput.value = "";
-        currentReplyToCommentId = null;
-        await loadComments(currentPostId);
-      } catch (error) {
-        console.error("Error submitting reply:", error);
-      }
-    }
-
-    function createPostElement(postId, username, description, imageUrl = null) {
-      const postEl = document.createElement("article");
-      postEl.className =
-        "bg-white rounded-lg shadow-md p-4 border border-gray-300";
-
-      const postHeader = document.createElement("header");
-      postHeader.className = "flex items-center space-x-3 mb-3";
-
-      const avatar = document.createElement("div");
-      avatar.className =
-        "w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
-      avatar.textContent = username.charAt(0).toUpperCase();
-
-      const usernameEl = document.createElement("p");
-      usernameEl.className = "font-semibold text-green-700";
-      usernameEl.textContent = username;
-
-      postHeader.appendChild(avatar);
-      postHeader.appendChild(usernameEl);
-
-      const postDesc = document.createElement("p");
-      postDesc.className = "mb-3 whitespace-pre-wrap break-words";
-      postDesc.textContent = description;
-
-      postEl.appendChild(postHeader);
-      postEl.appendChild(postDesc);
-
-      if (imageUrl) {
-        const imgEl = document.createElement("img");
-        imgEl.src = imageUrl;
-        imgEl.alt = "Gambar postingan";
-        imgEl.className = "rounded-lg max-w-full h-auto mb-3";
-        postEl.appendChild(imgEl);
-      }
-
-      const commentBtn = document.createElement("button");
-      commentBtn.className =
-        "text-green-600 font-semibold hover:text-green-800 transition";
-      commentBtn.textContent = "Komentar";
-      commentBtn.onclick = () => {
-        commentModal.classList.remove("hidden");
-        loadComments(postId);
-      };
-
-      postEl.appendChild(commentBtn);
-
-      return postEl;
-    }
-
-    // Cache untuk polling supaya DOM tidak rebuild terus-menerus kalau data sama
-    let postsCache = new Map();
-    let commentsCache = new Map();
-
-    async function loadPosts() {
-      try {
-        const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-
-        const newPostsCache = new Map();
-
-        for (const docSnap of querySnapshot.docs) {
-          const data = docSnap.data();
-          const postId = docSnap.id;
-          newPostsCache.set(postId, data);
-        }
-
-        // Compare cache with new data
-        if (JSON.stringify([...newPostsCache]) !== JSON.stringify([...postsCache])) {
-          postsCache = newPostsCache;
-          await renderPostsFromCache();
-        }
-      } catch (error) {
-        console.error("Error loading posts:", error);
-      }
-    }
-
-    async function renderPostsFromCache() {
-      clearPosts();
-      for (const [postId, data] of postsCache.entries()) {
-        const userRef = doc(db, "users", data.uid);
-        const userSnap = await getDoc(userRef);
-        const username = userSnap.exists() ? userSnap.data().username : "Anonim";
-        const postEl = createPostElement(
-          postId,
-          username,
-          data.description,
-          data.imageUrl || null
-        );
-        postsDiv.appendChild(postEl);
-      }
-    }
-
-    async function loadCommentsAuto(postId) {
-      if (!postId) return;
-
-      try {
-        const commentsQuery = query(
-          collection(db, "posts", postId, "comments"),
-          orderBy("createdAt", "asc")
-        );
-        const commentsSnapshot = await getDocs(commentsQuery);
-
-        const newCommentsData = [];
-
-        for (const commentDoc of commentsSnapshot.docs) {
-          const commentData = commentDoc.data();
-          const commentId = commentDoc.id;
-
-          const repliesQuery = query(
-            collection(db, "posts", postId, "comments", commentId, "replies"),
-            orderBy("createdAt", "asc")
-          );
-          const repliesSnapshot = await getDocs(repliesQuery);
-
-          const repliesData = [];
-          for (const replyDoc of repliesSnapshot.docs) {
-            const replyData = replyDoc.data();
-            repliesData.push({
-              id: replyDoc.id,
-              username: replyData.username,
-              text: replyData.text,
-              replies: [],
-            });
-          }
-
-          newCommentsData.push({
-            id: commentId,
-            username: commentData.username,
-            text: commentData.text,
-            replies: repliesData,
-          });
-        }
-
-        if (JSON.stringify(newCommentsData) !== JSON.stringify(commentsCache.get(postId))) {
-          commentsCache.set(postId, newCommentsData);
-
-          commentModalContent.innerHTML = "";
-
-          if (newCommentsData.length === 0) {
-            const noCommentsEl = document.createElement("p");
-            noCommentsEl.className = "text-gray-500 text-center py-10";
-            noCommentsEl.textContent = "Belum ada komentar.";
-            commentModalContent.appendChild(noCommentsEl);
-            return;
-          }
-
-          newCommentsData.forEach((comment) => {
-            const commentEl = createCommentElement(
-              comment.id,
-              comment.username,
-              comment.text,
-              comment.replies
-            );
-            commentModalContent.appendChild(commentEl);
-          });
-        }
-      } catch (error) {
-        console.error("Error loading comments auto:", error);
-      }
-    }
-
-    // Polling interval
-    setInterval(loadPosts, 7000);
-
-    setInterval(() => {
-      if (!commentModal.classList.contains("hidden") && currentPostId) {
-        loadCommentsAuto(currentPostId);
-      }
-    }, 5000);
-
-    closeCommentModalBtn.addEventListener("click", () => {
-      commentModal.classList.add("hidden");
-      commentModalContent.innerHTML = "";
-      currentPostId = null;
-      currentReplyToCommentId = null;
-      commentReplyInput.value = "";
-    });
-
-    commentReplyForm.addEventListener("submit", submitReply);
-
-    newPostBtn.addEventListener("click", () => {
-      alert("Fitur buat posting baru belum tersedia di contoh ini.");
-    });
-
-    // Muat postingan pertama kali
-    loadPosts();
-
-    function createPostElement(postId, username, description, imageUrl = null, likeCount = 0, userHasLiked = false) {
-  const postEl = document.createElement("article");
-  postEl.className = "bg-white rounded-lg shadow-md p-4 border border-gray-300";
-
-  // ... kode header dan deskripsi seperti sebelumnya
-
-  // Tambah tombol like
-  const likeBtn = document.createElement("button");
-  likeBtn.className = "text-green-600 font-semibold hover:text-green-800 transition ml-3";
-  likeBtn.textContent = `Like (${likeCount})`;
-  if (userHasLiked) {
-    likeBtn.classList.add("font-bold", "text-green-900");
-  }
-
-  likeBtn.onclick = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Silakan login dulu untuk memberi like.");
-      return;
-    }
-
-    const likeRef = doc(db, "posts", postId, "likes", user.uid);
-
-    try {
-      if (userHasLiked) {
-        // Unlike: hapus dokumen like user ini
-        await deleteDoc(likeRef);
-        likeBtn.textContent = `Like (${likeCount - 1})`;
-        likeBtn.classList.remove("font-bold", "text-green-900");
-        userHasLiked = false;
-      } else {
-        // Like: buat dokumen like user ini
-        await setDoc(likeRef, { createdAt: serverTimestamp() });
-        likeBtn.textContent = `Like (${likeCount + 1})`;
-        likeBtn.classList.add("font-bold", "text-green-900");
-        userHasLiked = true;
-      }
-    } catch (error) {
-      console.error("Error updating like:", error);
-    }
-  };
-
-  postEl.appendChild(likeBtn);
-
-  // ... tombol komentar dan lainnya
-
-  return postEl;
-}
-
-async function renderPostsFromCache() {
-  clearPosts();
-  for (const [postId, data] of postsCache.entries()) {
-    const userRef = doc(db, "users", data.uid);
-    const userSnap = await getDoc(userRef);
-    const username = userSnap.exists() ? userSnap.data().username : "Anonim";
-
-    // Ambil jumlah like dan cek user sudah like atau belum
-    const likesCollectionRef = collection(db, "posts", postId, "likes");
-    const likesSnapshot = await getDocs(likesCollectionRef);
-    const likeCount = likesSnapshot.size;
-
-    // Cek apakah user sudah like
-    let userHasLiked = false;
-    const user = auth.currentUser;
-    if (user) {
-      const userLikeDoc = await getDoc(doc(db, "posts", postId, "likes", user.uid));
-      userHasLiked = userLikeDoc.exists();
-    }
-
-    const postEl = createPostElement(
-      postId,
-      username,
-      data.description,
-      data.imageUrl || null,
-      likeCount,
-      userHasLiked
-    );
-    postsDiv.appendChild(postEl);
-  }
-}
-
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
   </script>
- </body>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
+  <button
+    onclick="window.location.href='update.html'"
+    class="mb-6 px-5 py-3 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 transition flex items-center gap-2"
+    aria-label="Upload Status"
+  >
+    <i class="fas fa-plus"></i> Upload Status
+  </button>
+  <div id="forum" class="w-full max-w-3xl space-y-6"></div>
+
+  <script>
+    const forumDiv = document.getElementById("forum");
+
+    function timeDiffExpired(timestamp) {
+      const now = new Date();
+      const createdAt = timestamp.toDate();
+      return now - createdAt > 24 * 60 * 60 * 1000;
+    }
+
+    function renderStatus(doc) {
+      const data = doc.data();
+      if (timeDiffExpired(data.createdAt)) return; // skip jika sudah lewat 24 jam
+
+      const statusDiv = document.createElement("div");
+      statusDiv.className = "bg-white p-5 rounded-lg shadow";
+
+      statusDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-3">
+            <img src="https://placehold.co/40x40/png?text=U" alt="Avatar pengguna ${data.username}" class="rounded-full w-10 h-10 object-cover" />
+            <b class="text-lg text-gray-800">${data.username}</b>
+          </div>
+          <span class="text-xs text-gray-400">${data.createdAt.toDate().toLocaleString('id-ID')}</span>
+        </div>
+        <p class="text-gray-700 mb-4 whitespace-pre-line">${data.description}</p>
+        <div class="flex flex-wrap gap-3 mb-4">
+          <button onclick="likeStatus('${doc.id}')" class="flex items-center gap-2 px-3 py-1 rounded-md bg-green-100 text-green-700 hover:bg-green-200 transition">
+            <i class="fas fa-thumbs-up"></i> Like (${data.likes?.length || 0})
+          </button>
+          <button onclick="dislikeStatus('${doc.id}')" class="flex items-center gap-2 px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200 transition">
+            <i class="fas fa-thumbs-down"></i> Dislike (${data.dislikes?.length || 0})
+          </button>
+          <button onclick="shareStatus('${doc.id}')" class="flex items-center gap-2 px-3 py-1 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+            <i class="fas fa-share-alt"></i> Share
+          </button>
+          <button onclick="reportStatus('${data.username}')" class="flex items-center gap-2 px-3 py-1 rounded-md bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition">
+            <i class="fas fa-flag"></i> Laporkan
+          </button>
+        </div>
+        <div class="comment-box">
+          <div class="flex gap-2 mb-3">
+            <input type="text" placeholder="Komentar..." id="comment-${doc.id}" class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button onclick="addComment('${doc.id}')" class="bg-blue-600 text-white px-4 rounded-md hover:bg-blue-700 transition">Kirim</button>
+          </div>
+          <div id="comments-${doc.id}" class="space-y-4"></div>
+        </div>
+      `;
+      forumDiv.appendChild(statusDiv);
+
+      loadComments(doc.id);
+    }
+
+    // Load status
+    db.collection("statuses").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+      forumDiv.innerHTML = "";
+      snapshot.docs.forEach(renderStatus);
+    });
+
+    // Like
+    function likeStatus(id) {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return alert("Login dulu");
+
+      const ref = db.collection("statuses").doc(id);
+      ref.update({
+        likes: firebase.firestore.FieldValue.arrayUnion(userId),
+        dislikes: firebase.firestore.FieldValue.arrayRemove(userId)
+      });
+    }
+
+    // Dislike
+    function dislikeStatus(id) {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return alert("Login dulu");
+
+      const ref = db.collection("statuses").doc(id);
+      ref.update({
+        dislikes: firebase.firestore.FieldValue.arrayUnion(userId),
+        likes: firebase.firestore.FieldValue.arrayRemove(userId)
+      });
+    }
+
+    // Share (bisa modifikasi dengan navigator.share jika mobile)
+    function shareStatus(id) {
+      const url = window.location.href.split('?')[0] + "?status=" + id;
+      navigator.clipboard.writeText(url);
+      alert("Link status disalin!");
+    }
+
+    // Report
+    function reportStatus(username) {
+      const pesan = `melaporkan status atas nama ${username}`;
+      const waLink = `https://wa.me/628119118047?text=${encodeURIComponent(pesan)}`;
+      window.open(waLink, "_blank");
+    }
+
+    // Tambah Komentar
+    function addComment(statusId) {
+      const commentInput = document.getElementById(`comment-${statusId}`);
+      const comment = commentInput.value.trim();
+      const user = auth.currentUser;
+      if (!user) return alert("Login dulu");
+      if (!comment) return;
+
+      db.collection("statuses").doc(statusId).collection("comments").add({
+        userId: user.uid,
+        username: user.displayName || user.email,
+        comment,
+        createdAt: new Date()
+      }).then(() => {
+        commentInput.value = "";
+        loadComments(statusId); // refresh komentar
+      });
+    }
+
+    // Load komentar + reply
+    function loadComments(statusId) {
+      const commentsDiv = document.getElementById(`comments-${statusId}`);
+      commentsDiv.innerHTML = "";
+      db.collection("statuses").doc(statusId).collection("comments")
+        .orderBy("createdAt").get().then(snapshot => {
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement("div");
+            div.className = "bg-gray-50 p-3 rounded-md shadow-sm";
+            div.innerHTML = `
+              <b class="text-gray-800">${data.username}</b>: <span class="text-gray-700">${data.comment}</span>
+              <div class="reply-box mt-2">
+                <div class="flex gap-2 mb-2">
+                  <input type="text" placeholder="Balas..." id="reply-${statusId}-${doc.id}" class="flex-grow border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <button onclick="replyComment('${statusId}', '${doc.id}')" class="bg-blue-600 text-white px-3 rounded-md hover:bg-blue-700 transition">Balas</button>
+                </div>
+                <div id="replies-${statusId}-${doc.id}" class="space-y-1 pl-4 border-l border-gray-300"></div>
+              </div>
+            `;
+            commentsDiv.appendChild(div);
+            loadReplies(statusId, doc.id);
+          });
+        });
+    }
+
+    // Balas Komentar
+    function replyComment(statusId, commentId) {
+      const replyInput = document.getElementById(`reply-${statusId}-${commentId}`);
+      const replyText = replyInput.value.trim();
+      const user = auth.currentUser;
+      if (!user) return alert("Login dulu");
+      if (!replyText) return;
+
+      db.collection("statuses").doc(statusId)
+        .collection("comments").doc(commentId)
+        .collection("replies").add({
+          userId: user.uid,
+          username: user.displayName || user.email,
+          reply: replyText,
+          createdAt: new Date()
+        }).then(() => {
+          replyInput.value = "";
+          loadReplies(statusId, commentId);
+        });
+    }
+
+    // Load reply
+    function loadReplies(statusId, commentId) {
+      const repliesDiv = document.getElementById(`replies-${statusId}-${commentId}`);
+      repliesDiv.innerHTML = "";
+      db.collection("statuses").doc(statusId).collection("comments")
+        .doc(commentId).collection("replies")
+        .orderBy("createdAt").get().then(snapshot => {
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const p = document.createElement("p");
+            p.className = "text-gray-600 text-sm";
+            p.innerHTML = `↪️ <b>${data.username}</b>: ${data.reply}`;
+            repliesDiv.appendChild(p);
+          });
+        });
+    }
+  </script>
+</body>
 </html>
