@@ -1,360 +1,283 @@
-<html>
-    <head>
-        <meta charset="utf-8"/>
-        <meta content="width=device-width, initial-scale=1" name="viewport"/>
-        <title>
-         SPA with Fixed Header and Footer - Logo Left, Text Right
-        </title>
-        <script src="https://cdn.tailwindcss.com">
-        </script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
-    </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Post dengan Like dan Komentar</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background:#f0f0f0; }
+  #posts { max-width: 600px; margin: auto; }
+  article { background: #fff; border: 1px solid #ddd; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+  img { max-width: 100%; border-radius: 8px; margin-top: 8px; }
+  button.like-btn { cursor: pointer; background: none; border: none; color: green; font-weight: normal; }
+  button.like-btn.liked { font-weight: bold; color: darkgreen; }
+  #login-form { max-width: 300px; margin: auto 0 40px; }
+  #login-form input { width: 100%; padding: 8px; margin: 4px 0; }
+  #login-status { margin-bottom: 20px; text-align: center; }
+  #logout-btn { cursor: pointer; background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 4px; }
+  .comments { margin-top: 12px; font-size: 0.9em; }
+  .comment { border-top: 1px solid #eee; padding: 6px 0; }
+  .comment .user { font-weight: bold; }
+  .comment .text { margin-left: 8px; display: inline-block; }
+  .comment-form { margin-top: 8px; }
+  .comment-form textarea { width: 100%; height: 50px; padding: 6px; resize: vertical; }
+  .comment-form button { margin-top: 4px; }
+</style>
+</head>
 <body>
-<main class="flex-grow max-w-3xl mx-auto w-full px-4 py-4 space-y-6">
-   <section aria-label="Area untuk membuat posting baru" class="bg-white rounded-lg shadow-md p-4 flex items-center space-x-3 border border-gray-300">
-    <img alt="Avatar pengguna berwarna hijau dengan inisial U" class="w-10 h-10 rounded-full object-cover" height="40" src="https://storage.googleapis.com/a1aa/image/6a2f67de-42cf-4de8-2bf0-fc5f274012d5.jpg" width="40"/>
-    <button aria-label="Mulai membuat posting baru" class="flex-grow text-left bg-gray-100 text-gray-600 rounded-full px-4 py-2 hover:bg-gray-200 transition font-medium select-none" id="newPostBtn">
-     Apa yang Anda pikirkan?
-    </button>
-   </section>
-   <section aria-label="Daftar postingan" class="space-y-6" id="posts">
-   </section>
-  </main>
-  <!-- Modal Komentar -->
-  <div aria-describedby="commentModalDesc" aria-labelledby="commentModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50" id="commentModal" role="dialog">
-   <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
-    <header class="flex justify-between items-center border-b border-gray-200 px-5 py-3">
-     <h2 class="text-xl font-semibold text-green-700" id="commentModalTitle">
-      Komentar
-     </h2>
-     <button aria-label="Tutup modal komentar" class="text-gray-500 hover:text-gray-700 transition text-2xl font-bold" id="closeCommentModal">
-      ×
-     </button>
-    </header>
-    <div class="flex-grow overflow-y-auto px-5 py-3 space-y-4" id="commentModalContent">
-    </div>
-    <form class="border-t border-gray-200 px-5 py-3 flex space-x-3" id="commentReplyForm">
-     <input aria-label="Input balasan komentar" class="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" id="commentReplyInput" placeholder="Tulis balasan..." type="text"/>
-     <button class="bg-green-600 text-white font-semibold rounded-md px-4 py-2 hover:bg-green-700 transition" id="commentReplySendBtn" type="submit">
-      Kirim
-     </button>
-    </form>
-   </div>
+
+<div id="login-status">
+  <div id="user-info" style="display:none;">
+    Logged in as <span id="user-email"></span>
+    <button id="logout-btn">Logout</button>
   </div>
+  <div id="login-form">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="login-btn">Login</button>
+  </div>
+</div>
+
+<div id="posts"></div>
+
 <script type="module">
-import {
-  initializeApp,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  query,
-  orderBy,
-  getDocs,
-  onSnapshot,
-  addDoc,
-  serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc, serverTimestamp,
+    onSnapshot, query, orderBy, addDoc
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-  authDomain: "gmi-official21-74326.firebaseapp.com",
-  projectId: "gmi-official21-74326",
-  storageBucket: "gmi-official21-74326.appspot.com",
-  messagingSenderId: "496607636364",
-  appId: "1:496607636364:web:5c0428ccad6952faa544a9",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-const postsDiv = document.getElementById("posts");
-const commentsContainer = document.getElementById("commentsContainer");
-const commentReplyForm = document.getElementById("commentReplyForm");
-const commentReplyInput = document.getElementById("commentReplyInput");
-const newPostBtn = document.getElementById("newPostBtn");
-
-let currentPostId = null;
-let currentReplyToCommentId = null;
-let unsubscribeComments = null;
-
-function clearPosts() {
-  postsDiv.innerHTML = "";
-}
-
-function createCommentElement(commentId, username, text, replies = []) {
-  const commentEl = document.createElement("div");
-  commentEl.className = "bg-gray-50 rounded-lg shadow-sm p-3 mb-3";
-
-  const commentHeader = document.createElement("div");
-  commentHeader.className = "flex items-center space-x-3";
-
-  const userIcon = document.createElement("div");
-  userIcon.className =
-    "w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold";
-  userIcon.textContent = username.charAt(0).toUpperCase();
-
-  const userNameEl = document.createElement("p");
-  userNameEl.className = "font-semibold text-green-700";
-  userNameEl.textContent = username;
-
-  commentHeader.appendChild(userIcon);
-  commentHeader.appendChild(userNameEl);
-
-  const commentText = document.createElement("p");
-  commentText.className = "text-gray-800 mt-2 whitespace-pre-wrap break-words";
-  commentText.textContent = text;
-
-  commentEl.appendChild(commentHeader);
-  commentEl.appendChild(commentText);
-
-  const replyBtn = document.createElement("button");
-  replyBtn.className =
-    "mt-2 text-sm text-green-600 hover:text-green-800 font-semibold";
-  replyBtn.textContent = "Balas";
-  replyBtn.onclick = () => {
-    currentReplyToCommentId = commentId;
-    commentReplyInput.focus();
+  // Konfigurasi Firebase (ganti dengan config kamu)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
   };
 
-  commentEl.appendChild(replyBtn);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  if (replies.length > 0) {
-    const repliesContainer = document.createElement("div");
-    repliesContainer.className =
-      "mt-3 ml-8 space-y-3 border-l-2 border-green-200 pl-4";
+  const postsDiv = document.getElementById("posts");
+  const loginForm = document.getElementById("login-form");
+  const userInfoDiv = document.getElementById("user-info");
+  const userEmailSpan = document.getElementById("user-email");
+  const logoutBtn = document.getElementById("logout-btn");
 
-    replies.forEach((reply) => {
-      const replyEl = createCommentElement(
-        reply.id,
-        reply.username,
-        reply.text,
-        reply.replies || []
-      );
-      repliesContainer.appendChild(replyEl);
-    });
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const loginBtn = document.getElementById("login-btn");
 
-    commentEl.appendChild(repliesContainer);
-  }
-
-  return commentEl;
-}
-
-async function loadComments(postId) {
-  currentPostId = postId;
-  currentReplyToCommentId = null;
-
-  if (unsubscribeComments) unsubscribeComments();
-
-  const commentsQuery = query(
-    collection(db, "posts", postId, "comments"),
-    orderBy("createdAt", "asc")
-  );
-
-  unsubscribeComments = onSnapshot(commentsQuery, async (commentsSnapshot) => {
-    commentsContainer.innerHTML = ""; // Clear previous comments
-
-    if (commentsSnapshot.empty) {
-      commentsContainer.innerHTML =
-        "<p class='text-gray-500 text-center py-5'>Belum ada komentar.</p>";
+  loginBtn.onclick = async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+    if (!email || !password) {
+      alert("Isi email dan password.");
       return;
     }
-
-    // Loop all comments and fetch replies
-    for (const commentDoc of commentsSnapshot.docs) {
-      const commentData = commentDoc.data();
-      const commentId = commentDoc.id;
-
-      // Fetch replies (non-realtime, can be improved if needed)
-      const repliesSnapshot = await getDocs(
-        query(
-          collection(db, "posts", postId, "comments", commentId, "replies"),
-          orderBy("createdAt", "asc")
-        )
-      );
-
-      const repliesData = repliesSnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          username: data.username,
-          text: data.text,
-          replies: [],
-        };
-      });
-
-      const commentEl = createCommentElement(
-        commentId,
-        commentData.username,
-        commentData.text,
-        repliesData
-      );
-
-      commentsContainer.appendChild(commentEl);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      emailInput.value = "";
+      passwordInput.value = "";
+    } catch (e) {
+      alert("Login gagal: " + e.message);
     }
-  });
-}
+  };
 
-async function submitReply(event) {
-  event.preventDefault();
-  const replyText = commentReplyInput.value.trim();
-  const user = auth.currentUser;
+  logoutBtn.onclick = async () => {
+    await signOut(auth);
+  };
 
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  if (!replyText) {
-    alert("Balasan tidak boleh kosong!");
-    return;
-  }
-
-  if (!currentPostId) {
-    alert("Tidak ada postingan yang dipilih.");
-    return;
-  }
-
-  try {
-    if (currentReplyToCommentId) {
-      await addDoc(
-        collection(
-          db,
-          "posts",
-          currentPostId,
-          "comments",
-          currentReplyToCommentId,
-          "replies"
-        ),
-        {
-          username: user.displayName || user.email || "Anonim",
-          text: replyText,
-          createdAt: serverTimestamp(),
-        }
-      );
-    } else {
-      await addDoc(collection(db, "posts", currentPostId, "comments"), {
-        username: user.displayName || user.email || "Anonim",
-        text: replyText,
-        createdAt: serverTimestamp(),
-      });
-    }
-
-    commentReplyInput.value = "";
-    currentReplyToCommentId = null;
-    // reload comments realtime sudah otomatis, tapi kalau mau refresh manual bisa dipanggil loadComments(currentPostId);
-  } catch (error) {
-    console.error("Gagal mengirim balasan: ", error);
-    alert("Gagal mengirim balasan, coba lagi.");
-  }
-}
-
-function createPostElement(id, username, description, imageUrl) {
-  const postEl = document.createElement("article");
-  postEl.className =
-    "bg-white rounded-lg shadow-md p-5 space-y-3 border border-gray-300";
-
-  const userHeader = document.createElement("div");
-  userHeader.className = "flex items-center space-x-3";
-
-  const userIcon = document.createElement("div");
-  userIcon.className =
-    "flex items-center justify-center bg-green-100 text-green-700 rounded-full w-10 h-10 text-lg font-bold select-none";
-  userIcon.textContent = username.charAt(0).toUpperCase();
-
-  const userNameEl = document.createElement("p");
-  userNameEl.className =
-    "font-semibold text-green-800 text-lg truncate max-w-xs sm:max-w-sm";
-  userNameEl.textContent = username;
-
-  userHeader.appendChild(userIcon);
-  userHeader.appendChild(userNameEl);
-
-  const descEl = document.createElement("p");
-  descEl.className = "text-gray-800 whitespace-pre-wrap break-words";
-  descEl.textContent = description;
-
-  postEl.appendChild(userHeader);
-  postEl.appendChild(descEl);
-
-  if (imageUrl) {
-    const imgEl = document.createElement("img");
-    imgEl.src = imageUrl;
-    imgEl.alt = `Gambar postingan oleh ${username} yang menggambarkan konten postingan`;
-    imgEl.className = "w-full max-h-96 object-cover rounded-md mt-2";
-    postEl.appendChild(imgEl);
-  }
-
-  const btnContainer = document.createElement("div");
-  btnContainer.className = "flex space-x-3";
-
-  const commentBtn = document.createElement("button");
-  commentBtn.type = "button";
-  commentBtn.className =
-    "flex items-center space-x-2 text-green-600 hover:text-green-800 font-semibold transition text-lg px-4 py-2 border border-green-600 rounded-md hover:bg-green-50";
-  commentBtn.innerHTML = `<i class="fas fa-comments text-xl"></i><span>Komentar</span>`;
-  commentBtn.onclick = () => loadComments(id); // langsung load comments di container
-
-  const reportLink = document.createElement("a");
-  reportLink.href = `https://wa.me/?text=Laporkan konten ini: ${window.location.href}`;
-  reportLink.target = "_blank";
-  reportLink.className = "flex";
-
-  const reportBtn = document.createElement("button");
-  reportBtn.type = "button";
-  reportBtn.className =
-    "flex items-center justify-center space-x-1 bg-red-600 text-white font-semibold rounded-md px-2 py-1 text-xs hover:bg-red-700 transition";
-  reportBtn.innerHTML = `<i class="fas fa-flag text-sm"></i><span>Laporkan!</span>`;
-
-  reportLink.appendChild(reportBtn);
-  btnContainer.appendChild(commentBtn);
-  btnContainer.appendChild(reportLink);
-
-  postEl.appendChild(btnContainer);
-
-  return postEl;
-}
-
-async function loadPosts() {
-  clearPosts();
-  const q = query(collection(db, "statuses"), orderBy("createdAt", "desc"));
-  const querySnapshot = await getDocs(q);
-
-  for (const docSnap of querySnapshot.docs) {
-    const data = docSnap.data();
-    const userRef = doc(db, "users", data.uid);
-    const userSnap = await getDoc(userRef);
-    const username = userSnap.exists() ? userSnap.data().username : "Anonim";
-
-    const postEl = createPostElement(
-      docSnap.id,
-      username,
-      data.description,
-      data.imageUrl || ""
-    );
-
-    postsDiv.appendChild(postEl);
-  }
-}
-
-commentReplyForm.addEventListener("submit", submitReply);
-
-window.onload = () => {
-  loadPosts();
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, user => {
     if (user) {
-      console.log("User logged in:", user.email);
+      loginForm.style.display = "none";
+      userInfoDiv.style.display = "block";
+      userEmailSpan.textContent = user.email;
+      loadPostsRealtime();
     } else {
-      console.log("User not logged in");
+      loginForm.style.display = "block";
+      userInfoDiv.style.display = "none";
+      postsDiv.innerHTML = "<p>Silakan login untuk melihat dan memberi like postingan.</p>";
     }
   });
-};
+
+  // Buat elemen komentar
+  function createCommentElement(commentId, username, text) {
+    const div = document.createElement("div");
+    div.classList.add("comment");
+    div.id = `comment-${commentId}`;
+
+    const userSpan = document.createElement("span");
+    userSpan.classList.add("user");
+    userSpan.textContent = username + ": ";
+
+    const textSpan = document.createElement("span");
+    textSpan.classList.add("text");
+    textSpan.textContent = text;
+
+    div.appendChild(userSpan);
+    div.appendChild(textSpan);
+
+    return div;
+  }
+
+  // Fungsi buat elemen post dengan like dan komentar
+  function createPostElement(postId, username, description, imageUrl, likeCount, userHasLiked) {
+    const postEl = document.createElement("article");
+
+    const header = document.createElement("h3");
+    header.textContent = username;
+    postEl.appendChild(header);
+
+    const desc = document.createElement("p");
+    desc.textContent = description;
+    postEl.appendChild(desc);
+
+    if (imageUrl) {
+      const img = document.createElement("img");
+      img.src = imageUrl;
+      postEl.appendChild(img);
+    }
+
+    // Tombol like
+    const likeBtn = document.createElement("button");
+    likeBtn.className = "like-btn";
+    likeBtn.textContent = `Like (${likeCount})`;
+    if (userHasLiked) likeBtn.classList.add("liked");
+
+    likeBtn.onclick = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Silakan login dulu untuk memberi like.");
+        return;
+      }
+      const likeRef = doc(db, "posts", postId, "likes", user.uid);
+
+      try {
+        if (userHasLiked) {
+          await deleteDoc(likeRef);
+          likeCount--;
+          userHasLiked = false;
+          likeBtn.classList.remove("liked");
+        } else {
+          await setDoc(likeRef, { createdAt: serverTimestamp() });
+          likeCount++;
+          userHasLiked = true;
+          likeBtn.classList.add("liked");
+        }
+        likeBtn.textContent = `Like (${likeCount})`;
+      } catch (e) {
+        console.error("Error updating like:", e);
+      }
+    };
+    postEl.appendChild(likeBtn);
+
+    // Container komentar
+    const commentsContainer = document.createElement("div");
+    commentsContainer.classList.add("comments");
+    postEl.appendChild(commentsContainer);
+
+    // Form komentar
+    const commentForm = document.createElement("form");
+    commentForm.classList.add("comment-form");
+    commentForm.innerHTML = `
+      <textarea placeholder="Tulis komentar..." required></textarea>
+      <button type="submit">Kirim</button>
+    `;
+    postEl.appendChild(commentForm);
+
+    // Tangani submit komentar
+    commentForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Silakan login dulu untuk mengirim komentar.");
+        return;
+      }
+      const textarea = commentForm.querySelector("textarea");
+      const text = textarea.value.trim();
+      if (!text) return;
+
+      try {
+        await addDoc(collection(db, "posts", postId, "comments"), {
+          uid: user.uid,
+          text,
+          createdAt: serverTimestamp(),
+        });
+        textarea.value = "";
+      } catch (e) {
+        console.error("Gagal kirim komentar:", e);
+      }
+    };
+
+    // Load komentar realtime
+    const commentsCol = collection(db, "posts", postId, "comments");
+    const q = query(commentsCol, orderBy("createdAt", "asc"));
+    onSnapshot(q, async (commentsSnap) => {
+      commentsContainer.innerHTML = ""; // kosongkan komentar dulu
+
+      // Ambil username untuk setiap komentar
+      const commentDocs = commentsSnap.docs;
+      for (const commentDoc of commentDocs) {
+        const commentData = commentDoc.data();
+        const userDoc = await getDoc(doc(db, "users", commentData.uid));
+        const commentUsername = userDoc.exists() ? userDoc.data().username : "Anonim";
+
+        const commentEl = createCommentElement(commentDoc.id, commentUsername, commentData.text);
+        commentsContainer.appendChild(commentEl);
+      }
+    });
+
+    return postEl;
+  }
+
+  // Load post realtime dengan komentar dan like
+  function loadPostsRealtime() {
+    const postsCol = collection(db, "posts");
+
+    onSnapshot(postsCol, async snapshot => {
+      postsDiv.innerHTML = "";
+
+      const posts = snapshot.docs;
+      for (const postDoc of posts) {
+        const postData = postDoc.data();
+        const postId = postDoc.id;
+
+        const userDoc = await getDoc(doc(db, "users", postData.uid));
+        const username = userDoc.exists() ? userDoc.data().username : "Anonim";
+
+        const likesCol = collection(db, "posts", postId, "likes");
+        const likesSnapshot = await getDocs(likesCol);
+        const likeCount = likesSnapshot.size;
+
+        let userHasLiked = false;
+        const user = auth.currentUser;
+        if (user) {
+          const userLikeDoc = await getDoc(doc(db, "posts", postId, "likes", user.uid));
+          userHasLiked = userLikeDoc.exists();
+        }
+
+        const postEl = createPostElement(
+          postId,
+          username,
+          postData.description,
+          postData.imageUrl || null,
+          likeCount,
+          userHasLiked
+        );
+
+        postsDiv.appendChild(postEl);
+      }
+      if (posts.length === 0) {
+        postsDiv.innerHTML = "<p>Belum ada postingan.</p>";
+      }
+    });
+  }
+
 </script>
+
 </body>
 </html>
