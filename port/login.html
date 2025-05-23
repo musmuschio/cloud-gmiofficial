@@ -1,87 +1,112 @@
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login - GMI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+<html class="scroll-smooth" lang="id">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Login - GMI Official App
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <style>
+   body {
+      font-family: "Inter", sans-serif;
+    }
+  </style>
+ </head>
+ <body class="bg-gray-50 min-h-screen flex flex-col justify-center items-center px-4 py-8">
+  <div class="w-full max-w-md bg-white rounded-lg shadow p-8">
+   <h1 class="text-2xl font-semibold text-center mb-6 text-gray-800">
+    Login
+   </h1>
+   <form autocomplete="off" class="space-y-5" id="loginForm">
+    <div>
+     <label class="block text-gray-700 font-semibold mb-1" for="loginUsername">
+      Username
+     </label>
+     <input autocomplete="username" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="loginUsername" name="username" placeholder="Masukkan username" required="" type="text"/>
+    </div>
+    <div>
+     <label class="block text-gray-700 font-semibold mb-1" for="loginPassword">
+      Password
+     </label>
+     <input autocomplete="current-password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="loginPassword" name="password" placeholder="Masukkan password" required="" type="password"/>
+    </div>
+    <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1" type="submit">
+     Login
+    </button>
+   </form>
+   <div class="my-4 flex items-center justify-center space-x-3">
+    <span class="border-b border-gray-300 w-1/5">
+    </span>
+    <span class="text-gray-500 text-sm">
+     atau
+    </span>
+    <span class="border-b border-gray-300 w-1/5">
+    </span>
+   </div>
+   <button class="w-full flex items-center justify-center space-x-3 border border-gray-300 rounded py-2 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" id="googleLoginBtn">
+    <img alt="Google logo, stylized G letter in multi-color" class="w-5 h-5" height="20" src="https://storage.googleapis.com/a1aa/image/889bbf33-420a-4e11-d0d0-4dd92b514243.jpg" width="20"/>
+    <span class="text-gray-700 font-semibold">
+     Login dengan Google
+    </span>
+   </button>
+   <p class="mt-6 text-center text-gray-600 text-sm">
+    Belum punya akun?
+    <a class="text-blue-600 font-semibold hover:underline" href="register.html">
+     Klik di sini!
+    </a>
+   </p>
+  </div>
   <script type="module">
-    import {
-      initializeApp
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import {
       getAuth,
-      signInWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      signInWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBrhBBX1CIt5JzCh25tPUwqHJjIVIeyef8",
-      authDomain: "gmi-official21-74326.firebaseapp.com",
-      projectId: "gmi-official21-74326",
-      storageBucket: "gmi-official21-74326.appspot.com",
-      messagingSenderId: "496607636364",
-      appId: "1:496607636364:web:5c0428ccad6952faa544a9",
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.appspot.com",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR",
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    window.loginUser = async function(event) {
-      event.preventDefault();
+    const loginForm = document.getElementById("loginForm");
+    const googleLoginBtn = document.getElementById("googleLoginBtn");
 
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      if (!email || !password) {
-        alert("Mohon isi semua field.");
-        return;
-      }
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = loginForm.loginUsername.value.trim();
+      const password = loginForm.loginPassword.value;
+      if (!username || !password) return alert("Username dan password harus diisi.");
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = "forum.html";
-      } catch (error) {
-        console.error("Login gagal:", error);
-        alert("Login gagal: " + error.message);
+        await signInWithEmailAndPassword(auth, username, password);
+        window.location.href = "home.html";
+      } catch (err) {
+        alert("Login gagal: " + err.message);
       }
-    };
+    });
+
+    googleLoginBtn.addEventListener("click", async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+        window.location.href = "home.html";
+      } catch (err) {
+        alert("Login Google gagal: " + err.message);
+      }
+    });
   </script>
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen px-4">
-  <form onsubmit="loginUser(event)" class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-semibold mb-6 text-center text-green-700">Login GMI Forum</h2>
-    <div class="mb-4">
-      <label for="email" class="block text-gray-700 mb-2 font-medium">Email</label>
-      <input
-        type="email"
-        id="email"
-        placeholder="Email"
-        required
-        class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-      />
-    </div>
-    <div class="mb-6">
-      <label for="password" class="block text-gray-700 mb-2 font-medium">Kata Sandi</label>
-      <input
-        type="password"
-        id="password"
-        placeholder="Kata Sandi"
-        required
-        class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-      />
-    </div>
-    <button
-      type="submit"
-      class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-md transition-colors duration-300"
-    >
-      Masuk
-    </button>
-    <div class="mt-6 text-center text-gray-600">
-      Belum punya akun? 
-      <a href="registrasi.html" class="text-green-600 hover:text-green-800 font-semibold underline ml-1 inline-block">
-        klik daftar disini!
-      </a>
-    </div>
-  </form>
-</body>
+ </body>
 </html>
