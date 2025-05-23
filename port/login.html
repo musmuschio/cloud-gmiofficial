@@ -92,7 +92,7 @@
       try {
         await signInWithEmailAndPassword(auth, email, password);
         loginError.textContent = "Login berhasil!";
-        window.location.href = "forum.html";
+        window.location.href = "index.html";
       } catch (error) {
         loginError.textContent = "Login gagal: " + error.message;
         console.error(error);
