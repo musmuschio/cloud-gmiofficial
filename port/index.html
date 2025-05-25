@@ -27,8 +27,8 @@
   </style>
  </head>
  <body class="bg-gray-50 min-h-screen flex flex-col">
-  <script type="module">
-   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
   import {
     getAuth,
@@ -41,28 +41,21 @@
     getFirestore,
     collection,
     query,
-    where,
     orderBy,
-    limit,
     onSnapshot,
     addDoc,
     serverTimestamp,
     doc,
     updateDoc,
-    arrayUnion,
-    arrayRemove,
     deleteDoc,
     getDoc,
     setDoc,
   } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
   import {
     getStorage,
-    ref,
-    uploadBytes,
-    getDownloadURL,
   } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
 
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
     authDomain: "gmi-enterprise23.firebaseapp.com",
@@ -70,18 +63,14 @@
     storageBucket: "gmi-enterprise23.firebasestorage.app",
     messagingSenderId: "974090028804",
     appId: "1:974090028804:web:43ae563ffd9433463c7251",
-    measurementId: "G-S27YB5Z8PR",
+    measurementId: "G-S27YB5Z8PR"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const storage = getStorage(app);
-
-  // Imgur Client ID
-  const IMGUR_CLIENT_ID = "0f3d0dc555fdb38";
 
   // Global state
   let currentUser = null;
@@ -110,7 +99,6 @@
   const commentSendBtn = document.getElementById("comment-send-btn");
   const reportModal = document.getElementById("report-modal");
   const reportModalCloseBtn = document.getElementById("report-modal-close");
-  const reportOptions = document.getElementById("report-options");
   const reportSendBtn = document.getElementById("report-send-btn");
   const reportReasonSelect = document.getElementById("report-reason-select");
   const referralCopyBtn = document.getElementById("referral-copy-btn");
@@ -118,352 +106,8 @@
   const userNameText = document.getElementById("user-name-text");
   const userEmailText = document.getElementById("user-email-text");
   const userReferralText = document.getElementById("user-referral-text");
-  const loadingOverlay = document.getElementById("loading-overlay");
 
-  // Containers
-  const loginSection = document.getElementById("login");
-  const registerSection = document.getElementById("register");
-  const appContainer = document.getElementById("app-container");
-
-  // Registration form elements
-  const regStep1 = document.getElementById('step1');
-  const regStep2 = document.getElementById('step2');
-  const nextBtn = document.getElementById('nextBtn');
-  const backBtn = document.getElementById('backBtn');
-  const regForm = document.getElementById('registrationForm');
-  const successMessage = document.getElementById('successMessage');
-  const loadingSpinner = document.getElementById('loadingSpinner');
-  const submitBtn = document.getElementById('submitBtn');
-
-  // Inputs Step 1
-  const fullNameInput = document.getElementById('fullName');
-  const addressInput = document.getElementById('address');
-  const emailInput = document.getElementById('email');
-
-  // Inputs Step 2
-  const passwordInput = document.getElementById('password');
-  const whatsappInput = document.getElementById('whatsapp');
-  const referralInput = document.getElementById('referral');
-
-  // Error elements
-  const fullNameError = document.getElementById('fullNameError');
-  const addressError = document.getElementById('addressError');
-  const emailError = document.getElementById('emailError');
-  const passwordError = document.getElementById('passwordError');
-  const passwordStrength = document.getElementById('passwordStrength');
-  const whatsappError = document.getElementById('whatsappError');
-
-  // Login form elements
-  const loginForm = document.getElementById("loginForm");
-  const loginEmailInput = document.getElementById("loginEmail");
-  const loginPasswordInput = document.getElementById("loginPassword");
-  const loginError = document.getElementById("loginError");
-  const toRegisterLink = document.getElementById("toRegister");
-  const toLoginLink = document.getElementById("toLogin");
-
-  // Validation functions
-  function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email.toLowerCase());
-  }
-
-  function validateWhatsapp(number) {
-    const re = /^08\d+$/;
-    return re.test(number);
-  }
-
-  function validatePasswordStrength(password) {
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[a-z]/.test(password)) score++;
-    if (/\d/.test(password)) score++;
-    if (/[\W_]/.test(password)) score++;
-
-    if (score <= 2) return { strength: 'Lemah', color: 'text-red-600' };
-    if (score === 3) return { strength: 'Sedang', color: 'text-yellow-500' };
-    if (score >= 4) return { strength: 'Kuat', color: 'text-green-600' };
-  }
-
-  function showError(element, message) {
-    element.textContent = message;
-    element.classList.remove('hidden');
-  }
-
-  function hideError(element) {
-    element.textContent = '';
-    element.classList.add('hidden');
-  }
-
-  // Step 1 validation
-  function validateStep1() {
-    let valid = true;
-
-    if (!fullNameInput.value.trim()) {
-      showError(fullNameError, 'Nama lengkap wajib diisi.');
-      valid = false;
-    } else {
-      hideError(fullNameError);
-    }
-
-    if (!addressInput.value.trim()) {
-      showError(addressError, 'Alamat wajib diisi.');
-      valid = false;
-    } else {
-      hideError(addressError);
-    }
-
-    if (!emailInput.value.trim()) {
-      showError(emailError, 'Email wajib diisi.');
-      valid = false;
-    } else if (!validateEmail(emailInput.value.trim())) {
-      showError(emailError, 'Format email tidak valid.');
-      valid = false;
-    } else {
-      hideError(emailError);
-    }
-
-    return valid;
-  }
-
-  // Step 2 validation
-  function validateStep2() {
-    let valid = true;
-
-    if (!passwordInput.value) {
-      showError(passwordError, 'Kata sandi wajib diisi.');
-      valid = false;
-    } else if (passwordInput.value.length < 8) {
-      showError(passwordError, 'Kata sandi minimal 8 karakter.');
-      valid = false;
-    } else {
-      hideError(passwordError);
-    }
-
-    if (!whatsappInput.value.trim()) {
-      showError(whatsappError, 'Nomor WhatsApp wajib diisi.');
-      valid = false;
-    } else if (!validateWhatsapp(whatsappInput.value.trim())) {
-      showError(whatsappError, 'Nomor WhatsApp harus diawali dengan "08" dan hanya angka.');
-      valid = false;
-    } else {
-      hideError(whatsappError);
-    }
-
-    return valid;
-  }
-
-  passwordInput.addEventListener('input', () => {
-    const val = passwordInput.value;
-    if (!val) {
-      passwordStrength.textContent = '';
-      passwordStrength.className = '';
-      return;
-    }
-    const { strength, color } = validatePasswordStrength(val);
-    passwordStrength.textContent = `Kekuatan kata sandi: ${strength}`;
-    passwordStrength.className = `mt-1 text-sm font-medium ${color}`;
-  });
-
-  nextBtn.addEventListener('click', () => {
-    if (validateStep1()) {
-      regStep1.classList.add('hidden');
-      regStep2.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  });
-
-  backBtn.addEventListener('click', () => {
-    regStep2.classList.add('hidden');
-    regStep1.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  regForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    if (!validateStep2()) {
-      return;
-    }
-
-    submitBtn.disabled = true;
-    loadingSpinner.classList.remove('hidden');
-
-    const fullName = fullNameInput.value.trim();
-    const address = addressInput.value.trim();
-    const email = emailInput.value.trim().toLowerCase();
-    const password = passwordInput.value;
-    const whatsapp = whatsappInput.value.trim();
-    const referral = referralInput.value.trim() || null;
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        fullName,
-        address,
-        email,
-        whatsapp,
-        referral,
-        createdAt: serverTimestamp(),
-        points: 0,
-      });
-
-      successMessage.classList.remove('hidden');
-      regForm.classList.add('hidden');
-
-      setTimeout(() => {
-        successMessage.classList.add('hidden');
-        regForm.reset();
-        regStep2.classList.add('hidden');
-        regStep1.classList.remove('hidden');
-        regForm.classList.remove('hidden');
-        showLoginSection();
-      }, 2500);
-
-    } catch (error) {
-      submitBtn.disabled = false;
-      loadingSpinner.classList.add('hidden');
-
-      let message = 'Terjadi kesalahan saat registrasi.';
-      if (error.code === 'auth/email-already-in-use') {
-        message = 'Email sudah terdaftar.';
-        showError(emailError, message);
-        regStep2.classList.add('hidden');
-        regStep1.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (error.code === 'auth/invalid-email') {
-        message = 'Email tidak valid.';
-        showError(emailError, message);
-        regStep2.classList.add('hidden');
-        regStep1.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (error.code === 'auth/weak-password') {
-        message = 'Kata sandi terlalu lemah.';
-        showError(passwordError, message);
-        regStep2.classList.remove('hidden');
-        regStep1.classList.add('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        alert(message + ' ' + error.message);
-      }
-    }
-  });
-
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    loginError.classList.add("hidden");
-    const email = loginEmailInput.value.trim().toLowerCase();
-    const password = loginPasswordInput.value;
-
-    if (!email || !password) {
-      loginError.textContent = "Email dan kata sandi wajib diisi.";
-      loginError.classList.remove("hidden");
-      return;
-    }
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      showApp();
-    } catch (error) {
-      let message = "Gagal login. Periksa email dan kata sandi Anda.";
-      if (error.code === "auth/user-not-found") {
-        message = "Pengguna tidak ditemukan.";
-      } else if (error.code === "auth/wrong-password") {
-        message = "Kata sandi salah.";
-      }
-      loginError.textContent = message;
-      loginError.classList.remove("hidden");
-    }
-  });
-
-  toRegisterLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    showRegisterSection();
-  });
-
-  toLoginLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    showLoginSection();
-  });
-
-  function showLoginSection() {
-    loginSection.classList.remove("hidden");
-    registerSection.classList.add("hidden");
-    appContainer.classList.add("hidden");
-  }
-
-  function showRegisterSection() {
-    loginSection.classList.add("hidden");
-    registerSection.classList.remove("hidden");
-    appContainer.classList.add("hidden");
-  }
-
-  function showApp() {
-    loginSection.classList.add("hidden");
-    registerSection.classList.add("hidden");
-    appContainer.classList.remove("hidden");
-    loadUserData().then(() => {
-      initApp();
-    });
-  }
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      showLoginSection();
-      currentUser = null;
-      userData = null;
-      return;
-    }
-    currentUser = user;
-    showApp();
-  });
-
-  async function loadUserData() {
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    if (userDoc.exists()) {
-      userData = userDoc.data();
-    } else {
-      userData = {
-        fullName: currentUser.displayName || "User",
-        email: currentUser.email,
-        whatsapp: "",
-        referral: "",
-        address: "",
-        createdAt: new Date(),
-        points: 0,
-      };
-      await setDoc(doc(db, "users", currentUser.uid), userData);
-    }
-  }
-
-  // Header options toggle
-  headerRightBtn.addEventListener("click", () => {
-    headerOptionsMenu.classList.toggle("hidden");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (
-      !headerRightBtn.contains(e.target) &&
-      !headerOptionsMenu.contains(e.target)
-    ) {
-      headerOptionsMenu.classList.add("hidden");
-    }
-  });
-
-  headerOptionsMenu.querySelectorAll("button[data-spa]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const spaPage = btn.getAttribute("data-spa");
-      if (spaPage === "@aboutapp") {
-        showAboutApp();
-      } else {
-        showSPA(spaPage);
-      }
-      headerOptionsMenu.classList.add("hidden");
-    });
-  });
-
+  // SPA pages content
   const SPA_PAGES = {
     settings: `<div class="p-6 max-w-xl mx-auto text-gray-700">
       <h2 class="text-2xl font-semibold mb-4">Settings</h2>
@@ -508,6 +152,32 @@
     </div>`,
   };
 
+  // Header options toggle
+  headerRightBtn.addEventListener("click", () => {
+    headerOptionsMenu.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (
+      !headerRightBtn.contains(e.target) &&
+      !headerOptionsMenu.contains(e.target)
+    ) {
+      headerOptionsMenu.classList.add("hidden");
+    }
+  });
+
+  headerOptionsMenu.querySelectorAll("button[data-spa]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const spaPage = btn.getAttribute("data-spa");
+      if (spaPage === "@aboutapp") {
+        showAboutApp();
+      } else {
+        showSPA(spaPage);
+      }
+      headerOptionsMenu.classList.add("hidden");
+    });
+  });
+
   function showSPA(page) {
     forumContainer.classList.add("hidden");
     profileContainer.classList.add("hidden");
@@ -542,8 +212,21 @@
       } else if (target === "profile") {
         showProfile();
       }
+      setActiveFooterBtn(target);
     });
   });
+
+  function setActiveFooterBtn(target) {
+    footerButtons.forEach((btn) => {
+      if (btn.getAttribute("data-target") === target) {
+        btn.classList.add("text-blue-600");
+        btn.classList.remove("text-gray-600");
+      } else {
+        btn.classList.remove("text-blue-600");
+        btn.classList.add("text-gray-600");
+      }
+    });
+  }
 
   function showHomeIframe() {
     mainContent.classList.add("hidden");
@@ -999,10 +682,6 @@
     });
   });
 
-  function initApp() {
-    showHomeIframe();
-  }
-
   // Forum upload footer elements and logic
   const forumUploadFooter = document.getElementById("forum-upload-footer");
   const uploadTextArea = document.getElementById("upload-textarea");
@@ -1048,7 +727,22 @@
     try {
       let imageUrl = null;
       if (uploadImageFile) {
-        imageUrl = await uploadImageToImgur(uploadImageFile);
+        const formData = new FormData();
+        formData.append("image", uploadImageFile);
+
+        const response = await fetch("https://api.imgur.com/3/image", {
+          method: "POST",
+          headers: {
+            Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+          },
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error("Upload gambar gagal");
+        }
+        imageUrl = data.data.link;
       }
 
       await addDoc(collection(db, "statuses"), {
@@ -1077,25 +771,16 @@
     }
   });
 
-  async function uploadImageToImgur(file) {
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const response = await fetch("https://api.imgur.com/3/image", {
-      method: "POST",
-      headers: {
-        Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
-      },
-      body: formData,
-    });
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error("Upload gambar gagal");
-    }
-    return data.data.link;
+  // Initialize footer active state and app
+  function initFooter() {
+    setActiveFooterBtn("home");
   }
-  </script>
+
+  function initApp() {
+    initFooter();
+    showHomeIframe();
+  }
+</script>
 
   <!-- LOGIN SECTION -->
   <section id="login" class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
@@ -1308,65 +993,28 @@
     </footer>
   </div>
 
-  <!-- Comments modal -->
-  <div aria-labelledby="comments-modal-header" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center p-4 hidden z-50" id="comments-modal" role="dialog">
-   <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-    <header class="flex justify-between items-center border-b border-gray-300 px-4 py-3">
-     <h3 class="text-xl font-semibold text-gray-800 text-center flex-grow" id="comments-modal-header">
-      Komentar
-     </h3>
-     <button aria-label="Close comments modal" class="text-gray-600 hover:text-gray-900 focus:outline-none" id="comments-modal-close" type="button">
-      <i class="fas fa-times text-2xl"></i>
-     </button>
-    </header>
-    <main class="flex-grow overflow-y-auto p-4 scrollbar-thin" id="comments-list"></main>
-    <footer class="border-t border-gray-300 px-4 py-3 flex space-x-2">
-     <input class="flex-grow border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="comment-input" placeholder="Tulis komentar..." type="text"/>
-     <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none" id="comment-send-btn" type="button">
-      Send
-     </button>
-    </footer>
-   </div>
-  </div>
-  <!-- Report modal -->
-  <div aria-labelledby="report-modal-header" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 hidden z-50" id="report-modal" role="dialog">
-   <div class="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
-    <header class="flex justify-between items-center">
-     <h3 class="text-xl font-semibold text-gray-800" id="report-modal-header">
-      Laporkan Postingan
-     </h3>
-     <button aria-label="Close report modal" class="text-gray-600 hover:text-gray-900 focus:outline-none" id="report-modal-close" type="button">
-      <i class="fas fa-times text-2xl"></i>
-     </button>
-    </header>
-    <div>
-     <label class="block font-semibold mb-2" for="report-reason-select">
-      Pilih alasan laporan:
-     </label>
-     <select class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" id="report-reason-select">
-      <option value="">
-       -- Pilih alasan --
-      </option>
-      <option value="Spam">
-       Spam
-      </option>
-      <option value="Kekerasan Verbal">
-       Kekerasan Verbal
-      </option>
-      <option value="Konten Tidak Pantas">
-       Konten Tidak Pantas
-      </option>
-      <option value="Lainnya">
-       Lainnya
-      </option>
-     </select>
-    </div>
-    <div class="flex justify-end">
-     <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none" id="report-send-btn" type="button">
-      Kirim
-     </button>
-    </div>
-   </div>
-  </div>
+  <!-- Footer navigation -->
+  <footer id="footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow flex justify-between items-center h-16 max-w-4xl mx-auto px-2 sm:px-6 z-50">
+    <button aria-label="Beranda" class="footer-btn flex flex-col items-center justify-center text-blue-600 focus:outline-none" data-target="home" type="button">
+      <i class="fas fa-home text-xl"></i>
+      <span class="text-xs mt-1 select-none">Beranda</span>
+    </button>
+    <button aria-label="Forum" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="forum" type="button">
+      <i class="fas fa-comments text-xl"></i>
+      <span class="text-xs mt-1 select-none">Forum</span>
+    </button>
+    <button aria-label="Informasi" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="info" type="button">
+      <i class="fas fa-info-circle text-xl"></i>
+      <span class="text-xs mt-1 select-none">Informasi</span>
+    </button>
+    <button aria-label="Tentang" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="about" type="button">
+      <i class="fas fa-info text-xl"></i>
+      <span class="text-xs mt-1 select-none">Tentang</span>
+    </button>
+    <button aria-label="Profil" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="profile" type="button">
+      <i class="fas fa-user text-xl"></i>
+      <span class="text-xs mt-1 select-none">Profil</span>
+    </button>
+  </footer>
  </body>
 </html>
