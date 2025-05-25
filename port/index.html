@@ -34,6 +34,8 @@
     getAuth,
     onAuthStateChanged,
     signOut,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
   } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
   import {
     getFirestore,
@@ -51,6 +53,7 @@
     arrayRemove,
     deleteDoc,
     getDoc,
+    setDoc,
   } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
   import {
     getStorage,
@@ -76,6 +79,9 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const storage = getStorage(app);
+
+  // Imgur Client ID
+  const IMGUR_CLIENT_ID = "0f3d0dc555fdb38";
 
   // Global state
   let currentUser = null;
@@ -114,7 +120,350 @@
   const userReferralText = document.getElementById("user-referral-text");
   const loadingOverlay = document.getElementById("loading-overlay");
 
-  // SPA pages
+  // Containers
+  const loginSection = document.getElementById("login");
+  const registerSection = document.getElementById("register");
+  const appContainer = document.getElementById("app-container");
+
+  // Registration form elements
+  const regStep1 = document.getElementById('step1');
+  const regStep2 = document.getElementById('step2');
+  const nextBtn = document.getElementById('nextBtn');
+  const backBtn = document.getElementById('backBtn');
+  const regForm = document.getElementById('registrationForm');
+  const successMessage = document.getElementById('successMessage');
+  const loadingSpinner = document.getElementById('loadingSpinner');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // Inputs Step 1
+  const fullNameInput = document.getElementById('fullName');
+  const addressInput = document.getElementById('address');
+  const emailInput = document.getElementById('email');
+
+  // Inputs Step 2
+  const passwordInput = document.getElementById('password');
+  const whatsappInput = document.getElementById('whatsapp');
+  const referralInput = document.getElementById('referral');
+
+  // Error elements
+  const fullNameError = document.getElementById('fullNameError');
+  const addressError = document.getElementById('addressError');
+  const emailError = document.getElementById('emailError');
+  const passwordError = document.getElementById('passwordError');
+  const passwordStrength = document.getElementById('passwordStrength');
+  const whatsappError = document.getElementById('whatsappError');
+
+  // Login form elements
+  const loginForm = document.getElementById("loginForm");
+  const loginEmailInput = document.getElementById("loginEmail");
+  const loginPasswordInput = document.getElementById("loginPassword");
+  const loginError = document.getElementById("loginError");
+  const toRegisterLink = document.getElementById("toRegister");
+  const toLoginLink = document.getElementById("toLogin");
+
+  // Validation functions
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email.toLowerCase());
+  }
+
+  function validateWhatsapp(number) {
+    const re = /^08\d+$/;
+    return re.test(number);
+  }
+
+  function validatePasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[\W_]/.test(password)) score++;
+
+    if (score <= 2) return { strength: 'Lemah', color: 'text-red-600' };
+    if (score === 3) return { strength: 'Sedang', color: 'text-yellow-500' };
+    if (score >= 4) return { strength: 'Kuat', color: 'text-green-600' };
+  }
+
+  function showError(element, message) {
+    element.textContent = message;
+    element.classList.remove('hidden');
+  }
+
+  function hideError(element) {
+    element.textContent = '';
+    element.classList.add('hidden');
+  }
+
+  // Step 1 validation
+  function validateStep1() {
+    let valid = true;
+
+    if (!fullNameInput.value.trim()) {
+      showError(fullNameError, 'Nama lengkap wajib diisi.');
+      valid = false;
+    } else {
+      hideError(fullNameError);
+    }
+
+    if (!addressInput.value.trim()) {
+      showError(addressError, 'Alamat wajib diisi.');
+      valid = false;
+    } else {
+      hideError(addressError);
+    }
+
+    if (!emailInput.value.trim()) {
+      showError(emailError, 'Email wajib diisi.');
+      valid = false;
+    } else if (!validateEmail(emailInput.value.trim())) {
+      showError(emailError, 'Format email tidak valid.');
+      valid = false;
+    } else {
+      hideError(emailError);
+    }
+
+    return valid;
+  }
+
+  // Step 2 validation
+  function validateStep2() {
+    let valid = true;
+
+    if (!passwordInput.value) {
+      showError(passwordError, 'Kata sandi wajib diisi.');
+      valid = false;
+    } else if (passwordInput.value.length < 8) {
+      showError(passwordError, 'Kata sandi minimal 8 karakter.');
+      valid = false;
+    } else {
+      hideError(passwordError);
+    }
+
+    if (!whatsappInput.value.trim()) {
+      showError(whatsappError, 'Nomor WhatsApp wajib diisi.');
+      valid = false;
+    } else if (!validateWhatsapp(whatsappInput.value.trim())) {
+      showError(whatsappError, 'Nomor WhatsApp harus diawali dengan "08" dan hanya angka.');
+      valid = false;
+    } else {
+      hideError(whatsappError);
+    }
+
+    return valid;
+  }
+
+  passwordInput.addEventListener('input', () => {
+    const val = passwordInput.value;
+    if (!val) {
+      passwordStrength.textContent = '';
+      passwordStrength.className = '';
+      return;
+    }
+    const { strength, color } = validatePasswordStrength(val);
+    passwordStrength.textContent = `Kekuatan kata sandi: ${strength}`;
+    passwordStrength.className = `mt-1 text-sm font-medium ${color}`;
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (validateStep1()) {
+      regStep1.classList.add('hidden');
+      regStep2.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  backBtn.addEventListener('click', () => {
+    regStep2.classList.add('hidden');
+    regStep1.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  regForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!validateStep2()) {
+      return;
+    }
+
+    submitBtn.disabled = true;
+    loadingSpinner.classList.remove('hidden');
+
+    const fullName = fullNameInput.value.trim();
+    const address = addressInput.value.trim();
+    const email = emailInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+    const whatsapp = whatsappInput.value.trim();
+    const referral = referralInput.value.trim() || null;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        fullName,
+        address,
+        email,
+        whatsapp,
+        referral,
+        createdAt: serverTimestamp(),
+        points: 0,
+      });
+
+      successMessage.classList.remove('hidden');
+      regForm.classList.add('hidden');
+
+      setTimeout(() => {
+        successMessage.classList.add('hidden');
+        regForm.reset();
+        regStep2.classList.add('hidden');
+        regStep1.classList.remove('hidden');
+        regForm.classList.remove('hidden');
+        showLoginSection();
+      }, 2500);
+
+    } catch (error) {
+      submitBtn.disabled = false;
+      loadingSpinner.classList.add('hidden');
+
+      let message = 'Terjadi kesalahan saat registrasi.';
+      if (error.code === 'auth/email-already-in-use') {
+        message = 'Email sudah terdaftar.';
+        showError(emailError, message);
+        regStep2.classList.add('hidden');
+        regStep1.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Email tidak valid.';
+        showError(emailError, message);
+        regStep2.classList.add('hidden');
+        regStep1.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (error.code === 'auth/weak-password') {
+        message = 'Kata sandi terlalu lemah.';
+        showError(passwordError, message);
+        regStep2.classList.remove('hidden');
+        regStep1.classList.add('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        alert(message + ' ' + error.message);
+      }
+    }
+  });
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loginError.classList.add("hidden");
+    const email = loginEmailInput.value.trim().toLowerCase();
+    const password = loginPasswordInput.value;
+
+    if (!email || !password) {
+      loginError.textContent = "Email dan kata sandi wajib diisi.";
+      loginError.classList.remove("hidden");
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      showApp();
+    } catch (error) {
+      let message = "Gagal login. Periksa email dan kata sandi Anda.";
+      if (error.code === "auth/user-not-found") {
+        message = "Pengguna tidak ditemukan.";
+      } else if (error.code === "auth/wrong-password") {
+        message = "Kata sandi salah.";
+      }
+      loginError.textContent = message;
+      loginError.classList.remove("hidden");
+    }
+  });
+
+  toRegisterLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    showRegisterSection();
+  });
+
+  toLoginLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    showLoginSection();
+  });
+
+  function showLoginSection() {
+    loginSection.classList.remove("hidden");
+    registerSection.classList.add("hidden");
+    appContainer.classList.add("hidden");
+  }
+
+  function showRegisterSection() {
+    loginSection.classList.add("hidden");
+    registerSection.classList.remove("hidden");
+    appContainer.classList.add("hidden");
+  }
+
+  function showApp() {
+    loginSection.classList.add("hidden");
+    registerSection.classList.add("hidden");
+    appContainer.classList.remove("hidden");
+    loadUserData().then(() => {
+      initApp();
+    });
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      showLoginSection();
+      currentUser = null;
+      userData = null;
+      return;
+    }
+    currentUser = user;
+    showApp();
+  });
+
+  async function loadUserData() {
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (userDoc.exists()) {
+      userData = userDoc.data();
+    } else {
+      userData = {
+        fullName: currentUser.displayName || "User",
+        email: currentUser.email,
+        whatsapp: "",
+        referral: "",
+        address: "",
+        createdAt: new Date(),
+        points: 0,
+      };
+      await setDoc(doc(db, "users", currentUser.uid), userData);
+    }
+  }
+
+  // Header options toggle
+  headerRightBtn.addEventListener("click", () => {
+    headerOptionsMenu.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (
+      !headerRightBtn.contains(e.target) &&
+      !headerOptionsMenu.contains(e.target)
+    ) {
+      headerOptionsMenu.classList.add("hidden");
+    }
+  });
+
+  headerOptionsMenu.querySelectorAll("button[data-spa]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const spaPage = btn.getAttribute("data-spa");
+      if (spaPage === "@aboutapp") {
+        showAboutApp();
+      } else {
+        showSPA(spaPage);
+      }
+      headerOptionsMenu.classList.add("hidden");
+    });
+  });
+
   const SPA_PAGES = {
     settings: `<div class="p-6 max-w-xl mx-auto text-gray-700">
       <h2 class="text-2xl font-semibold mb-4">Settings</h2>
@@ -159,84 +508,26 @@
     </div>`,
   };
 
-  // Redirect to login.html if not logged in
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
-    currentUser = user;
-    await loadUserData();
-    initApp();
-  });
-
-  async function loadUserData() {
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    if (userDoc.exists()) {
-      userData = userDoc.data();
-    } else {
-      // If user data not found, create minimal data
-      userData = {
-        fullName: currentUser.displayName || "User",
-        email: currentUser.email,
-        whatsapp: "",
-        referral: "",
-        address: "",
-        createdAt: new Date(),
-      };
-      await setDoc(doc(db, "users", currentUser.uid), userData);
-    }
-  }
-
-  // Header options toggle
-  headerRightBtn.addEventListener("click", () => {
-    headerOptionsMenu.classList.toggle("hidden");
-  });
-
-  // Close header options if clicked outside
-  document.addEventListener("click", (e) => {
-    if (
-      !headerRightBtn.contains(e.target) &&
-      !headerOptionsMenu.contains(e.target)
-    ) {
-      headerOptionsMenu.classList.add("hidden");
-    }
-  });
-
-  // Handle header options SPA navigation
-  headerOptionsMenu.querySelectorAll("button[data-spa]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const spaPage = btn.getAttribute("data-spa");
-      if (spaPage === "@aboutapp") {
-        showAboutApp();
-      } else {
-        showSPA(spaPage);
-      }
-      headerOptionsMenu.classList.add("hidden");
-    });
-  });
-
-  // Show SPA content in mainContent
   function showSPA(page) {
     forumContainer.classList.add("hidden");
     profileContainer.classList.add("hidden");
     iframeContainer.classList.add("hidden");
     postInputBox.classList.add("hidden");
+    forumUploadFooter.classList.add("hidden");
     mainContent.classList.remove("hidden");
     mainContent.innerHTML = SPA_PAGES[page] || "<p>Page not found.</p>";
   }
 
-  // Show About App page
   function showAboutApp() {
     forumContainer.classList.add("hidden");
     profileContainer.classList.add("hidden");
     iframeContainer.classList.add("hidden");
     postInputBox.classList.add("hidden");
+    forumUploadFooter.classList.add("hidden");
     mainContent.classList.remove("hidden");
     mainContent.innerHTML = SPA_PAGES.aboutapp;
   }
 
-  // Footer buttons navigation
   footerButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.getAttribute("data-target");
@@ -254,7 +545,6 @@
     });
   });
 
-  // Show home.html in iframe
   function showHomeIframe() {
     mainContent.classList.add("hidden");
     forumContainer.classList.add("hidden");
@@ -262,9 +552,9 @@
     iframeContainer.classList.remove("hidden");
     iframeContainer.innerHTML = `<iframe src="home.html" class="w-full h-full border-0" title="Home Page"></iframe>`;
     postInputBox.classList.add("hidden");
+    forumUploadFooter.classList.add("hidden");
   }
 
-  // Show informasi.html in iframe
   function showInfoIframe() {
     mainContent.classList.add("hidden");
     forumContainer.classList.add("hidden");
@@ -272,9 +562,9 @@
     iframeContainer.classList.remove("hidden");
     iframeContainer.innerHTML = `<iframe src="informasi.html" class="w-full h-full border-0" title="Informasi Page"></iframe>`;
     postInputBox.classList.add("hidden");
+    forumUploadFooter.classList.add("hidden");
   }
 
-  // Show tentang.html in iframe
   function showAboutIframe() {
     mainContent.classList.add("hidden");
     forumContainer.classList.add("hidden");
@@ -282,32 +572,32 @@
     iframeContainer.classList.remove("hidden");
     iframeContainer.innerHTML = `<iframe src="tentang.html" class="w-full h-full border-0" title="Tentang Page"></iframe>`;
     postInputBox.classList.add("hidden");
+    forumUploadFooter.classList.add("hidden");
   }
 
-  // Show profile page
   function showProfile() {
     mainContent.classList.add("hidden");
     forumContainer.classList.add("hidden");
     iframeContainer.classList.add("hidden");
     profileContainer.classList.remove("hidden");
     postInputBox.classList.add("hidden");
+    forumUploadFooter.classList.add("hidden");
     userPointsText.textContent = userData.points ? userData.points : "0";
     userNameText.textContent = userData.fullName || "";
     userEmailText.textContent = userData.email || "";
     userReferralText.textContent = userData.referral || "";
   }
 
-  // Show forum page
   function showForum() {
     mainContent.classList.add("hidden");
     iframeContainer.classList.add("hidden");
     profileContainer.classList.add("hidden");
     forumContainer.classList.remove("hidden");
     postInputBox.classList.remove("hidden");
+    forumUploadFooter.classList.remove("hidden");
     loadForumPosts();
   }
 
-  // Load forum posts from Firestore, only posts within 24 hours
   async function loadForumPosts() {
     if (statusesUnsub) {
       statusesUnsub();
@@ -325,7 +615,6 @@
     );
 
     statusesUnsub = onSnapshot(q, async (snapshot) => {
-      // Filter posts older than 24 hours and delete them
       const batchDeletes = [];
       const posts = [];
       snapshot.forEach((docSnap) => {
@@ -345,7 +634,6 @@
     });
   }
 
-  // Render forum posts
   function renderForumPosts(posts) {
     if (posts.length === 0) {
       forumContainer.innerHTML = `<p class="text-center text-gray-500 mt-6">No posts available.</p>`;
@@ -368,7 +656,6 @@
         "bg-white rounded-lg shadow p-4 mb-4 max-w-3xl mx-auto break-words";
       postDiv.dataset.postId = post.id;
 
-      // Post header: user fullName, date, time
       const headerDiv = document.createElement("div");
       headerDiv.className = "mb-2";
       headerDiv.innerHTML = `
@@ -376,12 +663,10 @@
         <p class="text-xs text-gray-500">${timeStr}, ${dateStr}</p>
       `;
 
-      // Post content text
       const contentP = document.createElement("p");
       contentP.className = "mt-2 text-gray-700 whitespace-pre-wrap";
       contentP.textContent = post.deskripsi || "";
 
-      // Post image if exists
       let imgEl = null;
       if (post.gambar) {
         imgEl = document.createElement("img");
@@ -390,12 +675,10 @@
         imgEl.className = "mt-3 rounded max-h-96 w-full object-contain";
       }
 
-      // Post actions: like, comment, report
       const actionsDiv = document.createElement("div");
       actionsDiv.className =
         "flex items-center justify-between mt-4 text-gray-600";
 
-      // Like button and count
       const likeBtn = document.createElement("button");
       likeBtn.className =
         "flex items-center space-x-1 hover:text-blue-600 focus:outline-none";
@@ -405,7 +688,6 @@
         toggleLike(post.id);
       });
 
-      // Comment button
       const commentBtn = document.createElement("button");
       commentBtn.className =
         "flex items-center space-x-1 hover:text-green-600 focus:outline-none";
@@ -415,7 +697,6 @@
         openCommentsModal(post.id);
       });
 
-      // Report button
       const reportBtn = document.createElement("button");
       reportBtn.className =
         "flex items-center space-x-1 hover:text-red-600 focus:outline-none";
@@ -438,7 +719,6 @@
     });
   }
 
-  // Escape HTML to prevent XSS
   function escapeHtml(text) {
     if (!text) return "";
     return text
@@ -449,7 +729,6 @@
       .replace(/'/g, "&#039;");
   }
 
-  // Toggle like for a post
   async function toggleLike(postId) {
     if (!currentUser) return;
     const postRef = doc(db, "statuses", postId);
@@ -459,11 +738,9 @@
     let likedBy = postData.likedBy || [];
     let likeCount = postData.likeCount || 0;
     if (likedBy.includes(currentUser.uid)) {
-      // Unlike
       likedBy = likedBy.filter((uid) => uid !== currentUser.uid);
       likeCount = Math.max(0, likeCount - 1);
     } else {
-      // Like
       likedBy.push(currentUser.uid);
       likeCount++;
     }
@@ -473,7 +750,6 @@
     });
   }
 
-  // Open comments modal for a post
   let currentCommentPostId = null;
   commentsModalCloseBtn.addEventListener("click", closeCommentsModal);
   commentSendBtn.addEventListener("click", sendComment);
@@ -492,7 +768,6 @@
     currentCommentPostId = null;
   }
 
-  // Load comments and replies for a post
   async function loadComments(postId) {
     const commentsRef = collection(db, "statuses", postId, "comments");
     const q = query(commentsRef, orderBy("timestamp", "asc"));
@@ -512,7 +787,6 @@
     );
   }
 
-  // Render comments and replies
   function renderComments(comments) {
     if (comments.length === 0) {
       commentsList.innerHTML = `<p class="text-center text-gray-500 py-6">Belum ada komentar.</p>`;
@@ -537,7 +811,6 @@
       const commentDiv = document.createElement("div");
       commentDiv.className = "mb-4 border-b border-gray-200 pb-2";
 
-      // Comment header: user fullName, date, time
       const headerDiv = document.createElement("div");
       headerDiv.className = "flex justify-between items-center mb-1";
       headerDiv.innerHTML = `
@@ -547,12 +820,10 @@
         <p class="text-xs text-gray-500">${timeStr}, ${dateStr}</p>
       `;
 
-      // Comment text
       const textP = document.createElement("p");
       textP.className = "text-gray-700 whitespace-pre-wrap";
       textP.textContent = comment.text || "";
 
-      // Reply button
       const replyBtn = document.createElement("button");
       replyBtn.className =
         "text-sm text-blue-600 hover:underline focus:outline-none mt-1";
@@ -561,11 +832,9 @@
         openReplyInput(comment.id);
       });
 
-      // Replies container
       const repliesDiv = document.createElement("div");
       repliesDiv.className = "ml-6 mt-2 space-y-2";
 
-      // Render replies if any
       if (comment.replies && Array.isArray(comment.replies)) {
         comment.replies.forEach((reply) => {
           const replyDate = reply.timestamp?.toDate();
@@ -607,20 +876,15 @@
     });
   }
 
-  // Open reply input below a comment
   function openReplyInput(commentId) {
-    // Check if reply input already exists, remove if so
     const existingReplyInput = document.getElementById("reply-input-box");
     if (existingReplyInput) existingReplyInput.remove();
 
-    // Find comment div
     const commentDiv = [...commentsList.children].find(
       (div) => div.dataset.commentId === commentId
     );
-    // If not found, append to commentsList last
     const targetDiv = commentDiv || commentsList.lastChild;
 
-    // Create reply input box
     const replyBox = document.createElement("div");
     replyBox.id = "reply-input-box";
     replyBox.className = "mt-2 flex space-x-2";
@@ -650,7 +914,6 @@
     }
   }
 
-  // Send comment to Firestore
   async function sendComment() {
     if (!currentCommentPostId) return;
     const text = commentInput.value.trim();
@@ -671,7 +934,6 @@
     commentInput.value = "";
   }
 
-  // Send reply to a comment
   async function sendReply(commentId, text) {
     if (!currentCommentPostId || !commentId || !text.trim()) return;
     const commentRef = doc(
@@ -697,7 +959,6 @@
     });
   }
 
-  // Report modal logic
   let currentReportPostId = null;
   reportModalCloseBtn.addEventListener("click", () => {
     reportModal.classList.add("hidden");
@@ -718,7 +979,6 @@
       alert("Please select a reason for reporting.");
       return;
     }
-    // Open WhatsApp with prefilled message
     const waNumber = "+628119118047";
     const message = encodeURIComponent(
       `Report for post ID: ${currentReportPostId}\nReason: ${reason}`
@@ -728,12 +988,10 @@
     reportReasonSelect.value = "";
   }
 
-  // Post input box logic
   postInputBox.addEventListener("click", () => {
     window.location.href = "update.html";
   });
 
-  // Referral copy button
   referralCopyBtn.addEventListener("click", () => {
     if (!userReferralText.textContent) return;
     navigator.clipboard.writeText(userReferralText.textContent).then(() => {
@@ -741,154 +999,315 @@
     });
   });
 
-  // Initialize app default view
   function initApp() {
     showHomeIframe();
   }
+
+  // Forum upload footer elements and logic
+  const forumUploadFooter = document.getElementById("forum-upload-footer");
+  const uploadTextArea = document.getElementById("upload-textarea");
+  const uploadImageInput = document.getElementById("upload-image-input");
+  const uploadImagePreview = document.getElementById("upload-image-preview");
+  const uploadSubmitBtn = document.getElementById("upload-submit-btn");
+  const uploadCancelBtn = document.getElementById("upload-cancel-btn");
+  const uploadLoadingSpinner = document.getElementById("upload-loading-spinner");
+
+  let uploadImageFile = null;
+
+  uploadImageInput.addEventListener("change", () => {
+    const file = uploadImageInput.files[0];
+    if (file) {
+      uploadImageFile = file;
+      const url = URL.createObjectURL(file);
+      uploadImagePreview.src = url;
+      uploadImagePreview.classList.remove("hidden");
+    } else {
+      uploadImageFile = null;
+      uploadImagePreview.src = "";
+      uploadImagePreview.classList.add("hidden");
+    }
+  });
+
+  uploadCancelBtn.addEventListener("click", () => {
+    uploadTextArea.value = "";
+    uploadImageInput.value = "";
+    uploadImagePreview.src = "";
+    uploadImagePreview.classList.add("hidden");
+    uploadImageFile = null;
+  });
+
+  uploadSubmitBtn.addEventListener("click", async () => {
+    const text = uploadTextArea.value.trim();
+    if (!text && !uploadImageFile) {
+      alert("Tulis sesuatu atau pilih gambar untuk diposting.");
+      return;
+    }
+    uploadSubmitBtn.disabled = true;
+    uploadLoadingSpinner.classList.remove("hidden");
+
+    try {
+      let imageUrl = null;
+      if (uploadImageFile) {
+        imageUrl = await uploadImageToImgur(uploadImageFile);
+      }
+
+      await addDoc(collection(db, "statuses"), {
+        deskripsi: text,
+        fullName: userData.fullName || "Anonymous",
+        gambar: imageUrl,
+        likeCount: 0,
+        likedBy: [],
+        timestamp: serverTimestamp(),
+        uid: currentUser.uid,
+      });
+
+      uploadTextArea.value = "";
+      uploadImageInput.value = "";
+      uploadImagePreview.src = "";
+      uploadImagePreview.classList.add("hidden");
+      uploadImageFile = null;
+
+      loadForumPosts();
+
+    } catch (error) {
+      alert("Gagal memposting: " + error.message);
+    } finally {
+      uploadSubmitBtn.disabled = false;
+      uploadLoadingSpinner.classList.add("hidden");
+    }
+  });
+
+  async function uploadImageToImgur(file) {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch("https://api.imgur.com/3/image", {
+      method: "POST",
+      headers: {
+        Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error("Upload gambar gagal");
+    }
+    return data.data.link;
+  }
   </script>
-  <!-- Loading overlay -->
-  <div class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 hidden" id="loading-overlay">
-   <i class="fas fa-spinner fa-spin text-4xl text-blue-600">
-   </i>
+
+  <!-- LOGIN SECTION -->
+  <section id="login" class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-6 sm:p-10">
+      <h2 class="text-3xl font-semibold text-gray-700 mb-6 text-center">Login</h2>
+      <form id="loginForm" class="space-y-4" novalidate>
+        <div>
+          <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="email" id="loginEmail" name="loginEmail" autocomplete="email" required
+            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" />
+        </div>
+        <div>
+          <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+          <input type="password" id="loginPassword" name="loginPassword" required
+            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" />
+        </div>
+        <p id="loginError" class="text-red-600 text-sm hidden"></p>
+        <button type="submit" class="w-full bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 transition">
+          Login
+        </button>
+      </form>
+      <p class="mt-6 text-center text-gray-600">
+        Belum punya akun? <a href="#" id="toRegister" class="text-blue-600 hover:underline">Daftar di sini</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- REGISTER SECTION -->
+  <section id="register" class="hidden min-h-screen flex items-center justify-center p-4 bg-gray-50">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-6 sm:p-10">
+      <h1 class="text-3xl font-semibold text-green-700 mb-6 text-center">Registrasi Akun</h1>
+      <form id="registrationForm" novalidate>
+        <!-- Step 1 -->
+        <fieldset id="step1" class="space-y-6">
+          <div>
+            <label for="fullName" class="block text-sm font-medium text-green-700 mb-1">Nama Lengkap</label>
+            <input type="text" id="fullName" name="fullName" autocomplete="name" required
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+              aria-describedby="fullNameError" />
+            <p id="fullNameError" class="mt-1 text-sm text-red-600 hidden"></p>
+          </div>
+          <div>
+            <label for="address" class="block text-sm font-medium text-green-700 mb-1">Alamat</label>
+            <input type="text" id="address" name="address" autocomplete="street-address" required
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+              aria-describedby="addressError" />
+            <p id="addressError" class="mt-1 text-sm text-red-600 hidden"></p>
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-green-700 mb-1">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email" required
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+              aria-describedby="emailError" />
+            <p id="emailError" class="mt-1 text-sm text-red-600 hidden"></p>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" id="nextBtn" class="bg-green-700 text-white px-5 py-2 rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800 focus:ring-offset-1 transition">
+              Selanjutnya <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        </fieldset>
+
+        <!-- Step 2 -->
+        <fieldset id="step2" class="space-y-6 hidden">
+          <div>
+            <label for="password" class="block text-sm font-medium text-green-700 mb-1">Kata Sandi</label>
+            <input type="password" id="password" name="password" required
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+              aria-describedby="passwordError passwordStrength" />
+            <p id="passwordError" class="mt-1 text-sm text-red-600 hidden"></p>
+            <p id="passwordStrength" class="mt-1 text-sm font-medium"></p>
+          </div>
+          <div>
+            <label for="whatsapp" class="block text-sm font-medium text-green-700 mb-1">Nomor WhatsApp</label>
+            <input type="text" id="whatsapp" name="whatsapp" inputmode="numeric" pattern="08[0-9]*" required
+              placeholder="Contoh: 081234567890"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+              aria-describedby="whatsappError" />
+            <p id="whatsappError" class="mt-1 text-sm text-red-600 hidden"></p>
+          </div>
+          <div>
+            <label for="referral" class="block text-sm font-medium text-green-700 mb-1">Kode Referral (opsional)</label>
+            <input type="text" id="referral" name="referral" autocomplete="off"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent" />
+          </div>
+          <div class="flex justify-between">
+            <button type="button" id="backBtn" class="border border-green-700 text-green-700 px-5 py-2 rounded-md hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-1 transition">
+              <i class="fas fa-arrow-left mr-2"></i> Kembali
+            </button>
+            <button type="submit" id="submitBtn" class="bg-green-700 text-white px-5 py-2 rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800 focus:ring-offset-1 transition flex items-center">
+              Daftar
+              <svg id="loadingSpinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            </button>
+          </div>
+        </fieldset>
+      </form>
+      <p class="mt-6 text-center text-gray-600">
+        Sudah punya akun? <a href="#" id="toLogin" class="text-blue-600 hover:underline">Login di sini</a>
+      </p>
+      <p id="successMessage" class="mt-6 text-center text-green-600 font-semibold hidden">Registrasi berhasil</p>
+    </div>
+  </section>
+
+  <!-- APP CONTAINER -->
+  <div id="app-container" class="hidden flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="flex items-center justify-between bg-white shadow px-4 py-3 sticky top-0 z-40">
+      <div class="flex items-center space-x-3">
+        <img alt="GMI Official Logo, stylized letters G M I in blue and white" class="w-10 h-10 rounded" height="40" loading="lazy" src="https://storage.googleapis.com/a1aa/image/840f54b7-f384-4cf0-98f1-fc6db0b6f9d4.jpg" width="40"/>
+        <span class="font-semibold text-xl text-blue-700 select-none">
+          gmi official
+        </span>
+      </div>
+      <div class="relative">
+        <button aria-label="Open options menu" class="text-2xl text-gray-600 hover:text-gray-900 focus:outline-none" id="header-options-btn" type="button">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div aria-labelledby="header-options-btn" aria-orientation="vertical" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50" id="header-options-menu" role="menu" tabindex="-1">
+          <div class="py-1" role="none">
+            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="settings" role="menuitem" tabindex="-1" type="button">
+              Settings
+            </button>
+            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="contact" role="menuitem" tabindex="-1" type="button">
+              Contact
+            </button>
+            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="@aboutapp" role="menuitem" tabindex="-1" type="button">
+              About Apps
+            </button>
+            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="rateus" role="menuitem" tabindex="-1" type="button">
+              Rate Us
+            </button>
+            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="newsupdates" role="menuitem" tabindex="-1" type="button">
+              News or Updates
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Main content container -->
+    <main class="flex-grow relative overflow-hidden">
+      <!-- SPA main content -->
+      <div class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-168px)] overflow-y-auto" id="main-content"></div>
+      <!-- iframe container for home, info, about -->
+      <div class="hidden w-full h-[calc(100vh-168px)]" id="iframe-container"></div>
+      <!-- Forum container -->
+      <section class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-168px)] overflow-y-auto" id="forum-container"></section>
+      <!-- Profile container -->
+      <section class="hidden p-6 max-w-md mx-auto min-h-[calc(100vh-168px)] bg-white rounded-lg shadow mt-4" id="profile-container">
+        <h2 class="text-3xl font-extrabold text-blue-700 mb-6 text-center">Profil User</h2>
+        <div class="mb-6 text-center">
+          <p class="text-5xl font-extrabold text-gray-900" id="user-points-text">0</p>
+          <p class="text-sm text-gray-500">Saldo Point</p>
+        </div>
+        <div class="space-y-4 text-gray-700">
+          <div>
+            <h3 class="font-semibold">Nama Lengkap</h3>
+            <p class="text-lg" id="user-name-text"></p>
+          </div>
+          <div>
+            <h3 class="font-semibold">Email</h3>
+            <p class="text-lg break-all" id="user-email-text"></p>
+          </div>
+          <div>
+            <h3 class="font-semibold flex items-center justify-between">
+              Kode Referral
+              <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 focus:outline-none" id="referral-copy-btn" type="button">Salin</button>
+            </h3>
+            <p class="text-lg break-all select-text" id="user-referral-text"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Post input box for forum -->
+    <div class="fixed bottom-16 left-0 right-0 max-w-4xl mx-auto px-4" id="post-input-box">
+      <div class="bg-white rounded-full shadow flex items-center px-4 py-3 cursor-pointer hover:shadow-md transition-shadow">
+        <input class="flex-grow text-gray-700 text-lg focus:outline-none cursor-pointer" id="post-input-area" placeholder="Katakan sesuatu..." readonly="" type="text"/>
+        <label class="ml-3 cursor-pointer text-gray-500 hover:text-gray-700" for="post-image-input" title="Upload gambar">
+          <i class="fas fa-image text-2xl"></i>
+        </label>
+        <input accept="image/*" class="hidden" disabled="" id="post-image-input" type="file"/>
+        <button class="ml-3 bg-blue-600 text-white px-4 py-2 rounded-full opacity-50 cursor-not-allowed" disabled="" id="post-submit-btn" type="button">Post</button>
+      </div>
+    </div>
+    <!-- Forum upload footer -->
+    <footer id="forum-upload-footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow flex flex-col p-4 max-w-4xl mx-auto z-50 hidden">
+      <textarea id="upload-textarea" rows="3" placeholder="Tulis sesuatu..." class="w-full rounded-md border border-gray-300 p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"></textarea>
+      <div class="flex items-center mt-2 space-x-3">
+        <label for="upload-image-input" class="cursor-pointer text-gray-600 hover:text-gray-900">
+          <i class="fas fa-image text-2xl"></i>
+          <span class="sr-only">Upload gambar</span>
+        </label>
+        <input type="file" id="upload-image-input" accept="image/*" class="hidden" />
+        <img id="upload-image-preview" alt="Preview gambar yang akan diupload" class="hidden max-h-24 rounded object-contain" />
+        <div class="flex-grow"></div>
+        <button id="upload-cancel-btn" type="button" class="text-red-600 hover:text-red-800 focus:outline-none">
+          <i class="fas fa-times text-xl"></i>
+          <span class="sr-only">Batal</span>
+        </button>
+        <button id="upload-submit-btn" type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none flex items-center">
+          Post
+          <svg id="upload-loading-spinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+        </button>
+      </div>
+    </footer>
   </div>
-  <!-- Header -->
-  <header class="flex items-center justify-between bg-white shadow px-4 py-3 sticky top-0 z-40">
-   <div class="flex items-center space-x-3">
-    <img alt="GMI Official Logo, stylized letters G M I in blue and white" class="w-10 h-10 rounded" height="40" loading="lazy" src="https://storage.googleapis.com/a1aa/image/840f54b7-f384-4cf0-98f1-fc6db0b6f9d4.jpg" width="40"/>
-    <span class="font-semibold text-xl text-blue-700 select-none">
-     gmi official
-    </span>
-   </div>
-   <div class="relative">
-    <button aria-label="Open options menu" class="text-2xl text-gray-600 hover:text-gray-900 focus:outline-none" id="header-options-btn" type="button">
-     <i class="fas fa-ellipsis-v">
-     </i>
-    </button>
-    <div aria-labelledby="header-options-btn" aria-orientation="vertical" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50" id="header-options-menu" role="menu" tabindex="-1">
-     <div class="py-1" role="none">
-      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="settings" role="menuitem" tabindex="-1" type="button">
-       Settings
-      </button>
-      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="contact" role="menuitem" tabindex="-1" type="button">
-       Contact
-      </button>
-      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="@aboutapp" role="menuitem" tabindex="-1" type="button">
-       About Apps
-      </button>
-      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="rateus" role="menuitem" tabindex="-1" type="button">
-       Rate Us
-      </button>
-      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="newsupdates" role="menuitem" tabindex="-1" type="button">
-       News or Updates
-      </button>
-     </div>
-    </div>
-   </div>
-  </header>
-  <!-- Main content container -->
-  <main class="flex-grow relative overflow-hidden">
-   <!-- SPA main content -->
-   <div class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-168px)] overflow-y-auto" id="main-content">
-   </div>
-   <!-- iframe container for home, info, about -->
-   <div class="hidden w-full h-[calc(100vh-168px)]" id="iframe-container">
-   </div>
-   <!-- Forum container -->
-   <section class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-168px)] overflow-y-auto" id="forum-container">
-   </section>
-   <!-- Profile container -->
-   <section class="hidden p-6 max-w-md mx-auto min-h-[calc(100vh-168px)] bg-white rounded-lg shadow mt-4" id="profile-container">
-    <h2 class="text-3xl font-extrabold text-blue-700 mb-6 text-center">
-     Profil User
-    </h2>
-    <div class="mb-6 text-center">
-     <p class="text-5xl font-extrabold text-gray-900" id="user-points-text">
-      0
-     </p>
-     <p class="text-sm text-gray-500">
-      Saldo Point
-     </p>
-    </div>
-    <div class="space-y-4 text-gray-700">
-     <div>
-      <h3 class="font-semibold">
-       Nama Lengkap
-      </h3>
-      <p class="text-lg" id="user-name-text">
-      </p>
-     </div>
-     <div>
-      <h3 class="font-semibold">
-       Email
-      </h3>
-      <p class="text-lg break-all" id="user-email-text">
-      </p>
-     </div>
-     <div>
-      <h3 class="font-semibold flex items-center justify-between">
-       Kode Referral
-       <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 focus:outline-none" id="referral-copy-btn" type="button">
-        Salin
-       </button>
-      </h3>
-      <p class="text-lg break-all select-text" id="user-referral-text">
-      </p>
-     </div>
-    </div>
-   </section>
-  </main>
-  <!-- Post input box for forum -->
-  <div class="fixed bottom-16 left-0 right-0 max-w-4xl mx-auto px-4" id="post-input-box">
-   <div class="bg-white rounded-full shadow flex items-center px-4 py-3 cursor-pointer hover:shadow-md transition-shadow">
-    <input class="flex-grow text-gray-700 text-lg focus:outline-none cursor-pointer" id="post-input-area" placeholder="Katakan sesuatu..." readonly="" type="text"/>
-    <label class="ml-3 cursor-pointer text-gray-500 hover:text-gray-700" for="post-image-input" title="Upload gambar">
-     <i class="fas fa-image text-2xl">
-     </i>
-    </label>
-    <input accept="image/*" class="hidden" disabled="" id="post-image-input" type="file"/>
-    <button class="ml-3 bg-blue-600 text-white px-4 py-2 rounded-full opacity-50 cursor-not-allowed" disabled="" id="post-submit-btn" type="button">
-     Post
-    </button>
-   </div>
-  </div>
-  <!-- Footer -->
-  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow flex justify-around items-center h-16 z-50">
-   <button aria-label="Beranda" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="home" type="button">
-    <i class="fas fa-home text-xl">
-    </i>
-    <span class="text-xs mt-1 select-none">
-     Beranda
-    </span>
-   </button>
-   <button aria-label="Forum" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="forum" type="button">
-    <i class="fas fa-comments text-xl">
-    </i>
-    <span class="text-xs mt-1 select-none">
-     Forum
-    </span>
-   </button>
-   <button aria-label="Informasi" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="info" type="button">
-    <i class="fas fa-info-circle text-xl">
-    </i>
-    <span class="text-xs mt-1 select-none">
-     Informasi
-    </span>
-   </button>
-   <button aria-label="Tentang" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="about" type="button">
-    <i class="fas fa-info text-xl">
-    </i>
-    <span class="text-xs mt-1 select-none">
-     Tentang
-    </span>
-   </button>
-   <button aria-label="Profil" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="profile" type="button">
-    <i class="fas fa-user text-xl">
-    </i>
-    <span class="text-xs mt-1 select-none">
-     Profil
-    </span>
-   </button>
-  </footer>
+
   <!-- Comments modal -->
   <div aria-labelledby="comments-modal-header" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center p-4 hidden z-50" id="comments-modal" role="dialog">
    <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -897,12 +1316,10 @@
       Komentar
      </h3>
      <button aria-label="Close comments modal" class="text-gray-600 hover:text-gray-900 focus:outline-none" id="comments-modal-close" type="button">
-      <i class="fas fa-times text-2xl">
-      </i>
+      <i class="fas fa-times text-2xl"></i>
      </button>
     </header>
-    <main class="flex-grow overflow-y-auto p-4 scrollbar-thin" id="comments-list">
-    </main>
+    <main class="flex-grow overflow-y-auto p-4 scrollbar-thin" id="comments-list"></main>
     <footer class="border-t border-gray-300 px-4 py-3 flex space-x-2">
      <input class="flex-grow border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="comment-input" placeholder="Tulis komentar..." type="text"/>
      <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none" id="comment-send-btn" type="button">
@@ -919,8 +1336,7 @@
       Laporkan Postingan
      </h3>
      <button aria-label="Close report modal" class="text-gray-600 hover:text-gray-900 focus:outline-none" id="report-modal-close" type="button">
-      <i class="fas fa-times text-2xl">
-      </i>
+      <i class="fas fa-times text-2xl"></i>
      </button>
     </header>
     <div>
