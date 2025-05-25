@@ -475,129 +475,71 @@
     }
 
     // Create post element for forum
-    async function createPostElement(id, data, postTime) {
-      const post = document.createElement("article");
-      post.className = "bg-white p-4 rounded shadow space-y-2";
+function createPostElement(id, data) {
+  const post = document.createElement("div");
+  post.className = "bg-white p-4 rounded shadow mb-4";
 
-      // Header: user name and timestamp
-      const header = document.createElement("header");
-      header.className = "text-gray-900 font-semibold";
-      header.textContent = data.fullName || "User";
+  const header = document.createElement("h2");
+  header.className = "text-lg font-bold";
+  header.textContent = data.fullName || "Tanpa Nama";
 
-      const subHeader = document.createElement("div");
-      subHeader.className = "text-xs text-gray-500";
-      const d = new Date(postTime);
-      const jam = d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
-      const tanggal = d.getDate().toString().padStart(2, "0");
-      const bulan = d.toLocaleString("id-ID", { month: "long" });
-      const tahun = d.getFullYear();
-      subHeader.textContent = `dibuat pada jam ${jam}, ${tanggal} ${bulan} ${tahun}`;
+  const subHeader = document.createElement("p");
+  subHeader.className = "text-xs text-gray-500";
+  const postTime = data.timestamp?.toDate?.().toLocaleString() || "Waktu tidak diketahui";
+  subHeader.textContent = postTime;
 
-      // Description text
-      const desc = document.createElement("p");
-      desc.className = "text-gray-800 whitespace-pre-wrap";
-      desc.textContent = data.deskripsi || "";
+  const desc = document.createElement("p");
+  desc.className = "mt-2";
+  desc.textContent = data.deskripsi || "";
 
-      // Image if exists
-      let img = null;
-      if (data.gambar) {
-        img = document.createElement("img");
-        img.src = data.gambar;
-        img.alt = `Gambar postingan oleh ${data.fullName || "user"} berisi ${data.deskripsi || "gambar postingan"}`;
-        img.className = "rounded max-h-64 w-full object-contain mt-2";
-      }
+  const img = data.gambar
+    ? (() => {
+        const image = document.createElement("img");
+        image.src = data.gambar;
+        image.className = "mt-2 w-full rounded";
+        return image;
+      })()
+    : null;
 
-      // Actions container
-      const actions = document.createElement("div");
-      actions.className = "flex gap-6 text-sm text-blue-600";
+  const actions = document.createElement("div");
+  actions.className = "flex gap-4 mt-3";
 
-      // Like button with count
-      const btnLike = document.createElement("button");
-      btnLike.className = "hover:underline focus:outline-none flex items-center gap-1";
-      btnLike.type = "button";
-      const likeIcon = document.createElement("i");
-      likeIcon.className = "fas fa-thumbs-up";
-      btnLike.appendChild(likeIcon);
-      const likeCountSpan = document.createElement("span");
-      likeCountSpan.textContent = data.likeCount ?? 0;
-      btnLike.appendChild(likeCountSpan);
-      btnLike.onclick = async () => {
-        if (!currentUser) {
-          alert("Silakan login terlebih dahulu.");
-          return;
-        }
-        // Increment likeCount and also add user uid to likedBy array to prevent multiple likes
-        const postRef = doc(db, "statuses", id);
-        const postSnap = await getDoc(postRef);
-        if (!postSnap.exists()) return;
-        const postData = postSnap.data();
-        const likedBy = postData.likedBy || [];
-        if (likedBy.includes(currentUser.uid)) {
-          alert("Anda sudah menyukai postingan ini.");
-          return;
-        }
-        await updateDoc(postRef, {
-          likeCount: (postData.likeCount || 0) + 1,
-          likedBy: [...likedBy, currentUser.uid]
-        });
-      };
+  const btnLike = document.createElement("button");
+  btnLike.textContent = "👍 Suka";
+  btnLike.onclick = () => {
+    handleLike(id);
+  };
 
-      // Komentar button
-      const btnKomentar = document.createElement("button");
-      btnKomentar.textContent = "Komentar";
-      btnKomentar.className = "hover:underline focus:outline-none";
-      btnKomentar.type = "button";
-      btnKomentar.onclick = () => openKomentar(id);
+  const btnComment = document.createElement("button");
+  btnComment.textContent = "💬 Komentar";
+  btnComment.onclick = () => {
+    currentPostId = id;
+    commentModal.classList.remove("hidden");
+    loadComments(id); // <-- Pastikan ini terpanggil
+  };
 
-      // Report dropdown
-      const reportWrapper = document.createElement("div");
-      reportWrapper.className = "relative";
+  const btnShare = document.createElement("button");
+  btnShare.textContent = "🔗 Bagikan";
+  btnShare.onclick = () => {
+    navigator.clipboard.writeText(location.href + "?post=" + id);
+    alert("Tautan disalin!");
+  };
 
-      const btnReport = document.createElement("button");
-      btnReport.textContent = "Laporkan";
-      btnReport.className = "hover:underline focus:outline-none";
-      btnReport.type = "button";
-      btnReport.onclick = (e) => {
-        e.stopPropagation();
-        toggleReportOptions(id, reportWrapper);
-      };
+  const btnReport = document.createElement("button");
+  btnReport.textContent = "🚨 Laporkan";
+  btnReport.onclick = () => {
+    const laporan = `Saya ingin melaporkan postingan berikut:\nNama: ${data.fullName}\nDeskripsi: ${data.deskripsi}\nGambar: ${data.gambar || "Tidak ada"}\nWaktu: ${postTime}`;
+    window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(laporan)}`, "_blank");
+  };
 
-      const reportOptions = document.createElement("div");
-      reportOptions.className = "hidden absolute right-0 mt-1 w-48 bg-white border border-gray-300 rounded shadow-md z-50";
-      reportOptions.innerHTML = `
-        <button data-type="spam" class="block w-full text-left px-3 py-2 text-sm hover:bg-red-100">Spam</button>
-        <button data-type="verbal" class="block w-full text-left px-3 py-2 text-sm hover:bg-red-100">Kekerasan Verbal</button>
-        <button data-type="lain" class="block w-full text-left px-3 py-2 text-sm hover:bg-red-100">Lain-lain</button>
-      `;
-      reportWrapper.appendChild(btnReport);
-      reportWrapper.appendChild(reportOptions);
+  actions.append(btnLike, btnComment, btnShare, btnReport);
 
-      // Close report options if clicked outside
-      document.addEventListener("click", () => {
-        reportOptions.classList.add("hidden");
-      });
+  post.append(header, subHeader, desc);
+  if (img) post.appendChild(img);
+  post.append(actions);
 
-      // Report option click handler
-      reportOptions.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const type = btn.getAttribute("data-type");
-          sendReport(id, type);
-          reportOptions.classList.add("hidden");
-        });
-      });
-
-      actions.appendChild(btnLike);
-      actions.appendChild(btnKomentar);
-      actions.appendChild(reportWrapper);
-
-      post.appendChild(header);
-      post.appendChild(subHeader);
-      post.appendChild(desc);
-      if (img) post.appendChild(img);
-      post.appendChild(actions);
-
-      return post;
-    }
+  return post;
+}
 
     // Toggle report options visibility
     function toggleReportOptions(postId, wrapper) {
@@ -632,21 +574,23 @@
     }
 
     // Load comments for a post
-    async function loadComments(postId) {
-      commentList.innerHTML = "";
-      const commentsRef = collection(db, "statuses", postId, "comments");
-      const q = query(commentsRef, orderBy("timestamp", "asc"));
-      onSnapshot(q, async (snapshot) => {
-        commentList.innerHTML = "";
-        for (const docSnap of snapshot.docs) {
-          const comment = docSnap.data();
-          comment.id = docSnap.id;
-          const commentEl = await createCommentElement(comment, postId);
-          commentList.appendChild(commentEl);
-        }
-        commentList.scrollTop = commentList.scrollHeight;
-      });
-    }
+ let currentPostId = null;
+
+function loadComments(postId) {
+  commentList.innerHTML = "";
+  const q = query(collection(db, `statuses/${postId}/comments`), orderBy("timestamp", "asc"));
+  onSnapshot(q, (snapshot) => {
+    commentList.innerHTML = ""; // clear sebelum render ulang
+    snapshot.forEach((doc) => {
+      const c = doc.data();
+      const p = document.createElement("p");
+      p.className = "border-b py-1";
+      p.innerHTML = `<strong>${c.fullName || "User"}:</strong> ${c.text}`;
+      commentList.appendChild(p);
+    });
+  });
+}
+
 
     // Create comment element with replies
     async function createCommentElement(comment, postId, level = 0) {
@@ -665,7 +609,7 @@
         const tanggal = d.getDate().toString().padStart(2, "0");
         const bulan = d.toLocaleString("id-ID", { month: "long" });
         const tahun = d.getFullYear();
-        subHeader.textContent = `dibuat pada jam ${jam}, ${tanggal} ${bulan} ${tahun}`;
+        subHeader.textContent = `${jam}, ${tanggal} ${bulan} ${tahun}`;
       } else {
         subHeader.textContent = "";
       }
@@ -759,23 +703,20 @@
     }
 
     // Submit new comment to post
-    commentForm.onsubmit = async (e) => {
-      e.preventDefault();
-      if (!currentUser || !currentPostId) {
-        alert("Silakan login terlebih dahulu.");
-        return;
-      }
-      const text = commentInput.value.trim();
-      if (!text) return;
-      const commentsRef = collection(db, "statuses", currentPostId, "comments");
-      await addDoc(commentsRef, {
-        uid: currentUser.uid,
-        fullName: currentUser.displayName || "User",
-        text,
-        timestamp: serverTimestamp()
-      });
-      commentInput.value = "";
-    };
+commentForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const text = commentInput.value.trim();
+  if (!text || !currentPostId) return;
+
+  await addDoc(collection(db, `statuses/${currentPostId}/comments`), {
+    text,
+    uid: currentUser.uid,
+    fullName: currentUser.displayName || "User",
+    timestamp: serverTimestamp(),
+  });
+
+  commentInput.value = "";
+};
 
     // Post form submit handler
     postForm.onsubmit = async (e) => {
