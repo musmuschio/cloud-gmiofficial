@@ -1,972 +1,918 @@
 <html class="scroll-smooth" lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1" name="viewport" />
-  <title>GMI Official App</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-    rel="stylesheet"
-  />
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   GMI Official App
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
   <style>
-    body {
-      font-family: "Inter", sans-serif;
+   body {
+      font-family: 'Inter', sans-serif;
     }
-    /* Modal slide up animation */
-    @keyframes slideUp {
-      from {
-        transform: translateY(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+    /* Scrollbar for modal comments */
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
     }
-    #commentModal.show {
-      animation: slideUp 0.3s ease forwards;
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: rgba(100, 100, 100, 0.5);
+      border-radius: 3px;
     }
   </style>
-</head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-  <!-- Header -->
-  <header
-    class="flex justify-between items-center bg-white shadow px-4 py-3 sticky top-0 z-30"
-  >
-    <div class="flex items-center space-x-3">
-      <img
-        alt="GMI Official Logo, stylized letters G M I in blue and white"
-        class="w-10 h-10 rounded"
-        height="40"
-        src="https://storage.googleapis.com/a1aa/image/e983514a-d83e-4c4f-a8e9-ce67afcf188a.jpg"
-        width="40"
-      />
-      <span class="font-bold text-xl text-blue-700 select-none">gmi official</span>
-    </div>
-    <div class="relative">
-      <button
-        aria-label="Open menu options"
-        class="text-2xl text-gray-700 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-        id="menuBtn"
-      >
-        <i class="fas fa-ellipsis-v"></i>
-      </button>
-      <div
-        class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-40"
-        id="menuOptions"
-      >
-        <div class="py-1">
-          <button
-            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 hover:text-blue-700"
-            onclick="loadPage('settings.html')"
-          >
-            Settings
-          </button>
-          <button
-            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 hover:text-blue-700"
-            onclick="loadPage('contact.html')"
-          >
-            Contact
-          </button>
-          <button
-            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 hover:text-blue-700"
-            onclick="loadPage('aboutapp.html')"
-          >
-            About Apps
-          </button>
-          <button
-            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 hover:text-blue-700"
-            onclick="loadPage('rateus.html')"
-          >
-            Rate Us
-          </button>
-          <button
-            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-100 hover:text-blue-700"
-            onclick="loadPage('news.html')"
-          >
-            News or Updates
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
-  <!-- Main Content -->
-  <main class="flex-grow flex flex-col">
-    <div class="flex-grow relative" id="contentArea">
-      <!-- Default to home page iframe -->
-      <iframe
-        class="w-full h-full border-0"
-        id="frame"
-        src="home.html"
-        title="Main content frame"
-      ></iframe>
-    </div>
-    <!-- Forum SPA (hidden by default) -->
-    <section
-      class="hidden flex flex-col max-w-3xl mx-auto p-4 space-y-4 overflow-y-auto"
-      id="forumSection"
-      style="max-height: calc(100vh - 160px)"
-    >
-      <div class="bg-white rounded shadow p-3">
-        <button
-          class="w-full text-left text-gray-500 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-          id="openPostBtn"
-        >
-          Katakan sesuatu...
-        </button>
-      </div>
-      <div class="space-y-4" id="postContainer"></div>
-    </section>
-  </main>
-  <!-- Footer Navigation -->
-  <footer
-    class="bg-white border-t border-gray-200 flex justify-around items-center py-2 fixed bottom-0 w-full z-30"
-  >
-    <button
-      aria-label="Home"
-      class="flex flex-col items-center text-gray-600 hover:text-blue-700 focus:outline-none focus:text-blue-700"
-      id="btnHome"
-    >
-      <i class="fas fa-home fa-lg"></i>
-      <span class="text-xs mt-0.5">Beranda</span>
-    </button>
-    <button
-      aria-label="Forum"
-      class="flex flex-col items-center text-gray-600 hover:text-blue-700 focus:outline-none focus:text-blue-700"
-      id="btnForum"
-    >
-      <i class="fas fa-comments fa-lg"></i>
-      <span class="text-xs mt-0.5">Forum</span>
-    </button>
-    <button
-      aria-label="Informasi"
-      class="flex flex-col items-center text-gray-600 hover:text-blue-700 focus:outline-none focus:text-blue-700"
-      id="btnInfo"
-    >
-      <i class="fas fa-info-circle fa-lg"></i>
-      <span class="text-xs mt-0.5">Informasi</span>
-    </button>
-    <button
-      aria-label="Tentang"
-      class="flex flex-col items-center text-gray-600 hover:text-blue-700 focus:outline-none focus:text-blue-700"
-      id="btnAbout"
-    >
-      <i class="fas fa-users fa-lg"></i>
-      <span class="text-xs mt-0.5">Tentang</span>
-    </button>
-    <button
-      aria-label="Profil"
-      class="flex flex-col items-center text-gray-600 hover:text-blue-700 focus:outline-none focus:text-blue-700"
-      id="btnProfile"
-    >
-      <i class="fas fa-user fa-lg"></i>
-      <span class="text-xs mt-0.5">Profil</span>
-    </button>
-  </footer>
-  <!-- Profile Modal -->
-  <div
-    class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
-    id="profileModal"
-  >
-    <div
-      class="bg-white rounded-lg max-w-sm w-full p-6 space-y-4 relative"
-    >
-      <button
-        aria-label="Close profile modal"
-        class="absolute top-3 right-3 text-gray-500 hover:text-red-600 focus:outline-none"
-        id="closeProfileModal"
-      >
-        <i class="fas fa-times fa-lg"></i>
-      </button>
-      <h2 class="text-2xl font-bold text-blue-700">Profil User</h2>
-      <div>
-        <p
-          class="text-4xl font-extrabold text-center text-green-600"
-          id="userPoints"
-        >
-          0
-        </p>
-        <p class="text-center text-gray-600">Saldo Point</p>
-      </div>
-      <div class="space-y-2">
-        <p>
-          <span class="font-semibold">Nama:</span>
-          <span id="userName">-</span>
-        </p>
-        <p>
-          <span class="font-semibold">Email:</span>
-          <span id="userEmail">-</span>
-        </p>
-        <p>
-          <span class="font-semibold">Kode Referral:</span>
-          <span
-            class="select-all cursor-pointer text-blue-600 underline"
-            id="userReferral"
-          ></span>
-          <button
-            class="ml-2 text-sm text-gray-500 hover:text-blue-700 focus:outline-none"
-            id="copyReferralBtn"
-            title="Salin kode referral"
-          >
-            <i class="fas fa-copy"></i>
-          </button>
-        </p>
-        <p>
-          <span class="font-semibold">WhatsApp:</span>
-          <span id="userWhatsapp">-</span>
-        </p>
-        <p>
-          <span class="font-semibold">Created At:</span>
-          <span id="userCreatedAt">-</span>
-        </p>
-      </div>
-    </div>
-  </div>
-  <!-- Post Modal -->
-  <div
-    class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4"
-    id="postModal"
-  >
-    <div
-      class="bg-white rounded-lg max-w-md w-full p-6 space-y-4 relative"
-    >
-      <button
-        aria-label="Close post modal"
-        class="absolute top-3 right-3 text-gray-500 hover:text-red-600 focus:outline-none"
-        id="closePostModal"
-      >
-        <i class="fas fa-times fa-lg"></i>
-      </button>
-      <h2 class="text-xl font-bold text-blue-700">Buat Postingan Baru</h2>
-      <form class="space-y-4" id="postForm">
-        <textarea
-          class="w-full border border-gray-300 rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          id="postText"
-          placeholder="Tulis sesuatu..."
-          required
-          rows="4"
-        ></textarea>
-        <div>
-          <label
-            class="block mb-1 font-semibold text-gray-700 cursor-pointer"
-            for="postImage"
-            >Upload Gambar (opsional)</label
-          >
-          <input accept="image/*" class="w-full" id="postImage" type="file" />
-        </div>
-        <div class="flex justify-end space-x-2">
-          <button
-            class="px-4 py-2 rounded border border-gray-300 hover:border-red-500 text-gray-700 hover:text-red-600 focus:outline-none"
-            id="cancelPostBtn"
-            type="button"
-          >
-            Batal
-          </button>
-          <button
-            class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 focus:outline-none"
-            type="submit"
-          >
-            Posting
-          </button>
-        </div>
-      </form>
-      <div class="text-sm text-red-600" id="postStatus"></div>
-    </div>
-  </div>
-  <!-- Comment Modal -->
-  <div
-    class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4 overflow-auto"
-    id="commentModal"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="commentModalTitle"
-  >
-    <div
-      class="bg-white rounded-lg max-w-3xl w-full p-6 space-y-4 relative max-h-[90vh] flex flex-col"
-    >
-      <header
-        class="flex justify-between items-center border-b border-gray-300 pb-2"
-      >
-        <h2 class="text-xl font-bold text-blue-700 mx-auto" id="commentModalTitle">
-          Komentar
-        </h2>
-        <button
-          aria-label="Close comment modal"
-          class="text-gray-500 hover:text-red-600 focus:outline-none"
-          id="closeCommentModal"
-        >
-          <i class="fas fa-times fa-lg"></i>
-        </button>
-      </header>
-      <div
-        class="flex-grow overflow-y-auto space-y-4"
-        id="commentList"
-        tabindex="0"
-        aria-live="polite"
-        aria-relevant="additions"
-      ></div>
-      <form class="flex space-x-2 pt-4 border-t border-gray-200" id="commentForm">
-        <input
-          aria-label="Tulis komentar"
-          class="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          id="commentInput"
-          placeholder="Tulis komentar..."
-          required
-          type="text"
-        />
-        <button
-          class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 focus:outline-none"
-          type="submit"
-        >
-          Kirim
-        </button>
-      </form>
-    </div>
-  </div>
+ </head>
+ <body class="bg-gray-50 min-h-screen flex flex-col">
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      onSnapshot,
-      deleteDoc,
-      doc,
-      addDoc,
-      serverTimestamp,
-      updateDoc,
-      getDoc,
-      orderBy,
-      getDocs,
-      setDoc,
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut,
+  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    orderBy,
+    limit,
+    onSnapshot,
+    addDoc,
+    serverTimestamp,
+    doc,
+    updateDoc,
+    arrayUnion,
+    arrayRemove,
+    deleteDoc,
+    getDoc,
+  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-      authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR",
-    };
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+    authDomain: "gmi-enterprise23.firebaseapp.com",
+    projectId: "gmi-enterprise23",
+    storageBucket: "gmi-enterprise23.firebasestorage.app",
+    messagingSenderId: "974090028804",
+    appId: "1:974090028804:web:43ae563ffd9433463c7251",
+    measurementId: "G-S27YB5Z8PR",
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const auth = getAuth();
-    const db = getFirestore();
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
 
-    // Elements
-    const menuBtn = document.getElementById("menuBtn");
-    const menuOptions = document.getElementById("menuOptions");
-    const frame = document.getElementById("frame");
-    const btnHome = document.getElementById("btnHome");
-    const btnForum = document.getElementById("btnForum");
-    const btnInfo = document.getElementById("btnInfo");
-    const btnAbout = document.getElementById("btnAbout");
-    const btnProfile = document.getElementById("btnProfile");
-    const contentArea = document.getElementById("contentArea");
-    const forumSection = document.getElementById("forumSection");
-    const postContainer = document.getElementById("postContainer");
-    const openPostBtn = document.getElementById("openPostBtn");
-    const postModal = document.getElementById("postModal");
-    const closePostModal = document.getElementById("closePostModal");
-    const postForm = document.getElementById("postForm");
-    const postText = document.getElementById("postText");
-    const postImage = document.getElementById("postImage");
-    const postStatus = document.getElementById("postStatus");
-    const profileModal = document.getElementById("profileModal");
-    const closeProfileModal = document.getElementById("closeProfileModal");
-    const userPoints = document.getElementById("userPoints");
-    const userName = document.getElementById("userName");
-    const userEmail = document.getElementById("userEmail");
-    const userReferral = document.getElementById("userReferral");
-    const userWhatsapp = document.getElementById("userWhatsapp");
-    const userCreatedAt = document.getElementById("userCreatedAt");
-    const copyReferralBtn = document.getElementById("copyReferralBtn");
-    const commentModal = document.getElementById("commentModal");
-    const closeCommentModal = document.getElementById("closeCommentModal");
-    const commentList = document.getElementById("commentList");
-    const commentForm = document.getElementById("commentForm");
-    const commentInput = document.getElementById("commentInput");
+  // Global state
+  let currentUser = null;
+  let userData = null;
+  let statusesUnsub = null;
+  let commentsUnsubMap = new Map();
 
-    let currentUser = null;
-    let currentPostId = null;
+  // Elements
+  const headerRightBtn = document.getElementById("header-options-btn");
+  const headerOptionsMenu = document.getElementById("header-options-menu");
+  const aboutAppContent = document.getElementById("aboutapp-content");
+  const mainContent = document.getElementById("main-content");
+  const footerButtons = document.querySelectorAll(".footer-btn");
+  const iframeContainer = document.getElementById("iframe-container");
+  const forumContainer = document.getElementById("forum-container");
+  const profileContainer = document.getElementById("profile-container");
+  const postInputBox = document.getElementById("post-input-box");
+  const postInputArea = document.getElementById("post-input-area");
+  const postImageInput = document.getElementById("post-image-input");
+  const postSubmitBtn = document.getElementById("post-submit-btn");
+  const commentsModal = document.getElementById("comments-modal");
+  const commentsModalCloseBtn = document.getElementById("comments-modal-close");
+  const commentsModalHeader = document.getElementById("comments-modal-header");
+  const commentsList = document.getElementById("comments-list");
+  const commentInput = document.getElementById("comment-input");
+  const commentSendBtn = document.getElementById("comment-send-btn");
+  const reportModal = document.getElementById("report-modal");
+  const reportModalCloseBtn = document.getElementById("report-modal-close");
+  const reportOptions = document.getElementById("report-options");
+  const reportSendBtn = document.getElementById("report-send-btn");
+  const reportReasonSelect = document.getElementById("report-reason-select");
+  const referralCopyBtn = document.getElementById("referral-copy-btn");
+  const userPointsText = document.getElementById("user-points-text");
+  const userNameText = document.getElementById("user-name-text");
+  const userEmailText = document.getElementById("user-email-text");
+  const userReferralText = document.getElementById("user-referral-text");
+  const loadingOverlay = document.getElementById("loading-overlay");
 
-    // Toggle menu options
-    menuBtn.onclick = () => {
-      menuOptions.classList.toggle("hidden");
-    };
+  // SPA pages
+  const SPA_PAGES = {
+    settings: `<div class="p-6 max-w-xl mx-auto text-gray-700">
+      <h2 class="text-2xl font-semibold mb-4">Settings</h2>
+      <p>Settings page content coming soon.</p>
+    </div>`,
+    contact: `<div class="p-6 max-w-xl mx-auto text-gray-700">
+      <h2 class="text-2xl font-semibold mb-4">Contact</h2>
+      <p>You can contact us at <a href="mailto:support@gmi.com" class="text-blue-600 underline">support@gmi.com</a>.</p>
+    </div>`,
+    aboutapp: `<div class="p-6 max-w-3xl mx-auto text-gray-800 space-y-6">
+      <h2 class="text-3xl font-bold mb-4 text-center">Privacy Policy & Terms</h2>
+      <section>
+        <h3 class="text-xl font-semibold mb-2">Privacy Policy (Kebijakan Privasi)</h3>
+        <p>Menjelaskan bagaimana data pengguna dikumpulkan, digunakan, dan dilindungi. Kami menghargai privasi Anda dan berkomitmen untuk melindungi informasi pribadi Anda sesuai dengan peraturan yang berlaku.</p>
+      </section>
+      <section>
+        <h3 class="text-xl font-semibold mb-2">Terms of Service / Terms and Conditions (Syarat dan Ketentuan)</h3>
+        <p>Menetapkan aturan dan batasan penggunaan layanan. Dengan menggunakan aplikasi ini, Anda setuju untuk mematuhi syarat dan ketentuan yang berlaku.</p>
+      </section>
+      <section>
+        <h3 class="text-xl font-semibold mb-2">Cookie Policy</h3>
+        <p>Informasi tentang penggunaan cookie, pelacakan, dan opsi persetujuan pengguna. Kami menggunakan cookie untuk meningkatkan pengalaman pengguna dan menganalisis penggunaan aplikasi.</p>
+      </section>
+      <section>
+        <h3 class="text-xl font-semibold mb-2">Disclaimer (Penafian)</h3>
+        <p>Menjelaskan batas tanggung jawab, terutama untuk layanan informasi atau konsultasi. Informasi yang disediakan dalam aplikasi ini adalah untuk tujuan umum dan bukan pengganti nasihat profesional.</p>
+      </section>
+      <section>
+        <h3 class="text-xl font-semibold mb-2">End-User License Agreement (EULA)</h3>
+        <p>Perjanjian lisensi antara pengembang dan pengguna akhir aplikasi. Dengan menggunakan aplikasi ini, Anda setuju dengan ketentuan lisensi yang ditetapkan.</p>
+      </section>
+    </div>`,
+    newsupdates: `<div class="p-6 max-w-xl mx-auto text-gray-700">
+      <h2 class="text-2xl font-semibold mb-4">News or Updates</h2>
+      <ul class="list-disc list-inside space-y-2">
+        <li>Update 1: New features added to the app.</li>
+        <li>Update 2: Bug fixes and performance improvements.</li>
+        <li>Update 3: Upcoming events and announcements.</li>
+        <li>Update 4: Community guidelines updated.</li>
+        <li>Update 5: New referral program launched.</li>
+      </ul>
+    </div>`,
+  };
 
-    // Close menu if clicked outside
-    document.addEventListener("click", (e) => {
-      if (!menuBtn.contains(e.target) && !menuOptions.contains(e.target)) {
-        menuOptions.classList.add("hidden");
-      }
-    });
-
-    // Load SPA pages in iframe
-    window.loadPage = function (page) {
-      forumSection.classList.add("hidden");
-      contentArea.classList.remove("hidden");
-      frame.src = page;
-    };
-
-    // Navigation buttons
-    btnHome.onclick = () => {
-      forumSection.classList.add("hidden");
-      contentArea.classList.remove("hidden");
-      frame.src = "home.html";
-    };
-    btnInfo.onclick = () => {
-      forumSection.classList.add("hidden");
-      contentArea.classList.remove("hidden");
-      frame.src = "informasi.html";
-    };
-    btnAbout.onclick = () => {
-      forumSection.classList.add("hidden");
-      contentArea.classList.remove("hidden");
-      frame.src = "tentang.html";
-    };
-    btnForum.onclick = () => {
-      contentArea.classList.add("hidden");
-      forumSection.classList.remove("hidden");
-      loadForumPosts();
-    };
-    btnProfile.onclick = () => {
-      if (!currentUser) return;
-      profileModal.classList.remove("hidden");
-      loadUserProfile();
-    };
-
-    closeProfileModal.onclick = () => {
-      profileModal.classList.add("hidden");
-    };
-
-    // Copy referral code
-    copyReferralBtn.onclick = () => {
-      if (userReferral.textContent) {
-        navigator.clipboard.writeText(userReferral.textContent).then(() => {
-          alert("Kode referral berhasil disalin!");
-        });
-      }
-    };
-
-    // Open post modal
-    openPostBtn.onclick = () => {
-      postStatus.textContent = "";
-      postText.value = "";
-      postImage.value = "";
-      postModal.classList.remove("hidden");
-    };
-
-    closePostModal.onclick = () => {
-      postModal.classList.add("hidden");
-    };
-
-    // Comment modal close
-    closeCommentModal.onclick = () => {
-      commentModal.classList.add("hidden");
-      commentList.innerHTML = "";
-      commentInput.value = "";
-      currentPostId = null;
-    };
-
-    // Auth state check and redirect if not logged in
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-      currentUser = user;
-      // Check if user data exists in Firestore, if not create
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (!userDocSnap.exists()) {
-        // Create user data with referral code (random 8 chars)
-        const referralCode = generateReferralCode();
-        await setUserData(
-          user.uid,
-          user.displayName || "User",
-          user.email || "",
-          referralCode
-        );
-      }
-      // Load profile data if profile modal is open
-      if (!profileModal.classList.contains("hidden")) {
-        loadUserProfile();
-      }
-      // Load forum posts if forum is active
-      if (!forumSection.classList.contains("hidden")) {
-        loadForumPosts();
-      }
-    });
-
-    // Generate random referral code 8 uppercase alphanumeric
-    function generateReferralCode() {
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-      let code = "";
-      for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
+  // Redirect to login.html if not logged in
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
     }
+    currentUser = user;
+    await loadUserData();
+    initApp();
+  });
 
-    // Set user data in Firestore
-    async function setUserData(uid, name, email, referral) {
-      const userDocRef = doc(db, "users", uid);
-      await setDoc(userDocRef, {
-        fullName: name,
-        email: email,
-        refferal: referral,
-        saldoPoint: 0,
+  async function loadUserData() {
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (userDoc.exists()) {
+      userData = userDoc.data();
+    } else {
+      // If user data not found, create minimal data
+      userData = {
+        fullName: currentUser.displayName || "User",
+        email: currentUser.email,
         whatsapp: "",
-        createdAt: serverTimestamp(),
-      });
-    }
-
-    // Load user profile data
-    async function loadUserProfile() {
-      if (!currentUser) return;
-      const userDocRef = doc(db, "users", currentUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        const data = userDocSnap.data();
-        userPoints.textContent = data.saldoPoint ?? 0;
-        userName.textContent = data.fullName ?? "-";
-        userEmail.textContent = data.email ?? "-";
-        userReferral.textContent = data.refferal ?? "-";
-        userWhatsapp.textContent = data.whatsapp ?? "-";
-        userCreatedAt.textContent = data.createdAt?.toDate
-          ? data.createdAt.toDate().toLocaleString()
-          : "-";
-      }
-    }
-
-    // Load forum posts from Firestore
-    async function loadForumPosts() {
-      postContainer.innerHTML = "";
-      const q = query(collection(db, "statuses"), orderBy("timestamp", "desc"));
-      onSnapshot(q, async (snapshot) => {
-        postContainer.innerHTML = "";
-        const now = Date.now();
-        for (const docSnap of snapshot.docs) {
-          const data = docSnap.data();
-          const postTime = data.timestamp?.seconds ? data.timestamp.seconds * 1000 : 0;
-          const isExpired = now - postTime > 86400000;
-          if (isExpired) {
-            await deleteDoc(doc(db, "statuses", docSnap.id));
-            continue;
-          }
-          const postEl = await createPostElement(docSnap.id, data, postTime);
-          postContainer.appendChild(postEl);
-        }
-      });
-    }
-
-    // Create post element for forum
-    async function createPostElement(id, data, postTime) {
-      const post = document.createElement("article");
-      post.className = "bg-white p-4 rounded shadow space-y-2";
-
-      // Header: user name and timestamp
-      const header = document.createElement("header");
-      header.className = "text-gray-900 font-semibold";
-      header.textContent = data.fullName || "User";
-
-      const subHeader = document.createElement("div");
-      subHeader.className = "text-xs text-gray-500";
-      const d = new Date(postTime);
-      const jam =
-        d.getHours().toString().padStart(2, "0") +
-        ":" +
-        d.getMinutes().toString().padStart(2, "0");
-      const tanggal = d.getDate().toString().padStart(2, "0");
-      const bulan = d.toLocaleString("id-ID", { month: "long" });
-      const tahun = d.getFullYear();
-      subHeader.textContent = `dibuat pada jam ${jam}, ${tanggal} ${bulan} ${tahun}`;
-
-      // Description text
-      const desc = document.createElement("p");
-      desc.className = "text-gray-800 whitespace-pre-wrap";
-      desc.textContent = data.deskripsi || "";
-
-      // Image if exists
-      let img = null;
-      if (data.gambar) {
-        img = document.createElement("img");
-        img.src = data.gambar;
-        img.alt = `Gambar postingan oleh ${data.fullName || "user"} berisi ${
-          data.deskripsi || "gambar postingan"
-        }`;
-        img.className = "rounded max-h-64 w-full object-contain mt-2";
-      }
-
-      // Actions container
-      const actions = document.createElement("div");
-      actions.className = "flex gap-6 text-sm text-blue-600";
-
-      // Like button with count
-      const btnLike = document.createElement("button");
-      btnLike.className = "hover:underline focus:outline-none flex items-center gap-1";
-      btnLike.type = "button";
-      const likeIcon = document.createElement("i");
-      likeIcon.className = "fas fa-thumbs-up";
-      btnLike.appendChild(likeIcon);
-      const likeCountSpan = document.createElement("span");
-      likeCountSpan.textContent = data.likeCount ?? 0;
-      btnLike.appendChild(likeCountSpan);
-      btnLike.onclick = async () => {
-        if (!currentUser) {
-          alert("Silakan login terlebih dahulu.");
-          return;
-        }
-        // Increment likeCount and also add user uid to likedBy array to prevent multiple likes
-        const postRef = doc(db, "statuses", id);
-        const postSnap = await getDoc(postRef);
-        if (!postSnap.exists()) return;
-        const postData = postSnap.data();
-        const likedBy = postData.likedBy || [];
-        if (likedBy.includes(currentUser.uid)) {
-          alert("Anda sudah menyukai postingan ini.");
-          return;
-        }
-        await updateDoc(postRef, {
-          likeCount: (postData.likeCount || 0) + 1,
-          likedBy: [...likedBy, currentUser.uid],
-        });
+        referral: "",
+        address: "",
+        createdAt: new Date(),
       };
+      await setDoc(doc(db, "users", currentUser.uid), userData);
+    }
+  }
 
-      // Komentar button
-      const btnKomentar = document.createElement("button");
-      btnKomentar.textContent = "Komentar";
-      btnKomentar.className = "hover:underline focus:outline-none";
-      btnKomentar.type = "button";
-      btnKomentar.onclick = () => openKomentar(id);
+  // Header options toggle
+  headerRightBtn.addEventListener("click", () => {
+    headerOptionsMenu.classList.toggle("hidden");
+  });
 
-      // Report dropdown
-      const reportWrapper = document.createElement("div");
-      reportWrapper.className = "relative";
+  // Close header options if clicked outside
+  document.addEventListener("click", (e) => {
+    if (
+      !headerRightBtn.contains(e.target) &&
+      !headerOptionsMenu.contains(e.target)
+    ) {
+      headerOptionsMenu.classList.add("hidden");
+    }
+  });
 
-      const btnReport = document.createElement("button");
-      btnReport.textContent = "Laporkan";
-      btnReport.className = "hover:underline focus:outline-none";
-      btnReport.type = "button";
-      btnReport.onclick = (e) => {
-        e.stopPropagation();
-        toggleReportOptions(id, reportWrapper);
-      };
+  // Handle header options SPA navigation
+  headerOptionsMenu.querySelectorAll("button[data-spa]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const spaPage = btn.getAttribute("data-spa");
+      if (spaPage === "@aboutapp") {
+        showAboutApp();
+      } else {
+        showSPA(spaPage);
+      }
+      headerOptionsMenu.classList.add("hidden");
+    });
+  });
 
-      const reportOptions = document.createElement("div");
-      reportOptions.className =
-        "hidden absolute right-0 mt-1 w-48 bg-white border border-gray-300 rounded shadow-md z-50";
-      reportOptions.innerHTML = `
-        <button data-type="spam" class="block w-full text-left px-3 py-2 text-sm hover:bg-red-100">Spam</button>
-        <button data-type="verbal" class="block w-full text-left px-3 py-2 text-sm hover:bg-red-100">Kekerasan Verbal</button>
-        <button data-type="lain" class="block w-full text-left px-3 py-2 text-sm hover:bg-red-100">Lain-lain</button>
+  // Show SPA content in mainContent
+  function showSPA(page) {
+    forumContainer.classList.add("hidden");
+    profileContainer.classList.add("hidden");
+    iframeContainer.classList.add("hidden");
+    postInputBox.classList.add("hidden");
+    mainContent.classList.remove("hidden");
+    mainContent.innerHTML = SPA_PAGES[page] || "<p>Page not found.</p>";
+  }
+
+  // Show About App page
+  function showAboutApp() {
+    forumContainer.classList.add("hidden");
+    profileContainer.classList.add("hidden");
+    iframeContainer.classList.add("hidden");
+    postInputBox.classList.add("hidden");
+    mainContent.classList.remove("hidden");
+    mainContent.innerHTML = SPA_PAGES.aboutapp;
+  }
+
+  // Footer buttons navigation
+  footerButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.getAttribute("data-target");
+      if (target === "home") {
+        showHomeIframe();
+      } else if (target === "forum") {
+        showForum();
+      } else if (target === "info") {
+        showInfoIframe();
+      } else if (target === "about") {
+        showAboutIframe();
+      } else if (target === "profile") {
+        showProfile();
+      }
+    });
+  });
+
+  // Show home.html in iframe
+  function showHomeIframe() {
+    mainContent.classList.add("hidden");
+    forumContainer.classList.add("hidden");
+    profileContainer.classList.add("hidden");
+    iframeContainer.classList.remove("hidden");
+    iframeContainer.innerHTML = `<iframe src="home.html" class="w-full h-full border-0" title="Home Page"></iframe>`;
+    postInputBox.classList.add("hidden");
+  }
+
+  // Show informasi.html in iframe
+  function showInfoIframe() {
+    mainContent.classList.add("hidden");
+    forumContainer.classList.add("hidden");
+    profileContainer.classList.add("hidden");
+    iframeContainer.classList.remove("hidden");
+    iframeContainer.innerHTML = `<iframe src="informasi.html" class="w-full h-full border-0" title="Informasi Page"></iframe>`;
+    postInputBox.classList.add("hidden");
+  }
+
+  // Show tentang.html in iframe
+  function showAboutIframe() {
+    mainContent.classList.add("hidden");
+    forumContainer.classList.add("hidden");
+    profileContainer.classList.add("hidden");
+    iframeContainer.classList.remove("hidden");
+    iframeContainer.innerHTML = `<iframe src="tentang.html" class="w-full h-full border-0" title="Tentang Page"></iframe>`;
+    postInputBox.classList.add("hidden");
+  }
+
+  // Show profile page
+  function showProfile() {
+    mainContent.classList.add("hidden");
+    forumContainer.classList.add("hidden");
+    iframeContainer.classList.add("hidden");
+    profileContainer.classList.remove("hidden");
+    postInputBox.classList.add("hidden");
+    userPointsText.textContent = userData.points ? userData.points : "0";
+    userNameText.textContent = userData.fullName || "";
+    userEmailText.textContent = userData.email || "";
+    userReferralText.textContent = userData.referral || "";
+  }
+
+  // Show forum page
+  function showForum() {
+    mainContent.classList.add("hidden");
+    iframeContainer.classList.add("hidden");
+    profileContainer.classList.add("hidden");
+    forumContainer.classList.remove("hidden");
+    postInputBox.classList.remove("hidden");
+    loadForumPosts();
+  }
+
+  // Load forum posts from Firestore, only posts within 24 hours
+  async function loadForumPosts() {
+    if (statusesUnsub) {
+      statusesUnsub();
+      statusesUnsub = null;
+    }
+    forumContainer.innerHTML = `<p class="text-center text-gray-500 mt-6">Loading posts...</p>`;
+
+    const now = Date.now();
+    const cutoff = now - 24 * 60 * 60 * 1000;
+
+    const statusesRef = collection(db, "statuses");
+    const q = query(
+      statusesRef,
+      orderBy("timestamp", "desc")
+    );
+
+    statusesUnsub = onSnapshot(q, async (snapshot) => {
+      // Filter posts older than 24 hours and delete them
+      const batchDeletes = [];
+      const posts = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (!data.timestamp) return;
+        const ts = data.timestamp.toMillis();
+        if (ts < cutoff) {
+          batchDeletes.push(deleteDoc(doc(db, "statuses", docSnap.id)));
+        } else {
+          posts.push({ id: docSnap.id, ...data });
+        }
+      });
+      if (batchDeletes.length > 0) {
+        await Promise.all(batchDeletes);
+      }
+      renderForumPosts(posts);
+    });
+  }
+
+  // Render forum posts
+  function renderForumPosts(posts) {
+    if (posts.length === 0) {
+      forumContainer.innerHTML = `<p class="text-center text-gray-500 mt-6">No posts available.</p>`;
+      return;
+    }
+    forumContainer.innerHTML = "";
+    posts.forEach((post) => {
+      const postDate = post.timestamp.toDate();
+      const dateStr = postDate.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+      const timeStr = postDate.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const postDiv = document.createElement("div");
+      postDiv.className =
+        "bg-white rounded-lg shadow p-4 mb-4 max-w-3xl mx-auto break-words";
+      postDiv.dataset.postId = post.id;
+
+      // Post header: user fullName, date, time
+      const headerDiv = document.createElement("div");
+      headerDiv.className = "mb-2";
+      headerDiv.innerHTML = `
+        <p class="font-semibold text-gray-800">${escapeHtml(post.fullName)}</p>
+        <p class="text-xs text-gray-500">${timeStr}, ${dateStr}</p>
       `;
-      reportWrapper.appendChild(btnReport);
-      reportWrapper.appendChild(reportOptions);
 
-      // Close report options if clicked outside
-      document.addEventListener("click", () => {
-        reportOptions.classList.add("hidden");
+      // Post content text
+      const contentP = document.createElement("p");
+      contentP.className = "mt-2 text-gray-700 whitespace-pre-wrap";
+      contentP.textContent = post.deskripsi || "";
+
+      // Post image if exists
+      let imgEl = null;
+      if (post.gambar) {
+        imgEl = document.createElement("img");
+        imgEl.src = post.gambar;
+        imgEl.alt = `User post image uploaded by ${escapeHtml(post.fullName)}`;
+        imgEl.className = "mt-3 rounded max-h-96 w-full object-contain";
+      }
+
+      // Post actions: like, comment, report
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className =
+        "flex items-center justify-between mt-4 text-gray-600";
+
+      // Like button and count
+      const likeBtn = document.createElement("button");
+      likeBtn.className =
+        "flex items-center space-x-1 hover:text-blue-600 focus:outline-none";
+      likeBtn.innerHTML = `<i class="fas fa-thumbs-up"></i> <span>${post.likeCount || 0}</span>`;
+      likeBtn.title = "Like";
+      likeBtn.addEventListener("click", () => {
+        toggleLike(post.id);
       });
 
-      // Report option click handler
-      reportOptions.querySelectorAll("button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const type = btn.getAttribute("data-type");
-          sendReport(id, type);
-          reportOptions.classList.add("hidden");
+      // Comment button
+      const commentBtn = document.createElement("button");
+      commentBtn.className =
+        "flex items-center space-x-1 hover:text-green-600 focus:outline-none";
+      commentBtn.innerHTML = `<i class="fas fa-comment"></i> <span>Komentar</span>`;
+      commentBtn.title = "Komentar";
+      commentBtn.addEventListener("click", () => {
+        openCommentsModal(post.id);
+      });
+
+      // Report button
+      const reportBtn = document.createElement("button");
+      reportBtn.className =
+        "flex items-center space-x-1 hover:text-red-600 focus:outline-none";
+      reportBtn.innerHTML = `<i class="fas fa-flag"></i> <span>Report</span>`;
+      reportBtn.title = "Report";
+      reportBtn.addEventListener("click", () => {
+        openReportModal(post.id);
+      });
+
+      actionsDiv.appendChild(likeBtn);
+      actionsDiv.appendChild(commentBtn);
+      actionsDiv.appendChild(reportBtn);
+
+      postDiv.appendChild(headerDiv);
+      postDiv.appendChild(contentP);
+      if (imgEl) postDiv.appendChild(imgEl);
+      postDiv.appendChild(actionsDiv);
+
+      forumContainer.appendChild(postDiv);
+    });
+  }
+
+  // Escape HTML to prevent XSS
+  function escapeHtml(text) {
+    if (!text) return "";
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // Toggle like for a post
+  async function toggleLike(postId) {
+    if (!currentUser) return;
+    const postRef = doc(db, "statuses", postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) return;
+    const postData = postSnap.data();
+    let likedBy = postData.likedBy || [];
+    let likeCount = postData.likeCount || 0;
+    if (likedBy.includes(currentUser.uid)) {
+      // Unlike
+      likedBy = likedBy.filter((uid) => uid !== currentUser.uid);
+      likeCount = Math.max(0, likeCount - 1);
+    } else {
+      // Like
+      likedBy.push(currentUser.uid);
+      likeCount++;
+    }
+    await updateDoc(postRef, {
+      likedBy,
+      likeCount,
+    });
+  }
+
+  // Open comments modal for a post
+  let currentCommentPostId = null;
+  commentsModalCloseBtn.addEventListener("click", closeCommentsModal);
+  commentSendBtn.addEventListener("click", sendComment);
+
+  function openCommentsModal(postId) {
+    currentCommentPostId = postId;
+    commentsModal.classList.remove("hidden");
+    commentsList.innerHTML = `<p class="text-center text-gray-500 py-6">Loading comments...</p>`;
+    loadComments(postId);
+  }
+
+  function closeCommentsModal() {
+    commentsModal.classList.add("hidden");
+    commentsList.innerHTML = "";
+    commentInput.value = "";
+    currentCommentPostId = null;
+  }
+
+  // Load comments and replies for a post
+  async function loadComments(postId) {
+    const commentsRef = collection(db, "statuses", postId, "comments");
+    const q = query(commentsRef, orderBy("timestamp", "asc"));
+    if (commentsUnsubMap.has(postId)) {
+      commentsUnsubMap.get(postId)();
+      commentsUnsubMap.delete(postId);
+    }
+    commentsUnsubMap.set(
+      postId,
+      onSnapshot(q, (snapshot) => {
+        const comments = [];
+        snapshot.forEach((docSnap) => {
+          comments.push({ id: docSnap.id, ...docSnap.data() });
         });
-      });
+        renderComments(comments);
+      })
+    );
+  }
 
-      actions.appendChild(btnLike);
-      actions.appendChild(btnKomentar);
-      actions.appendChild(reportWrapper);
-
-      post.appendChild(header);
-      post.appendChild(subHeader);
-      post.appendChild(desc);
-      if (img) post.appendChild(img);
-      post.appendChild(actions);
-
-      return post;
+  // Render comments and replies
+  function renderComments(comments) {
+    if (comments.length === 0) {
+      commentsList.innerHTML = `<p class="text-center text-gray-500 py-6">Belum ada komentar.</p>`;
+      return;
     }
+    commentsList.innerHTML = "";
+    comments.forEach((comment) => {
+      const commentDate = comment.timestamp?.toDate();
+      const dateStr = commentDate
+        ? commentDate.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : "";
+      const timeStr = commentDate
+        ? commentDate.toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "";
+      const commentDiv = document.createElement("div");
+      commentDiv.className = "mb-4 border-b border-gray-200 pb-2";
 
-    // Toggle report options visibility
-    function toggleReportOptions(postId, wrapper) {
-      const options = wrapper.querySelector("div");
-      if (options.classList.contains("hidden")) {
-        options.classList.remove("hidden");
-      } else {
-        options.classList.add("hidden");
-      }
-    }
+      // Comment header: user fullName, date, time
+      const headerDiv = document.createElement("div");
+      headerDiv.className = "flex justify-between items-center mb-1";
+      headerDiv.innerHTML = `
+        <p class="font-semibold text-gray-800">${escapeHtml(
+          comment.fullName || "Anonymous"
+        )}</p>
+        <p class="text-xs text-gray-500">${timeStr}, ${dateStr}</p>
+      `;
 
-    // Send report to WhatsApp
-    function sendReport(postId, type) {
-      const waNumber = "628119118047";
-      const text = encodeURIComponent(
-        `Laporkan postingan ID: ${postId} dengan tipe laporan: ${type}`
-      );
-      window.open(`https://wa.me/${waNumber}?text=${text}`, "_blank");
-    }
-
-    // Open komentar modal and load comments
-    async function openKomentar(postId) {
-      if (!currentUser) {
-        alert("Silakan login terlebih dahulu.");
-        return;
-      }
-      currentPostId = postId;
-      commentList.innerHTML = "";
-      commentInput.value = "";
-      commentModal.classList.remove("hidden");
-      commentModal.classList.add("show");
-      await loadComments(postId);
-      commentInput.focus();
-    }
-
-    // Load comments for a post
-    async function loadComments(postId) {
-      commentList.innerHTML = "";
-      const commentsRef = collection(db, "statuses", postId, "comments");
-      const q = query(commentsRef, orderBy("timestamp", "asc"));
-      onSnapshot(q, async (snapshot) => {
-        commentList.innerHTML = "";
-        for (const docSnap of snapshot.docs) {
-          const comment = docSnap.data();
-          comment.id = docSnap.id;
-          const commentEl = await createCommentElement(comment, postId);
-          commentList.appendChild(commentEl);
-        }
-        commentList.scrollTop = commentList.scrollHeight;
-      });
-    }
-
-    // Create comment element with replies
-    async function createCommentElement(comment, postId, level = 0) {
-      const container = document.createElement("div");
-      container.className = `border rounded p-2 bg-gray-50 ${
-        level > 0 ? "ml-6" : ""
-      }`;
-
-      const header = document.createElement("div");
-      header.className = "text-gray-900 font-semibold";
-      header.textContent = comment.fullName || comment.nama || "User";
-
-      const subHeader = document.createElement("div");
-      subHeader.className = "text-xs text-gray-500";
-      if (comment.timestamp?.seconds) {
-        const d = new Date(comment.timestamp.seconds * 1000);
-        const jam =
-          d.getHours().toString().padStart(2, "0") +
-          ":" +
-          d.getMinutes().toString().padStart(2, "0");
-        const tanggal = d.getDate().toString().padStart(2, "0");
-        const bulan = d.toLocaleString("id-ID", { month: "long" });
-        const tahun = d.getFullYear();
-        subHeader.textContent = `dibuat pada jam ${jam}, ${tanggal} ${bulan} ${tahun}`;
-      } else {
-        subHeader.textContent = "";
-      }
-
+      // Comment text
       const textP = document.createElement("p");
-      textP.className = "mt-1 text-gray-800 whitespace-pre-wrap";
+      textP.className = "text-gray-700 whitespace-pre-wrap";
       textP.textContent = comment.text || "";
 
       // Reply button
-      const actions = document.createElement("div");
-      actions.className = "flex gap-4 text-xs text-blue-600 mt-1";
-
-      const btnReply = document.createElement("button");
-      btnReply.textContent = "Reply";
-      btnReply.className = "hover:underline focus:outline-none";
-      btnReply.type = "button";
-      btnReply.onclick = () => openReplyInput(container, comment.id, postId);
-
-      actions.appendChild(btnReply);
-
-      container.appendChild(header);
-      container.appendChild(subHeader);
-      container.appendChild(textP);
-      container.appendChild(actions);
+      const replyBtn = document.createElement("button");
+      replyBtn.className =
+        "text-sm text-blue-600 hover:underline focus:outline-none mt-1";
+      replyBtn.textContent = "Reply";
+      replyBtn.addEventListener("click", () => {
+        openReplyInput(comment.id);
+      });
 
       // Replies container
-      const repliesContainer = document.createElement("div");
-      repliesContainer.className = "mt-2 space-y-2";
+      const repliesDiv = document.createElement("div");
+      repliesDiv.className = "ml-6 mt-2 space-y-2";
 
-      // Load replies subcollection
-      const repliesRef = collection(
-        db,
-        "statuses",
-        postId,
-        "comments",
-        comment.id,
-        "replies"
-      );
-      const qReplies = query(repliesRef, orderBy("timestamp", "asc"));
-      const repliesSnapshot = await getDocs(qReplies);
-      for (const replyDoc of repliesSnapshot.docs) {
-        const reply = replyDoc.data();
-        reply.id = replyDoc.id;
-        const replyEl = await createCommentElement(reply, postId, level + 1);
-        repliesContainer.appendChild(replyEl);
-      }
-      if (repliesContainer.children.length > 0) {
-        container.appendChild(repliesContainer);
-      }
-
-      return container;
-    }
-
-    // Open reply input below a comment
-    function openReplyInput(container, commentId, postId) {
-      // Prevent multiple reply inputs
-      if (container.querySelector(".reply-input")) return;
-
-      const replyForm = document.createElement("form");
-      replyForm.className = "reply-input flex space-x-2 mt-2";
-
-      const input = document.createElement("input");
-      input.type = "text";
-      input.placeholder = "Tulis balasan...";
-      input.required = true;
-      input.className =
-        "flex-grow border border-gray-300 rounded p-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
-
-      const btnSend = document.createElement("button");
-      btnSend.type = "submit";
-      btnSend.textContent = "Kirim";
-      btnSend.className =
-        "px-3 rounded bg-blue-600 text-white hover:bg-blue-700 focus:outline-none";
-
-      replyForm.appendChild(input);
-      replyForm.appendChild(btnSend);
-
-      replyForm.onsubmit = async (e) => {
-        e.preventDefault();
-        if (!currentUser) {
-          alert("Silakan login terlebih dahulu.");
-          return;
-        }
-        const replyText = input.value.trim();
-        if (!replyText) return;
-        // Add reply to Firestore under comment's replies subcollection
-        const repliesRef = collection(
-          db,
-          "statuses",
-          postId,
-          "comments",
-          commentId,
-          "replies"
-        );
-        await addDoc(repliesRef, {
-          uid: currentUser.uid,
-          fullName: currentUser.displayName || "User",
-          text: replyText,
-          timestamp: serverTimestamp(),
+      // Render replies if any
+      if (comment.replies && Array.isArray(comment.replies)) {
+        comment.replies.forEach((reply) => {
+          const replyDate = reply.timestamp?.toDate();
+          const rDateStr = replyDate
+            ? replyDate.toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })
+            : "";
+          const rTimeStr = replyDate
+            ? replyDate.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "";
+          const replyDiv = document.createElement("div");
+          replyDiv.className =
+            "bg-gray-100 rounded p-2 border border-gray-300 break-words";
+          replyDiv.innerHTML = `
+            <p class="font-semibold text-gray-700">${escapeHtml(
+              reply.fullName || "Anonymous"
+            )}</p>
+            <p class="text-gray-700 whitespace-pre-wrap">${escapeHtml(
+              reply.text || ""
+            )}</p>
+            <p class="text-xs text-gray-500 text-right">${rTimeStr}, ${rDateStr}</p>
+          `;
+          repliesDiv.appendChild(replyDiv);
         });
-        input.value = "";
-        replyForm.remove();
-      };
+      }
 
-      container.appendChild(replyForm);
-      input.focus();
+      commentDiv.appendChild(headerDiv);
+      commentDiv.appendChild(textP);
+      commentDiv.appendChild(replyBtn);
+      commentDiv.appendChild(repliesDiv);
+
+      commentsList.appendChild(commentDiv);
+    });
+  }
+
+  // Open reply input below a comment
+  function openReplyInput(commentId) {
+    // Check if reply input already exists, remove if so
+    const existingReplyInput = document.getElementById("reply-input-box");
+    if (existingReplyInput) existingReplyInput.remove();
+
+    // Find comment div
+    const commentDiv = [...commentsList.children].find(
+      (div) => div.dataset.commentId === commentId
+    );
+    // If not found, append to commentsList last
+    const targetDiv = commentDiv || commentsList.lastChild;
+
+    // Create reply input box
+    const replyBox = document.createElement("div");
+    replyBox.id = "reply-input-box";
+    replyBox.className = "mt-2 flex space-x-2";
+
+    const replyInput = document.createElement("input");
+    replyInput.type = "text";
+    replyInput.placeholder = "Tulis reply...";
+    replyInput.className =
+      "flex-grow border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+    const replySendBtn = document.createElement("button");
+    replySendBtn.textContent = "Send";
+    replySendBtn.className =
+      "bg-blue-600 text-white px-4 rounded hover:bg-blue-700 focus:outline-none";
+    replySendBtn.addEventListener("click", () => {
+      sendReply(commentId, replyInput.value);
+      replyInput.value = "";
+      replyBox.remove();
+    });
+
+    replyBox.appendChild(replyInput);
+    replyBox.appendChild(replySendBtn);
+
+    if (targetDiv) {
+      targetDiv.appendChild(replyBox);
+      replyInput.focus();
     }
+  }
 
-    // Submit new comment to post
-    commentForm.onsubmit = async (e) => {
-      e.preventDefault();
-      if (!currentUser || !currentPostId) {
-        alert("Silakan login terlebih dahulu.");
-        return;
-      }
-      const text = commentInput.value.trim();
-      if (!text) return;
-      const commentsRef = collection(db, "statuses", currentPostId, "comments");
-      await addDoc(commentsRef, {
-        uid: currentUser.uid,
-        fullName: currentUser.displayName || "User",
-        text,
-        timestamp: serverTimestamp(),
-      });
-      commentInput.value = "";
+  // Send comment to Firestore
+  async function sendComment() {
+    if (!currentCommentPostId) return;
+    const text = commentInput.value.trim();
+    if (!text) return;
+    const commentsRef = collection(
+      db,
+      "statuses",
+      currentCommentPostId,
+      "comments"
+    );
+    await addDoc(commentsRef, {
+      text,
+      fullName: userData.fullName || "Anonymous",
+      uid: currentUser.uid,
+      timestamp: serverTimestamp(),
+      replies: [],
+    });
+    commentInput.value = "";
+  }
+
+  // Send reply to a comment
+  async function sendReply(commentId, text) {
+    if (!currentCommentPostId || !commentId || !text.trim()) return;
+    const commentRef = doc(
+      db,
+      "statuses",
+      currentCommentPostId,
+      "comments",
+      commentId
+    );
+    const commentSnap = await getDoc(commentRef);
+    if (!commentSnap.exists()) return;
+    const commentData = commentSnap.data();
+    const newReply = {
+      text: text.trim(),
+      fullName: userData.fullName || "Anonymous",
+      uid: currentUser.uid,
+      timestamp: serverTimestamp(),
     };
+    const updatedReplies = commentData.replies ? [...commentData.replies] : [];
+    updatedReplies.push(newReply);
+    await updateDoc(commentRef, {
+      replies: updatedReplies,
+    });
+  }
 
-    // Post form submit handler
-    postForm.onsubmit = async (e) => {
-      e.preventDefault();
-      if (!currentUser) {
-        alert("Silakan login terlebih dahulu.");
-        return;
-      }
-      postStatus.textContent = "";
-      const text = postText.value.trim();
-      if (!text) {
-        postStatus.textContent = "Teks postingan tidak boleh kosong.";
-        return;
-      }
-      postStatus.textContent = "Mengirim postingan...";
-      let imageUrl = "";
-      if (postImage.files.length > 0) {
-        try {
-          imageUrl = await uploadImageToImgur(postImage.files[0]);
-        } catch (err) {
-          postStatus.textContent = "Gagal mengupload gambar: " + err.message;
-          return;
-        }
-      }
-      try {
-        await addDoc(collection(db, "statuses"), {
-          uid: currentUser.uid,
-          fullName: currentUser.displayName || "User",
-          deskripsi: text,
-          gambar: imageUrl,
-          timestamp: serverTimestamp(),
-          likeCount: 0,
-          likedBy: [],
-        });
-        postStatus.textContent = "Postingan berhasil dikirim.";
-        postText.value = "";
-        postImage.value = "";
-        postModal.classList.add("hidden");
-        if (!forumSection.classList.contains("hidden")) {
-          loadForumPosts();
-        }
-      } catch (err) {
-        postStatus.textContent = "Gagal mengirim postingan: " + err.message;
-      }
-    };
+  // Report modal logic
+  let currentReportPostId = null;
+  reportModalCloseBtn.addEventListener("click", () => {
+    reportModal.classList.add("hidden");
+    reportReasonSelect.value = "";
+  });
+  reportSendBtn.addEventListener("click", () => {
+    sendReport();
+  });
 
-    // Upload image to Imgur
-    async function uploadImageToImgur(file) {
-      const clientId = "0f3d0dc555fdb38";
-      const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch("https://api.imgur.com/3/image", {
-        method: "POST",
-        headers: {
-          Authorization: `Client-ID ${clientId}`,
-        },
-        body: formData,
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.data.error || "Upload gagal");
-      return data.data.link;
+  function openReportModal(postId) {
+    currentReportPostId = postId;
+    reportModal.classList.remove("hidden");
+  }
+
+  function sendReport() {
+    const reason = reportReasonSelect.value;
+    if (!reason) {
+      alert("Please select a reason for reporting.");
+      return;
     }
+    // Open WhatsApp with prefilled message
+    const waNumber = "+628119118047";
+    const message = encodeURIComponent(
+      `Report for post ID: ${currentReportPostId}\nReason: ${reason}`
+    );
+    window.open(`https://wa.me/${waNumber.replace(/\D/g, "")}?text=${message}`, "_blank");
+    reportModal.classList.add("hidden");
+    reportReasonSelect.value = "";
+  }
+
+  // Post input box logic
+  postInputBox.addEventListener("click", () => {
+    window.location.href = "update.html";
+  });
+
+  // Referral copy button
+  referralCopyBtn.addEventListener("click", () => {
+    if (!userReferralText.textContent) return;
+    navigator.clipboard.writeText(userReferralText.textContent).then(() => {
+      alert("Kode referral berhasil disalin!");
+    });
+  });
+
+  // Initialize app default view
+  function initApp() {
+    showHomeIframe();
+  }
   </script>
-</body>
+  <!-- Loading overlay -->
+  <div class="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 hidden" id="loading-overlay">
+   <i class="fas fa-spinner fa-spin text-4xl text-blue-600">
+   </i>
+  </div>
+  <!-- Header -->
+  <header class="flex items-center justify-between bg-white shadow px-4 py-3 sticky top-0 z-40">
+   <div class="flex items-center space-x-3">
+    <img alt="GMI Official Logo, stylized letters G M I in blue and white" class="w-10 h-10 rounded" height="40" loading="lazy" src="https://storage.googleapis.com/a1aa/image/840f54b7-f384-4cf0-98f1-fc6db0b6f9d4.jpg" width="40"/>
+    <span class="font-semibold text-xl text-blue-700 select-none">
+     gmi official
+    </span>
+   </div>
+   <div class="relative">
+    <button aria-label="Open options menu" class="text-2xl text-gray-600 hover:text-gray-900 focus:outline-none" id="header-options-btn" type="button">
+     <i class="fas fa-ellipsis-v">
+     </i>
+    </button>
+    <div aria-labelledby="header-options-btn" aria-orientation="vertical" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50" id="header-options-menu" role="menu" tabindex="-1">
+     <div class="py-1" role="none">
+      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="settings" role="menuitem" tabindex="-1" type="button">
+       Settings
+      </button>
+      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="contact" role="menuitem" tabindex="-1" type="button">
+       Contact
+      </button>
+      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="@aboutapp" role="menuitem" tabindex="-1" type="button">
+       About Apps
+      </button>
+      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="rateus" role="menuitem" tabindex="-1" type="button">
+       Rate Us
+      </button>
+      <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="newsupdates" role="menuitem" tabindex="-1" type="button">
+       News or Updates
+      </button>
+     </div>
+    </div>
+   </div>
+  </header>
+  <!-- Main content container -->
+  <main class="flex-grow relative overflow-hidden">
+   <!-- SPA main content -->
+   <div class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-128px)] overflow-y-auto" id="main-content">
+   </div>
+   <!-- iframe container for home, info, about -->
+   <div class="hidden w-full h-[calc(100vh-128px)]" id="iframe-container">
+   </div>
+   <!-- Forum container -->
+   <section class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-168px)] overflow-y-auto" id="forum-container">
+   </section>
+   <!-- Profile container -->
+   <section class="hidden p-6 max-w-md mx-auto min-h-[calc(100vh-168px)] bg-white rounded-lg shadow mt-4" id="profile-container">
+    <h2 class="text-3xl font-extrabold text-blue-700 mb-6 text-center">
+     Profil User
+    </h2>
+    <div class="mb-6 text-center">
+     <p class="text-5xl font-extrabold text-gray-900" id="user-points-text">
+      0
+     </p>
+     <p class="text-sm text-gray-500">
+      Saldo Point
+     </p>
+    </div>
+    <div class="space-y-4 text-gray-700">
+     <div>
+      <h3 class="font-semibold">
+       Nama Lengkap
+      </h3>
+      <p class="text-lg" id="user-name-text">
+      </p>
+     </div>
+     <div>
+      <h3 class="font-semibold">
+       Email
+      </h3>
+      <p class="text-lg break-all" id="user-email-text">
+      </p>
+     </div>
+     <div>
+      <h3 class="font-semibold flex items-center justify-between">
+       Kode Referral
+       <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 focus:outline-none" id="referral-copy-btn" type="button">
+        Salin
+       </button>
+      </h3>
+      <p class="text-lg break-all select-text" id="user-referral-text">
+      </p>
+     </div>
+    </div>
+   </section>
+  </main>
+  <!-- Post input box for forum -->
+  <div class="fixed bottom-16 left-0 right-0 max-w-4xl mx-auto px-4" id="post-input-box">
+   <div class="bg-white rounded-full shadow flex items-center px-4 py-3 cursor-pointer hover:shadow-md transition-shadow">
+    <input class="flex-grow text-gray-700 text-lg focus:outline-none cursor-pointer" id="post-input-area" placeholder="Katakan sesuatu..." readonly="" type="text"/>
+    <label class="ml-3 cursor-pointer text-gray-500 hover:text-gray-700" for="post-image-input" title="Upload gambar">
+     <i class="fas fa-image text-2xl">
+     </i>
+    </label>
+    <input accept="image/*" class="hidden" disabled="" id="post-image-input" type="file"/>
+    <button class="ml-3 bg-blue-600 text-white px-4 py-2 rounded-full opacity-50 cursor-not-allowed" disabled="" id="post-submit-btn" type="button">
+     Post
+    </button>
+   </div>
+  </div>
+  <!-- Comments modal -->
+  <div aria-labelledby="comments-modal-header" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center p-4 hidden z-50" id="comments-modal" role="dialog">
+   <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+    <header class="flex justify-between items-center border-b border-gray-300 px-4 py-3">
+     <h3 class="text-xl font-semibold text-gray-800 text-center flex-grow" id="comments-modal-header">
+      Komentar
+     </h3>
+     <button aria-label="Close comments modal" class="text-gray-600 hover:text-gray-900 focus:outline-none" id="comments-modal-close" type="button">
+      <i class="fas fa-times text-2xl">
+      </i>
+     </button>
+    </header>
+    <main class="flex-grow overflow-y-auto p-4 scrollbar-thin" id="comments-list">
+    </main>
+    <footer class="border-t border-gray-300 px-4 py-3 flex space-x-2">
+     <input class="flex-grow border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" id="comment-input" placeholder="Tulis komentar..." type="text"/>
+     <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none" id="comment-send-btn" type="button">
+      Send
+     </button>
+    </footer>
+   </div>
+  </div>
+  <!-- Report modal -->
+  <div aria-labelledby="report-modal-header" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 hidden z-50" id="report-modal" role="dialog">
+   <div class="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
+    <header class="flex justify-between items-center">
+     <h3 class="text-xl font-semibold text-gray-800" id="report-modal-header">
+      Laporkan Postingan
+     </h3>
+     <button aria-label="Close report modal" class="text-gray-600 hover:text-gray-900 focus:outline-none" id="report-modal-close" type="button">
+      <i class="fas fa-times text-2xl">
+      </i>
+     </button>
+    </header>
+    <div>
+     <label class="block font-semibold mb-2" for="report-reason-select">
+      Pilih alasan laporan:
+     </label>
+     <select class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" id="report-reason-select">
+      <option value="">
+       -- Pilih alasan --
+      </option>
+      <option value="Spam">
+       Spam
+      </option>
+      <option value="Kekerasan Verbal">
+       Kekerasan Verbal
+      </option>
+      <option value="Konten Tidak Pantas">
+       Konten Tidak Pantas
+      </option>
+      <option value="Lainnya">
+       Lainnya
+      </option>
+     </select>
+    </div>
+    <div class="flex justify-end">
+     <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none" id="report-send-btn" type="button">
+      Kirim
+     </button>
+    </div>
+   </div>
+  </div>
+ </body>
 </html>
