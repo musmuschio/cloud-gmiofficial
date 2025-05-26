@@ -720,7 +720,6 @@
             "border border-gray-300 rounded p-4 bg-white shadow-sm space-y-2";
 
           card.innerHTML = `
-          <div class="flex transition-transform" style="width: 100%;">
             <header class="flex justify-between items-center text-sm text-gray-600 font-semibold">
               <span>${escapeHtml(status.fullName)}</span>
               <time datetime="${dateObj.toISOString()}">${dateTimeStr}</time>
@@ -747,7 +746,6 @@
                 <span>Report</span>
               </button>
             </footer>
-            </div>
           `;
 
           // Like button handler
