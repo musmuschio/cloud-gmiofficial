@@ -1,19 +1,21 @@
-<html class="scroll-smooth" lang="en">
+<html class="scroll-smooth" lang="id">
  <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1" name="viewport"/>
   <title>
-   GMI Official App
+   GMI Official Forum SPA
   </title>
   <script src="https://cdn.tailwindcss.com">
   </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
   <style>
    body {
       font-family: 'Inter', sans-serif;
+      overflow: auto;         /* Pastikan scroll tetap aktif */
+      scrollbar-width: none;  /* Firefox */
     }
-    /* Scrollbar for modal comments */
+    /* Scrollbar for comments modal */
     .scrollbar-thin::-webkit-scrollbar {
       width: 6px;
     }
@@ -21,1000 +23,1201 @@
       background: transparent;
     }
     .scrollbar-thin::-webkit-scrollbar-thumb {
-      background-color: rgba(100, 100, 100, 0.5);
+      background-color: rgba(100, 116, 139, 0.5);
       border-radius: 3px;
+    }
+    body::-webkit-scrollbar {
+      display: none;          /* Chrome, Safari */
     }
   </style>
  </head>
  <body class="bg-gray-50 min-h-screen flex flex-col">
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signOut,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-  import {
-    getFirestore,
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    serverTimestamp,
-    doc,
-    updateDoc,
-    deleteDoc,
-    getDoc,
-    setDoc,
-  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  <div class="flex flex-col flex-1" id="app">
+   <!-- HEADER -->
+   <header class="flex justify-between items-center bg-green-700 text-white px-4 py-3 shadow-md sticky top-0 z-30" role="banner">
+    <div class="flex items-center space-x-2">
+     <img alt="Logo GMI Official, green square with white GMI text" class="w-10 h-10 rounded" height="40" loading="lazy" src="https://storage.googleapis.com/a1aa/image/12549230-03e5-4e9b-09c9-29eb0940c298.jpg" width="40"/>
+     <h1 class="font-semibold text-lg select-none">
+      GMI Official
+     </h1>
+    </div>
+    <div class="relative">
+     <button aria-controls="headerMenu" aria-expanded="false" aria-haspopup="true" class="p-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-white" id="menuToggleBtn" title="Menu">
+      <i class="fas fa-ellipsis-v text-xl">
+      </i>
+      <span class="sr-only">
+       Toggle menu
+      </span>
+     </button>
+     <nav aria-label="Header menu" class="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg border border-gray-200 text-gray-800 hidden" id="headerMenu" role="menu">
+      <button class="w-full text-left px-4 py-2 hover:bg-green-100 focus:bg-green-100 focus:outline-none" data-spa-link="settings" role="menuitem">
+       <i class="fas fa-cog mr-2">
+       </i>
+       Settings
+      </button>
+      <button class="w-full text-left px-4 py-2 hover:bg-green-100 focus:bg-green-100 focus:outline-none" data-spa-link="contact" role="menuitem">
+       <i class="fas fa-envelope mr-2">
+       </i>
+       Contact
+      </button>
+      <button class="w-full text-left px-4 py-2 hover:bg-green-100 focus:bg-green-100 focus:outline-none" data-spa-link="aboutapp" role="menuitem">
+       <i class="fas fa-info-circle mr-2">
+       </i>
+       About Apps
+      </button>
+      <button class="w-full text-left px-4 py-2 hover:bg-green-100 focus:bg-green-100 focus:outline-none" data-spa-link="rateus" role="menuitem">
+       <i class="fas fa-star mr-2">
+       </i>
+       Rate Us
+      </button>
+      <button class="w-full text-left px-4 py-2 hover:bg-green-100 focus:bg-green-100 focus:outline-none" data-spa-link="news" role="menuitem">
+       <i class="fas fa-newspaper mr-2">
+       </i>
+       News or Updates
+      </button>
+     </nav>
+    </div>
+   </header>
+   <!-- MAIN SPA CONTENT -->
+   <main aria-live="polite" class="flex-1 overflow-auto relative bg-white" id="mainContent" tabindex="-1">
+    <!-- SPA views will be injected here -->
+   </main>
+   <!-- FOOTER NAVIGATION -->
+   <nav aria-label="Footer navigation" class="bg-yellow-400 fixed bottom-0 left-0 right-0 flex justify-around items-center h-16 text-gray-900 shadow-inner z-40" id="footerNav" role="navigation">
+    <button aria-current="page" class="flex flex-col items-center justify-center flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-700" data-spa-link="beranda">
+     <i class="fas fa-home text-xl">
+     </i>
+     <span class="text-xs">
+      Beranda
+     </span>
+    </button>
+    <button class="flex flex-col items-center justify-center flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-700" data-spa-link="forum">
+     <i class="fas fa-comments text-xl">
+     </i>
+     <span class="text-xs">
+      Forum
+     </span>
+    </button>
+    <button class="flex flex-col items-center justify-center flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-700" data-spa-link="informasi">
+     <i class="fas fa-info text-xl">
+     </i>
+     <span class="text-xs">
+      Informasi
+     </span>
+    </button>
+    <button class="flex flex-col items-center justify-center flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-700" data-spa-link="tentang">
+     <i class="fas fa-address-card text-xl">
+     </i>
+     <span class="text-xs">
+      Tentang
+     </span>
+    </button>
+    <button class="flex flex-col items-center justify-center flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-700" data-spa-link="profil">
+     <i class="fas fa-user text-xl">
+     </i>
+     <span class="text-xs">
+      Profil
+     </span>
+    </button>
+   </nav>
+  </div>
+  <!-- MODALS -->
+  <!-- Modal: Komentar & Reply -->
+  <div aria-labelledby="commentModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end sm:items-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" id="commentModal" role="dialog">
+   <div class="bg-white rounded-t-lg sm:rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
+    <header class="flex justify-between items-center border-b border-gray-300 px-4 py-3">
+     <h2 class="text-lg font-semibold text-center flex-1" id="commentModalTitle">
+      Komentar
+     </h2>
+     <button aria-label="Tutup komentar" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" id="closeCommentModalBtn">
+      <i class="fas fa-times text-xl">
+      </i>
+     </button>
+    </header>
+    <section class="flex-1 overflow-y-auto px-4 py-2 space-y-3 scrollbar-thin" id="commentList" tabindex="0">
+     <!-- Comments & replies will be dynamically inserted here -->
+    </section>
+    <footer class="border-t border-gray-300 px-4 py-3 flex items-center space-x-2">
+     <input aria-label="Input komentar" class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="commentInput" placeholder="Tulis komentar..." type="text"/>
+     <button aria-label="Kirim komentar" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-700" id="sendCommentBtn">
+      <i class="fas fa-paper-plane">
+      </i>
+     </button>
+    </footer>
+   </div>
+  </div>
+  <!-- Modal: Login -->
+  <div aria-labelledby="loginModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" id="loginModal" role="dialog">
+   <div class="bg-white rounded-lg w-full max-w-md p-6 mx-4">
+    <h2 class="text-2xl font-semibold mb-4 text-center" id="loginModalTitle">
+     Login
+    </h2>
+    <form class="space-y-4" id="loginForm" novalidate="">
+     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="loginEmail">
+       Email
+      </label>
+      <input autocomplete="email" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="loginEmail" name="loginEmail" placeholder="Isi email aktif" required="" type="email"/>
+     </div>
+     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="loginPassword">
+       Kata Sandi
+      </label>
+      <input autocomplete="current-password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="loginPassword" name="loginPassword" placeholder="Kata sandi" required="" type="password"/>
+     </div>
+     <button class="w-full bg-green-700 text-white py-2 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" type="submit">
+      Masuk
+     </button>
+    </form>
+    <p class="mt-4 text-center text-sm text-gray-600">
+     Belum punya akun? Silahkan daftar!
+     <button class="text-green-700 font-semibold hover:underline focus:outline-none" id="openRegisterBtn">
+      Daftar
+     </button>
+    </p>
+   </div>
+  </div>
+  <!-- Modal: Register (Form Wizard) -->
+  <div aria-labelledby="registerModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" id="registerModal" role="dialog">
+   <div class="bg-white rounded-lg w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
+    <h2 class="text-2xl font-semibold mb-6 text-center" id="registerModalTitle">
+     Registrasi Akun Baru
+    </h2>
+    <form class="space-y-6" id="registerForm" novalidate="">
+     <!-- Step 1: Nama Lengkap -->
+     <fieldset class="step-fieldset" data-step="1">
+      <legend class="sr-only">
+       Nama Lengkap
+      </legend>
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="fullName">
+       Nama Lengkap
+      </label>
+      <input autocomplete="name" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="fullName" name="fullName" placeholder="Isi nama lengkap" required="" type="text"/>
+     </fieldset>
+     <!-- Step 2: Alamat (3 kolom) -->
+     <fieldset class="step-fieldset hidden" data-step="2">
+      <legend class="sr-only">
+       Alamat
+      </legend>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+       <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1" for="desa">
+         Desa
+        </label>
+        <input autocomplete="address-level3" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="desa" name="desa" placeholder="Desa" required="" type="text"/>
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1" for="kecamatan">
+         Kecamatan
+        </label>
+        <input autocomplete="address-level2" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="kecamatan" name="kecamatan" placeholder="Kecamatan" required="" type="text"/>
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1" for="kabupaten">
+         Kabupaten/Kota
+        </label>
+        <input autocomplete="address-level1" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="kabupaten" name="kabupaten" placeholder="Kabupaten/Kota" required="" type="text"/>
+       </div>
+      </div>
+     </fieldset>
+     <!-- Step 3: Kata Sandi (see/hide) -->
+     <fieldset class="step-fieldset hidden" data-step="3">
+      <legend class="sr-only">
+       Kata Sandi
+      </legend>
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="registerPassword">
+       Kata Sandi
+      </label>
+      <div class="relative">
+       <input autocomplete="new-password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 pr-10" id="registerPassword" minlength="6" name="registerPassword" placeholder="Kata sandi" required="" type="password"/>
+       <button aria-label="Tampilkan atau sembunyikan kata sandi" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-900 focus:outline-none" id="togglePasswordBtn" type="button">
+        <i class="fas fa-eye">
+        </i>
+       </button>
+      </div>
+     </fieldset>
+     <!-- Step 4: Email -->
+     <fieldset class="step-fieldset hidden" data-step="4">
+      <legend class="sr-only">
+       Email
+      </legend>
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="registerEmail">
+       Email
+      </label>
+      <input autocomplete="email" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="registerEmail" name="registerEmail" placeholder="Isi email aktif" required="" type="email"/>
+     </fieldset>
+     <!-- Step 5: Nomor WhatsApp -->
+     <fieldset class="step-fieldset hidden" data-step="5">
+      <legend class="sr-only">
+       Nomor WhatsApp
+      </legend>
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="whatsapp">
+       Nomor WhatsApp
+      </label>
+      <input autocomplete="tel" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="whatsapp" name="whatsapp" pattern="08[0-9]{8,12}" placeholder="08..." required="" type="tel"/>
+     </fieldset>
+     <!-- Step 6: Referral Code (optional) -->
+     <fieldset class="step-fieldset hidden" data-step="6">
+      <legend class="sr-only">
+       Referral Code
+      </legend>
+      <label class="block text-sm font-medium text-gray-700 mb-1" for="referralCode">
+       Referral Code (opsional)
+      </label>
+      <input autocomplete="off" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="referralCode" name="referralCode" placeholder="Kode referral jika ada" type="text"/>
+     </fieldset>
+     <div class="flex justify-between">
+      <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-400" disabled="" id="prevStepBtn" type="button">
+       Sebelumnya
+      </button>
+      <button class="bg-green-700 text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-800" id="nextStepBtn" type="button">
+       Berikutnya
+      </button>
+      <button class="bg-green-700 text-white px-4 py-2 rounded hidden focus:outline-none focus:ring-2 focus:ring-green-800" id="submitRegisterBtn" type="submit">
+       Daftar
+      </button>
+     </div>
+    </form>
+   </div>
+  </div>
+  <!-- Forum Floating Post Status Input -->
+  <div aria-label="Formulir posting status baru" class="fixed bottom-16 left-0 right-0 flex justify-center z-40" id="postStatusFooter">
+   <form autocomplete="off" class="bg-white shadow-lg rounded-full flex items-center space-x-2 px-4 py-2 w-[95vw] max-w-3xl" id="postStatusForm">
+    <textarea aria-label="Input status" class="flex-1 resize-none border border-gray-300 rounded-full px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-600" id="postStatusInput" name="postStatusInput" placeholder="Katakan sesuatu..." rows="1"></textarea>
+    <label class="cursor-pointer text-green-700 hover:text-green-900 focus:outline-none focus:ring-2 focus:ring-green-700 rounded p-1" for="postImageInput" title="Unggah gambar (opsional)">
+     <i class="fas fa-image text-xl">
+     </i>
+     <input accept="image/*" aria-label="Unggah gambar" class="hidden" id="postImageInput" name="postImageInput" type="file"/>
+    </label>
+    <button aria-label="Kirim status" class="bg-green-700 text-white rounded-full px-4 py-2 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" type="submit">
+     Kirim
+    </button>
+   </form>
+  </div>
+  <script type="module">
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      where,
+      orderBy,
+      limit,
+      doc,
+      updateDoc,
+      arrayUnion,
+      serverTimestamp,
+      onSnapshot,
+      getDoc,
+      setDoc,
+      deleteDoc,
+      Timestamp,
+    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      updateProfile,
+    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
-  import {
-    getStorage,
-  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR",
+    };
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-    authDomain: "gmi-enterprise23.firebaseapp.com",
-    projectId: "gmi-enterprise23",
-    storageBucket: "gmi-enterprise23.firebasestorage.app",
-    messagingSenderId: "974090028804",
-    appId: "1:974090028804:web:43ae563ffd9433463c7251",
-    measurementId: "G-S27YB5Z8PR"
-  };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+    // DOM Elements
+    const menuToggleBtn = document.getElementById("menuToggleBtn");
+    const headerMenu = document.getElementById("headerMenu");
+    const footerNav = document.getElementById("footerNav");
+    const mainContent = document.getElementById("mainContent");
 
-  // Global state
-  let currentUser = null;
-  let userData = null;
-  let statusesUnsub = null;
-  let commentsUnsubMap = new Map();
+    const loginModal = document.getElementById("loginModal");
+    const loginForm = document.getElementById("loginForm");
+    const openRegisterBtn = document.getElementById("openRegisterBtn");
 
-  // Elements
-  const headerRightBtn = document.getElementById("header-options-btn");
-  const headerOptionsMenu = document.getElementById("header-options-menu");
-  const aboutAppContent = document.getElementById("aboutapp-content");
-  const mainContent = document.getElementById("main-content");
-  const footerButtons = document.querySelectorAll(".footer-btn");
-  const iframeContainer = document.getElementById("iframe-container");
-  const forumContainer = document.getElementById("forum-container");
-  const profileContainer = document.getElementById("profile-container");
-  const postInputBox = document.getElementById("post-input-box");
-  const postInputArea = document.getElementById("post-input-area");
-  const postImageInput = document.getElementById("post-image-input");
-  const postSubmitBtn = document.getElementById("post-submit-btn");
-  const commentsModal = document.getElementById("comments-modal");
-  const commentsModalCloseBtn = document.getElementById("comments-modal-close");
-  const commentsModalHeader = document.getElementById("comments-modal-header");
-  const commentsList = document.getElementById("comments-list");
-  const commentInput = document.getElementById("comment-input");
-  const commentSendBtn = document.getElementById("comment-send-btn");
-  const reportModal = document.getElementById("report-modal");
-  const reportModalCloseBtn = document.getElementById("report-modal-close");
-  const reportSendBtn = document.getElementById("report-send-btn");
-  const reportReasonSelect = document.getElementById("report-reason-select");
-  const referralCopyBtn = document.getElementById("referral-copy-btn");
-  const userPointsText = document.getElementById("user-points-text");
-  const userNameText = document.getElementById("user-name-text");
-  const userEmailText = document.getElementById("user-email-text");
-  const userReferralText = document.getElementById("user-referral-text");
+    const registerModal = document.getElementById("registerModal");
+    const registerForm = document.getElementById("registerForm");
+    const prevStepBtn = document.getElementById("prevStepBtn");
+    const nextStepBtn = document.getElementById("nextStepBtn");
+    const submitRegisterBtn = document.getElementById("submitRegisterBtn");
+    const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+    const registerPasswordInput = document.getElementById("registerPassword");
 
-  // SPA pages content
-  const SPA_PAGES = {
-    settings: `<div class="p-6 max-w-xl mx-auto text-gray-700">
-      <h2 class="text-2xl font-semibold mb-4">Settings</h2>
-      <p>Settings page content coming soon.</p>
-    </div>`,
-    contact: `<div class="p-6 max-w-xl mx-auto text-gray-700">
-      <h2 class="text-2xl font-semibold mb-4">Contact</h2>
-      <p>You can contact us at <a href="mailto:support@gmi.com" class="text-blue-600 underline">support@gmi.com</a>.</p>
-    </div>`,
-    aboutapp: `<div class="p-6 max-w-3xl mx-auto text-gray-800 space-y-6">
-      <h2 class="text-3xl font-bold mb-4 text-center">Privacy Policy & Terms</h2>
-      <section>
-        <h3 class="text-xl font-semibold mb-2">Privacy Policy (Kebijakan Privasi)</h3>
-        <p>Menjelaskan bagaimana data pengguna dikumpulkan, digunakan, dan dilindungi. Kami menghargai privasi Anda dan berkomitmen untuk melindungi informasi pribadi Anda sesuai dengan peraturan yang berlaku.</p>
-      </section>
-      <section>
-        <h3 class="text-xl font-semibold mb-2">Terms of Service / Terms and Conditions (Syarat dan Ketentuan)</h3>
-        <p>Menetapkan aturan dan batasan penggunaan layanan. Dengan menggunakan aplikasi ini, Anda setuju untuk mematuhi syarat dan ketentuan yang berlaku.</p>
-      </section>
-      <section>
-        <h3 class="text-xl font-semibold mb-2">Cookie Policy</h3>
-        <p>Informasi tentang penggunaan cookie, pelacakan, dan opsi persetujuan pengguna. Kami menggunakan cookie untuk meningkatkan pengalaman pengguna dan menganalisis penggunaan aplikasi.</p>
-      </section>
-      <section>
-        <h3 class="text-xl font-semibold mb-2">Disclaimer (Penafian)</h3>
-        <p>Menjelaskan batas tanggung jawab, terutama untuk layanan informasi atau konsultasi. Informasi yang disediakan dalam aplikasi ini adalah untuk tujuan umum dan bukan pengganti nasihat profesional.</p>
-      </section>
-      <section>
-        <h3 class="text-xl font-semibold mb-2">End-User License Agreement (EULA)</h3>
-        <p>Perjanjian lisensi antara pengembang dan pengguna akhir aplikasi. Dengan menggunakan aplikasi ini, Anda setuju dengan ketentuan lisensi yang ditetapkan.</p>
-      </section>
-    </div>`,
-    newsupdates: `<div class="p-6 max-w-xl mx-auto text-gray-700">
-      <h2 class="text-2xl font-semibold mb-4">News or Updates</h2>
-      <ul class="list-disc list-inside space-y-2">
-        <li>Update 1: New features added to the app.</li>
-        <li>Update 2: Bug fixes and performance improvements.</li>
-        <li>Update 3: Upcoming events and announcements.</li>
-        <li>Update 4: Community guidelines updated.</li>
-        <li>Update 5: New referral program launched.</li>
-      </ul>
-    </div>`,
-  };
+    const postStatusFooter = document.getElementById("postStatusFooter");
+    const postStatusForm = document.getElementById("postStatusForm");
+    const postStatusInput = document.getElementById("postStatusInput");
+    const postImageInput = document.getElementById("postImageInput");
 
-  // Header options toggle
-  headerRightBtn.addEventListener("click", () => {
-    headerOptionsMenu.classList.toggle("hidden");
-  });
+    const commentModal = document.getElementById("commentModal");
+    const closeCommentModalBtn = document.getElementById("closeCommentModalBtn");
+    const commentList = document.getElementById("commentList");
+    const commentInput = document.getElementById("commentInput");
+    const sendCommentBtn = document.getElementById("sendCommentBtn");
 
-  document.addEventListener("click", (e) => {
-    if (
-      !headerRightBtn.contains(e.target) &&
-      !headerOptionsMenu.contains(e.target)
-    ) {
-      headerOptionsMenu.classList.add("hidden");
+    // SPA navigation buttons
+    const spaButtons = document.querySelectorAll("[data-spa-link]");
+
+    // Register form steps
+    const stepFieldsets = registerForm.querySelectorAll(".step-fieldset");
+    let currentStep = 1;
+    const totalSteps = stepFieldsets.length;
+
+    // State
+    let currentUser = null;
+    let currentUserData = null;
+    let currentStatusIdForComments = null;
+    let commentsData = {};
+    let commentsUnsub = null;
+
+    // Imgur config
+    const IMGUR_CLIENT_ID = "0f3d0dc555fdb38";
+
+    // Utility: Show/hide element
+    function showElement(el) {
+      el.classList.remove("hidden");
+      el.classList.remove("opacity-0");
+      el.classList.remove("pointer-events-none");
     }
-  });
+    function hideElement(el) {
+      el.classList.add("hidden");
+      el.classList.add("opacity-0");
+      el.classList.add("pointer-events-none");
+    }
+    function fadeIn(el) {
+      el.classList.remove("opacity-0");
+      el.classList.remove("pointer-events-none");
+    }
+    function fadeOut(el) {
+      el.classList.add("opacity-0");
+      el.classList.add("pointer-events-none");
+    }
 
-  headerOptionsMenu.querySelectorAll("button[data-spa]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const spaPage = btn.getAttribute("data-spa");
-      if (spaPage === "@aboutapp") {
-        showAboutApp();
+    // Toggle header menu
+    menuToggleBtn.addEventListener("click", () => {
+      const expanded = menuToggleBtn.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        headerMenu.classList.add("hidden");
+        menuToggleBtn.setAttribute("aria-expanded", "false");
       } else {
-        showSPA(spaPage);
+        headerMenu.classList.remove("hidden");
+        menuToggleBtn.setAttribute("aria-expanded", "true");
       }
-      headerOptionsMenu.classList.add("hidden");
     });
-  });
 
-  function showSPA(page) {
-    forumContainer.classList.add("hidden");
-    profileContainer.classList.add("hidden");
-    iframeContainer.classList.add("hidden");
-    postInputBox.classList.add("hidden");
-    forumUploadFooter.classList.add("hidden");
-    mainContent.classList.remove("hidden");
-    mainContent.innerHTML = SPA_PAGES[page] || "<p>Page not found.</p>";
-  }
-
-  function showAboutApp() {
-    forumContainer.classList.add("hidden");
-    profileContainer.classList.add("hidden");
-    iframeContainer.classList.add("hidden");
-    postInputBox.classList.add("hidden");
-    forumUploadFooter.classList.add("hidden");
-    mainContent.classList.remove("hidden");
-    mainContent.innerHTML = SPA_PAGES.aboutapp;
-  }
-
-  footerButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.getAttribute("data-target");
-      if (target === "home") {
-        showHomeIframe();
-      } else if (target === "forum") {
-        showForum();
-      } else if (target === "info") {
-        showInfoIframe();
-      } else if (target === "about") {
-        showAboutIframe();
-      } else if (target === "profile") {
-        showProfile();
+    // Close header menu on outside click
+    document.addEventListener("click", (e) => {
+      if (
+        !headerMenu.contains(e.target) &&
+        e.target !== menuToggleBtn
+      ) {
+        headerMenu.classList.add("hidden");
+        menuToggleBtn.setAttribute("aria-expanded", "false");
       }
-      setActiveFooterBtn(target);
     });
-  });
 
-  function setActiveFooterBtn(target) {
-    footerButtons.forEach((btn) => {
-      if (btn.getAttribute("data-target") === target) {
-        btn.classList.add("text-blue-600");
-        btn.classList.remove("text-gray-600");
+    // SPA navigation handler
+    spaButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.getAttribute("data-spa-link");
+        navigateTo(target);
+        // Close header menu if open
+        headerMenu.classList.add("hidden");
+        menuToggleBtn.setAttribute("aria-expanded", "false");
+      });
+    });
+
+    // Navigation state
+    let currentView = null;
+
+    // Navigate to SPA view
+    async function navigateTo(view) {
+      if (!currentUser && view !== "login" && view !== "register") {
+        // Force login if not authenticated
+        openLoginModal();
+        return;
+      }
+      currentView = view;
+      // Clear main content
+      mainContent.innerHTML = "";
+      // Hide post status footer except on forum
+      if (view === "forum") {
+        postStatusFooter.classList.remove("hidden");
       } else {
-        btn.classList.remove("text-blue-600");
-        btn.classList.add("text-gray-600");
+        postStatusFooter.classList.add("hidden");
       }
-    });
-  }
-
-  function showHomeIframe() {
-    mainContent.classList.add("hidden");
-    forumContainer.classList.add("hidden");
-    profileContainer.classList.add("hidden");
-    iframeContainer.classList.remove("hidden");
-    iframeContainer.innerHTML = `<iframe src="home.html" class="w-full h-full border-0" title="Home Page"></iframe>`;
-    postInputBox.classList.add("hidden");
-    forumUploadFooter.classList.add("hidden");
-  }
-
-  function showInfoIframe() {
-    mainContent.classList.add("hidden");
-    forumContainer.classList.add("hidden");
-    profileContainer.classList.add("hidden");
-    iframeContainer.classList.remove("hidden");
-    iframeContainer.innerHTML = `<iframe src="informasi.html" class="w-full h-full border-0" title="Informasi Page"></iframe>`;
-    postInputBox.classList.add("hidden");
-    forumUploadFooter.classList.add("hidden");
-  }
-
-  function showAboutIframe() {
-    mainContent.classList.add("hidden");
-    forumContainer.classList.add("hidden");
-    profileContainer.classList.add("hidden");
-    iframeContainer.classList.remove("hidden");
-    iframeContainer.innerHTML = `<iframe src="tentang.html" class="w-full h-full border-0" title="Tentang Page"></iframe>`;
-    postInputBox.classList.add("hidden");
-    forumUploadFooter.classList.add("hidden");
-  }
-
-  function showProfile() {
-    mainContent.classList.add("hidden");
-    forumContainer.classList.add("hidden");
-    iframeContainer.classList.add("hidden");
-    profileContainer.classList.remove("hidden");
-    postInputBox.classList.add("hidden");
-    forumUploadFooter.classList.add("hidden");
-    userPointsText.textContent = userData.points ? userData.points : "0";
-    userNameText.textContent = userData.fullName || "";
-    userEmailText.textContent = userData.email || "";
-    userReferralText.textContent = userData.referral || "";
-  }
-
-  function showForum() {
-    mainContent.classList.add("hidden");
-    iframeContainer.classList.add("hidden");
-    profileContainer.classList.add("hidden");
-    forumContainer.classList.remove("hidden");
-    postInputBox.classList.remove("hidden");
-    forumUploadFooter.classList.remove("hidden");
-    loadForumPosts();
-  }
-
-  async function loadForumPosts() {
-    if (statusesUnsub) {
-      statusesUnsub();
-      statusesUnsub = null;
-    }
-    forumContainer.innerHTML = `<p class="text-center text-gray-500 mt-6">Loading posts...</p>`;
-
-    const now = Date.now();
-    const cutoff = now - 24 * 60 * 60 * 1000;
-
-    const statusesRef = collection(db, "statuses");
-    const q = query(
-      statusesRef,
-      orderBy("timestamp", "desc")
-    );
-
-    statusesUnsub = onSnapshot(q, async (snapshot) => {
-      const batchDeletes = [];
-      const posts = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (!data.timestamp) return;
-        const ts = data.timestamp.toMillis();
-        if (ts < cutoff) {
-          batchDeletes.push(deleteDoc(doc(db, "statuses", docSnap.id)));
-        } else {
-          posts.push({ id: docSnap.id, ...data });
-        }
+      // Update footer nav aria-current
+      footerNav.querySelectorAll("button").forEach((btn) => {
+        btn.setAttribute("aria-current", "false");
       });
-      if (batchDeletes.length > 0) {
-        await Promise.all(batchDeletes);
+      const activeBtn = footerNav.querySelector(`[data-spa-link="${view}"]`);
+      if (activeBtn) activeBtn.setAttribute("aria-current", "page");
+
+      switch (view) {
+        case "beranda":
+          loadBeranda();
+          break;
+        case "forum":
+          loadForum();
+          break;
+        case "informasi":
+          loadIframePage("informasi.html");
+          break;
+        case "tentang":
+          loadIframePage("tentang.html");
+          break;
+        case "profil":
+          loadProfil();
+          break;
+        case "settings":
+          loadSettings();
+          break;
+        case "contact":
+          loadContact();
+          break;
+        case "aboutapp":
+          loadAboutApp();
+          break;
+        case "rateus":
+          loadRateUs();
+          break;
+        case "news":
+          loadNews();
+          break;
+        case "login":
+          openLoginModal();
+          break;
+        case "register":
+          openRegisterModal();
+          break;
+        default:
+          mainContent.innerHTML = `<p class="p-4 text-center text-gray-600">Halaman tidak ditemukan.</p>`;
       }
-      renderForumPosts(posts);
-    });
-  }
-
-  function renderForumPosts(posts) {
-    if (posts.length === 0) {
-      forumContainer.innerHTML = `<p class="text-center text-gray-500 mt-6">No posts available.</p>`;
-      return;
     }
-    forumContainer.innerHTML = "";
-    posts.forEach((post) => {
-      const postDate = post.timestamp.toDate();
-      const dateStr = postDate.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-      const timeStr = postDate.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const postDiv = document.createElement("div");
-      postDiv.className =
-        "bg-white rounded-lg shadow p-4 mb-4 max-w-3xl mx-auto break-words";
-      postDiv.dataset.postId = post.id;
 
-      const headerDiv = document.createElement("div");
-      headerDiv.className = "mb-2";
-      headerDiv.innerHTML = `
-        <p class="font-semibold text-gray-800">${escapeHtml(post.fullName)}</p>
-        <p class="text-xs text-gray-500">${timeStr}, ${dateStr}</p>
+    // Load Beranda (iframe home.html)
+    function loadBeranda() {
+      const iframe = document.createElement("iframe");
+      iframe.src = "home.html";
+      iframe.title = "Beranda GMI Official";
+      iframe.className = "w-full h-full min-h-[calc(100vh-112px)] border-0";
+      mainContent.appendChild(iframe);
+    }
+
+    // Load Informasi (iframe informasi.html)
+    function loadIframePage(src) {
+      const iframe = document.createElement("iframe");
+      iframe.src = src;
+      iframe.title = `Halaman ${src.replace(".html", "")}`;
+      iframe.className = "w-full h-full min-h-[calc(100vh-112px)] border-0";
+      mainContent.appendChild(iframe);
+    }
+
+    // Load Tentang (iframe tentang.html)
+    // Same as loadIframePage("tentang.html")
+
+    // Load Profil page
+    function loadProfil() {
+      if (!currentUserData) {
+        mainContent.innerHTML = `<p class="p-4 text-center text-gray-600">Memuat data profil...</p>`;
+        return;
+      }
+      const { fullName, email, referral, saldoPoin = 0 } = currentUserData;
+      const container = document.createElement("section");
+      container.className = "p-6 max-w-md mx-auto";
+
+      container.innerHTML = `
+        <h2 class="text-3xl font-extrabold text-green-700 mb-6 text-center">Saldo Poin</h2>
+        <p class="text-6xl font-extrabold text-center text-yellow-500 mb-8">${saldoPoin}</p>
+        <div class="space-y-3 text-center">
+          <p class="text-lg font-semibold">${fullName}</p>
+          <p class="text-gray-700">${email}</p>
+          <div class="mt-4 flex justify-center items-center space-x-2">
+            <input type="text" readonly value="${referral}" id="referralCodeInput" class="border border-gray-300 rounded px-3 py-1 text-center w-48 select-all" aria-label="Kode referral milik user" />
+            <button id="copyReferralBtn" class="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" aria-label="Salin kode referral">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
       `;
+      mainContent.appendChild(container);
 
-      const contentP = document.createElement("p");
-      contentP.className = "mt-2 text-gray-700 whitespace-pre-wrap";
-      contentP.textContent = post.deskripsi || "";
-
-      let imgEl = null;
-      if (post.gambar) {
-        imgEl = document.createElement("img");
-        imgEl.src = post.gambar;
-        imgEl.alt = `User post image uploaded by ${escapeHtml(post.fullName)}`;
-        imgEl.className = "mt-3 rounded max-h-96 w-full object-contain";
-      }
-
-      const actionsDiv = document.createElement("div");
-      actionsDiv.className =
-        "flex items-center justify-between mt-4 text-gray-600";
-
-      const likeBtn = document.createElement("button");
-      likeBtn.className =
-        "flex items-center space-x-1 hover:text-blue-600 focus:outline-none";
-      likeBtn.innerHTML = `<i class="fas fa-thumbs-up"></i> <span>${post.likeCount || 0}</span>`;
-      likeBtn.title = "Like";
-      likeBtn.addEventListener("click", () => {
-        toggleLike(post.id);
-      });
-
-      const commentBtn = document.createElement("button");
-      commentBtn.className =
-        "flex items-center space-x-1 hover:text-green-600 focus:outline-none";
-      commentBtn.innerHTML = `<i class="fas fa-comment"></i> <span>Komentar</span>`;
-      commentBtn.title = "Komentar";
-      commentBtn.addEventListener("click", () => {
-        openCommentsModal(post.id);
-      });
-
-      const reportBtn = document.createElement("button");
-      reportBtn.className =
-        "flex items-center space-x-1 hover:text-red-600 focus:outline-none";
-      reportBtn.innerHTML = `<i class="fas fa-flag"></i> <span>Report</span>`;
-      reportBtn.title = "Report";
-      reportBtn.addEventListener("click", () => {
-        openReportModal(post.id);
-      });
-
-      actionsDiv.appendChild(likeBtn);
-      actionsDiv.appendChild(commentBtn);
-      actionsDiv.appendChild(reportBtn);
-
-      postDiv.appendChild(headerDiv);
-      postDiv.appendChild(contentP);
-      if (imgEl) postDiv.appendChild(imgEl);
-      postDiv.appendChild(actionsDiv);
-
-      forumContainer.appendChild(postDiv);
-    });
-  }
-
-  function escapeHtml(text) {
-    if (!text) return "";
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  async function toggleLike(postId) {
-    if (!currentUser) return;
-    const postRef = doc(db, "statuses", postId);
-    const postSnap = await getDoc(postRef);
-    if (!postSnap.exists()) return;
-    const postData = postSnap.data();
-    let likedBy = postData.likedBy || [];
-    let likeCount = postData.likeCount || 0;
-    if (likedBy.includes(currentUser.uid)) {
-      likedBy = likedBy.filter((uid) => uid !== currentUser.uid);
-      likeCount = Math.max(0, likeCount - 1);
-    } else {
-      likedBy.push(currentUser.uid);
-      likeCount++;
-    }
-    await updateDoc(postRef, {
-      likedBy,
-      likeCount,
-    });
-  }
-
-  let currentCommentPostId = null;
-  commentsModalCloseBtn.addEventListener("click", closeCommentsModal);
-  commentSendBtn.addEventListener("click", sendComment);
-
-  function openCommentsModal(postId) {
-    currentCommentPostId = postId;
-    commentsModal.classList.remove("hidden");
-    commentsList.innerHTML = `<p class="text-center text-gray-500 py-6">Loading comments...</p>`;
-    loadComments(postId);
-  }
-
-  function closeCommentsModal() {
-    commentsModal.classList.add("hidden");
-    commentsList.innerHTML = "";
-    commentInput.value = "";
-    currentCommentPostId = null;
-  }
-
-  async function loadComments(postId) {
-    const commentsRef = collection(db, "statuses", postId, "comments");
-    const q = query(commentsRef, orderBy("timestamp", "asc"));
-    if (commentsUnsubMap.has(postId)) {
-      commentsUnsubMap.get(postId)();
-      commentsUnsubMap.delete(postId);
-    }
-    commentsUnsubMap.set(
-      postId,
-      onSnapshot(q, (snapshot) => {
-        const comments = [];
-        snapshot.forEach((docSnap) => {
-          comments.push({ id: docSnap.id, ...docSnap.data() });
+      const copyReferralBtn = document.getElementById("copyReferralBtn");
+      const referralCodeInput = document.getElementById("referralCodeInput");
+      copyReferralBtn.addEventListener("click", () => {
+        referralCodeInput.select();
+        referralCodeInput.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(referralCodeInput.value).then(() => {
+          copyReferralBtn.innerHTML = `<i class="fas fa-check"></i>`;
+          setTimeout(() => {
+            copyReferralBtn.innerHTML = `<i class="fas fa-copy"></i>`;
+          }, 1500);
         });
-        renderComments(comments);
-      })
-    );
-  }
-
-  function renderComments(comments) {
-    if (comments.length === 0) {
-      commentsList.innerHTML = `<p class="text-center text-gray-500 py-6">Belum ada komentar.</p>`;
-      return;
+      });
     }
-    commentsList.innerHTML = "";
-    comments.forEach((comment) => {
-      const commentDate = comment.timestamp?.toDate();
-      const dateStr = commentDate
-        ? commentDate.toLocaleDateString("id-ID", {
+
+    // Load Settings page (SPA)
+    function loadSettings() {
+      mainContent.innerHTML = `
+        <section class="p-6 max-w-md mx-auto">
+          <h2 class="text-2xl font-semibold mb-4">Settings</h2>
+          <p class="text-gray-700 mb-6">Pengaturan aplikasi akan tersedia di sini.</p>
+          <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700">Logout</button>
+        </section>
+      `;
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", async () => {
+        await signOut(auth);
+      });
+    }
+
+    // Load Contact page (SPA)
+    function loadContact() {
+      mainContent.innerHTML = `
+        <section class="p-6 max-w-md mx-auto">
+          <h2 class="text-2xl font-semibold mb-4">Contact</h2>
+          <p class="text-gray-700 mb-4">Hubungi kami melalui email atau WhatsApp.</p>
+          <ul class="space-y-2 text-green-700">
+            <li><i class="fas fa-envelope mr-2"></i>email@gmiofficial.id</li>
+            <li><i class="fab fa-whatsapp mr-2"></i>+62 811-9118-047</li>
+          </ul>
+        </section>
+      `;
+    }
+
+    // Load About Apps page (SPA)
+    function loadAboutApp() {
+      mainContent.innerHTML = `
+        <section class="p-6 max-w-3xl mx-auto space-y-6">
+          <h2 class="text-2xl font-semibold mb-4 text-center">About GMI Official</h2>
+          <article>
+            <h3 class="font-semibold text-lg mb-1">Privacy Policy</h3>
+            <p class="text-gray-700 text-justify">Kami menghargai privasi Anda dan berkomitmen untuk melindungi data pribadi Anda sesuai dengan peraturan yang berlaku.</p>
+          </article>
+          <article>
+            <h3 class="font-semibold text-lg mb-1">Terms of Service</h3>
+            <p class="text-gray-700 text-justify">Dengan menggunakan aplikasi ini, Anda setuju untuk mematuhi semua ketentuan dan peraturan yang berlaku.</p>
+          </article>
+          <article>
+            <h3 class="font-semibold text-lg mb-1">Cookie Policy</h3>
+            <p class="text-gray-700 text-justify">Aplikasi ini menggunakan cookie untuk meningkatkan pengalaman pengguna dan analitik.</p>
+          </article>
+          <article>
+            <h3 class="font-semibold text-lg mb-1">Disclaimer</h3>
+            <p class="text-gray-700 text-justify">Informasi yang disediakan dalam aplikasi ini adalah untuk tujuan umum dan tidak menggantikan nasihat profesional.</p>
+          </article>
+          <article>
+            <h3 class="font-semibold text-lg mb-1">End-User License Agreement (EULA)</h3>
+            <p class="text-gray-700 text-justify">Lisensi penggunaan aplikasi ini diatur oleh perjanjian yang berlaku antara pengguna dan pengembang.</p>
+          </article>
+        </section>
+      `;
+    }
+
+    // Load Rate Us page (SPA)
+    function loadRateUs() {
+      mainContent.innerHTML = `
+        <section class="p-6 max-w-md mx-auto text-center">
+          <h2 class="text-2xl font-semibold mb-4">Rate Us</h2>
+          <p class="text-gray-700 mb-6">Jika Anda menyukai aplikasi ini, silakan berikan rating dan ulasan di toko aplikasi.</p>
+          <button class="bg-yellow-400 text-gray-900 px-6 py-3 rounded font-semibold hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-600">
+            Beri Rating
+          </button>
+        </section>
+      `;
+    }
+
+    // Load News or Updates page (SPA)
+    function loadNews() {
+      mainContent.innerHTML = `
+        <section class="p-6 max-w-3xl mx-auto space-y-6">
+          <h2 class="text-2xl font-semibold mb-4 text-center">News or Updates</h2>
+          <article class="border border-gray-300 rounded p-4 bg-green-50">
+            <h3 class="font-semibold text-lg mb-1">Update 1 - 01-06-2024</h3>
+            <p class="text-gray-700">Peluncuran fitur baru forum dengan komentar nested dan sistem poin referral.</p>
+          </article>
+          <article class="border border-gray-300 rounded p-4 bg-green-50">
+            <h3 class="font-semibold text-lg mb-1">Update 2 - 15-05-2024</h3>
+            <p class="text-gray-700">Perbaikan bug dan peningkatan performa aplikasi.</p>
+          </article>
+          <article class="border border-gray-300 rounded p-4 bg-green-50">
+            <h3 class="font-semibold text-lg mb-1">Update 3 - 01-05-2024</h3>
+            <p class="text-gray-700">Penambahan halaman About Apps dan Rate Us.</p>
+          </article>
+          <article class="border border-gray-300 rounded p-4 bg-green-50">
+            <h3 class="font-semibold text-lg mb-1">Update 4 - 20-04-2024</h3>
+            <p class="text-gray-700">Integrasi Imgur untuk upload gambar pada postingan.</p>
+          </article>
+          <article class="border border-gray-300 rounded p-4 bg-green-50">
+            <h3 class="font-semibold text-lg mb-1">Update 5 - 10-04-2024</h3>
+            <p class="text-gray-700">Implementasi autentikasi pengguna dengan Firebase.</p>
+          </article>
+        </section>
+      `;
+    }
+
+    // Load Forum page (SPA)
+    async function loadForum() {
+      mainContent.innerHTML = `
+        <section class="max-w-3xl mx-auto p-4 space-y-4">
+          <h2 class="text-2xl font-semibold text-center mb-4">Forum Postingan</h2>
+          <div id="statusesContainer" class="space-y-6"></div>
+          <p class="text-center text-gray-500 text-sm mt-4">Postingan hanya berlaku 24 jam dan akan otomatis terhapus.</p>
+        </section>
+      `;
+      const statusesContainer = document.getElementById("statusesContainer");
+
+      // Listen realtime statuses, ordered by timestamp desc, only last 24 hours
+      const now = Timestamp.now();
+      const yesterday = Timestamp.fromMillis(now.toMillis() - 24 * 60 * 60 * 1000);
+      const statusesQuery = query(
+        collection(db, "statuses"),
+        where("timestamp", ">", yesterday),
+        orderBy("timestamp", "desc")
+      );
+
+      // Unsubscribe previous listener if any
+      if (window.statusesUnsub) window.statusesUnsub();
+
+      window.statusesUnsub = onSnapshot(statusesQuery, (snapshot) => {
+        statusesContainer.innerHTML = "";
+        if (snapshot.empty) {
+          statusesContainer.innerHTML = `<p class="text-center text-gray-500">Belum ada postingan.</p>`;
+          return;
+        }
+        snapshot.forEach((docSnap) => {
+          const status = docSnap.data();
+          const id = docSnap.id;
+          const dateObj = status.timestamp.toDate();
+          const dateStr = dateObj.toLocaleDateString("id-ID", {
             day: "2-digit",
-            month: "long",
+            month: "2-digit",
             year: "numeric",
-          })
-        : "";
-      const timeStr = commentDate
-        ? commentDate.toLocaleTimeString("id-ID", {
+          });
+          const timeStr = dateObj.toLocaleTimeString("id-ID", {
             hour: "2-digit",
             minute: "2-digit",
-          })
-        : "";
-      const commentDiv = document.createElement("div");
-      commentDiv.className = "mb-4 border-b border-gray-200 pb-2";
+            hour12: false,
+          });
+          const dateTimeStr = `${timeStr}, ${dateStr}`;
 
-      const headerDiv = document.createElement("div");
-      headerDiv.className = "flex justify-between items-center mb-1";
-      headerDiv.innerHTML = `
-        <p class="font-semibold text-gray-800">${escapeHtml(
-          comment.fullName || "Anonymous"
-        )}</p>
-        <p class="text-xs text-gray-500">${timeStr}, ${dateStr}</p>
-      `;
+          // Create status card
+          const card = document.createElement("article");
+          card.className =
+            "border border-gray-300 rounded p-4 bg-white shadow-sm space-y-2";
 
-      const textP = document.createElement("p");
-      textP.className = "text-gray-700 whitespace-pre-wrap";
-      textP.textContent = comment.text || "";
-
-      const replyBtn = document.createElement("button");
-      replyBtn.className =
-        "text-sm text-blue-600 hover:underline focus:outline-none mt-1";
-      replyBtn.textContent = "Reply";
-      replyBtn.addEventListener("click", () => {
-        openReplyInput(comment.id);
-      });
-
-      const repliesDiv = document.createElement("div");
-      repliesDiv.className = "ml-6 mt-2 space-y-2";
-
-      if (comment.replies && Array.isArray(comment.replies)) {
-        comment.replies.forEach((reply) => {
-          const replyDate = reply.timestamp?.toDate();
-          const rDateStr = replyDate
-            ? replyDate.toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })
-            : "";
-          const rTimeStr = replyDate
-            ? replyDate.toLocaleTimeString("id-ID", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "";
-          const replyDiv = document.createElement("div");
-          replyDiv.className =
-            "bg-gray-100 rounded p-2 border border-gray-300 break-words";
-          replyDiv.innerHTML = `
-            <p class="font-semibold text-gray-700">${escapeHtml(
-              reply.fullName || "Anonymous"
-            )}</p>
-            <p class="text-gray-700 whitespace-pre-wrap">${escapeHtml(
-              reply.text || ""
-            )}</p>
-            <p class="text-xs text-gray-500 text-right">${rTimeStr}, ${rDateStr}</p>
+          card.innerHTML = `
+            <header class="flex justify-between items-center text-sm text-gray-600 font-semibold">
+              <span>${escapeHtml(status.fullName)}</span>
+              <time datetime="${dateObj.toISOString()}">${dateTimeStr}</time>
+            </header>
+            <p class="whitespace-pre-wrap text-gray-800">${escapeHtml(status.deskripsi)}</p>
+            ${
+              status.gambar
+                ? `<img src="${status.gambar}" alt="Gambar postingan oleh ${escapeHtml(
+                    status.fullName
+                  )}" class="w-full max-h-64 object-contain rounded" loading="lazy" />`
+                : ""
+            }
+            <footer class="flex items-center justify-between text-sm text-gray-600">
+              <button class="likeBtn flex items-center space-x-1 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" aria-label="Like postingan">
+                <i class="fas fa-thumbs-up"></i>
+                <span class="likeCount">${status.likeCount || 0}</span>
+              </button>
+              <button class="commentBtn flex items-center space-x-1 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" aria-label="Komentar postingan">
+                <i class="fas fa-comment"></i>
+                <span>Komentar</span>
+              </button>
+              <button class="reportBtn flex items-center space-x-1 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 rounded" aria-label="Laporkan postingan via WhatsApp">
+                <i class="fas fa-flag"></i>
+                <span>Report</span>
+              </button>
+            </footer>
           `;
-          repliesDiv.appendChild(replyDiv);
+
+          // Like button handler
+          const likeBtn = card.querySelector(".likeBtn");
+          likeBtn.addEventListener("click", async () => {
+            if (!currentUser) {
+              openLoginModal();
+              return;
+            }
+            try {
+              const statusRef = doc(db, "statuses", id);
+              const docSnap = await getDoc(statusRef);
+              if (!docSnap.exists()) return;
+              const data = docSnap.data();
+              if (data.likedBy && data.likedBy.includes(currentUser.uid)) {
+                // Already liked, do nothing or optionally unlike
+                return;
+              }
+              await updateDoc(statusRef, {
+                likeCount: (data.likeCount || 0) + 1,
+                likedBy: arrayUnion(currentUser.uid),
+              });
+            } catch (e) {
+              alert("Gagal menyukai postingan.");
+            }
+          });
+
+          // Comment button handler
+          const commentBtn = card.querySelector(".commentBtn");
+          commentBtn.addEventListener("click", () => {
+            if (!currentUser) {
+              openLoginModal();
+              return;
+            }
+            openCommentModal(id);
+          });
+
+          // Report button handler
+          const reportBtn = card.querySelector(".reportBtn");
+          reportBtn.addEventListener("click", () => {
+            const waNumber = "+628119118047";
+            const waText = encodeURIComponent(
+              `Laporan postingan oleh ${status.fullName} pada ${dateTimeStr}:\n\n${status.deskripsi}`
+            );
+            window.open(`https://wa.me/${waNumber}?text=${waText}`, "_blank");
+          });
+
+          statusesContainer.appendChild(card);
         });
-      }
-
-      commentDiv.appendChild(headerDiv);
-      commentDiv.appendChild(textP);
-      commentDiv.appendChild(replyBtn);
-      commentDiv.appendChild(repliesDiv);
-
-      commentsList.appendChild(commentDiv);
-    });
-  }
-
-  function openReplyInput(commentId) {
-    const existingReplyInput = document.getElementById("reply-input-box");
-    if (existingReplyInput) existingReplyInput.remove();
-
-    const commentDiv = [...commentsList.children].find(
-      (div) => div.dataset.commentId === commentId
-    );
-    const targetDiv = commentDiv || commentsList.lastChild;
-
-    const replyBox = document.createElement("div");
-    replyBox.id = "reply-input-box";
-    replyBox.className = "mt-2 flex space-x-2";
-
-    const replyInput = document.createElement("input");
-    replyInput.type = "text";
-    replyInput.placeholder = "Tulis reply...";
-    replyInput.className =
-      "flex-grow border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
-
-    const replySendBtn = document.createElement("button");
-    replySendBtn.textContent = "Send";
-    replySendBtn.className =
-      "bg-blue-600 text-white px-4 rounded hover:bg-blue-700 focus:outline-none";
-    replySendBtn.addEventListener("click", () => {
-      sendReply(commentId, replyInput.value);
-      replyInput.value = "";
-      replyBox.remove();
-    });
-
-    replyBox.appendChild(replyInput);
-    replyBox.appendChild(replySendBtn);
-
-    if (targetDiv) {
-      targetDiv.appendChild(replyBox);
-      replyInput.focus();
-    }
-  }
-
-  async function sendComment() {
-    if (!currentCommentPostId) return;
-    const text = commentInput.value.trim();
-    if (!text) return;
-    const commentsRef = collection(
-      db,
-      "statuses",
-      currentCommentPostId,
-      "comments"
-    );
-    await addDoc(commentsRef, {
-      text,
-      fullName: userData.fullName || "Anonymous",
-      uid: currentUser.uid,
-      timestamp: serverTimestamp(),
-      replies: [],
-    });
-    commentInput.value = "";
-  }
-
-  async function sendReply(commentId, text) {
-    if (!currentCommentPostId || !commentId || !text.trim()) return;
-    const commentRef = doc(
-      db,
-      "statuses",
-      currentCommentPostId,
-      "comments",
-      commentId
-    );
-    const commentSnap = await getDoc(commentRef);
-    if (!commentSnap.exists()) return;
-    const commentData = commentSnap.data();
-    const newReply = {
-      text: text.trim(),
-      fullName: userData.fullName || "Anonymous",
-      uid: currentUser.uid,
-      timestamp: serverTimestamp(),
-    };
-    const updatedReplies = commentData.replies ? [...commentData.replies] : [];
-    updatedReplies.push(newReply);
-    await updateDoc(commentRef, {
-      replies: updatedReplies,
-    });
-  }
-
-  let currentReportPostId = null;
-  reportModalCloseBtn.addEventListener("click", () => {
-    reportModal.classList.add("hidden");
-    reportReasonSelect.value = "";
-  });
-  reportSendBtn.addEventListener("click", () => {
-    sendReport();
-  });
-
-  function openReportModal(postId) {
-    currentReportPostId = postId;
-    reportModal.classList.remove("hidden");
-  }
-
-  function sendReport() {
-    const reason = reportReasonSelect.value;
-    if (!reason) {
-      alert("Please select a reason for reporting.");
-      return;
-    }
-    const waNumber = "+628119118047";
-    const message = encodeURIComponent(
-      `Report for post ID: ${currentReportPostId}\nReason: ${reason}`
-    );
-    window.open(`https://wa.me/${waNumber.replace(/\D/g, "")}?text=${message}`, "_blank");
-    reportModal.classList.add("hidden");
-    reportReasonSelect.value = "";
-  }
-
-  postInputBox.addEventListener("click", () => {
-    window.location.href = "update.html";
-  });
-
-  referralCopyBtn.addEventListener("click", () => {
-    if (!userReferralText.textContent) return;
-    navigator.clipboard.writeText(userReferralText.textContent).then(() => {
-      alert("Kode referral berhasil disalin!");
-    });
-  });
-
-  // Forum upload footer elements and logic
-  const forumUploadFooter = document.getElementById("forum-upload-footer");
-  const uploadTextArea = document.getElementById("upload-textarea");
-  const uploadImageInput = document.getElementById("upload-image-input");
-  const uploadImagePreview = document.getElementById("upload-image-preview");
-  const uploadSubmitBtn = document.getElementById("upload-submit-btn");
-  const uploadCancelBtn = document.getElementById("upload-cancel-btn");
-  const uploadLoadingSpinner = document.getElementById("upload-loading-spinner");
-
-  let uploadImageFile = null;
-
-  uploadImageInput.addEventListener("change", () => {
-    const file = uploadImageInput.files[0];
-    if (file) {
-      uploadImageFile = file;
-      const url = URL.createObjectURL(file);
-      uploadImagePreview.src = url;
-      uploadImagePreview.classList.remove("hidden");
-    } else {
-      uploadImageFile = null;
-      uploadImagePreview.src = "";
-      uploadImagePreview.classList.add("hidden");
-    }
-  });
-
-  uploadCancelBtn.addEventListener("click", () => {
-    uploadTextArea.value = "";
-    uploadImageInput.value = "";
-    uploadImagePreview.src = "";
-    uploadImagePreview.classList.add("hidden");
-    uploadImageFile = null;
-  });
-
-  uploadSubmitBtn.addEventListener("click", async () => {
-    const text = uploadTextArea.value.trim();
-    if (!text && !uploadImageFile) {
-      alert("Tulis sesuatu atau pilih gambar untuk diposting.");
-      return;
-    }
-    uploadSubmitBtn.disabled = true;
-    uploadLoadingSpinner.classList.remove("hidden");
-
-    try {
-      let imageUrl = null;
-      if (uploadImageFile) {
-        const formData = new FormData();
-        formData.append("image", uploadImageFile);
-
-        const response = await fetch("https://api.imgur.com/3/image", {
-          method: "POST",
-          headers: {
-            Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
-          },
-          body: formData,
-        });
-
-        const data = await response.json();
-        if (!data.success) {
-          throw new Error("Upload gambar gagal");
-        }
-        imageUrl = data.data.link;
-      }
-
-      await addDoc(collection(db, "statuses"), {
-        deskripsi: text,
-        fullName: userData.fullName || "Anonymous",
-        gambar: imageUrl,
-        likeCount: 0,
-        likedBy: [],
-        timestamp: serverTimestamp(),
-        uid: currentUser.uid,
       });
-
-      uploadTextArea.value = "";
-      uploadImageInput.value = "";
-      uploadImagePreview.src = "";
-      uploadImagePreview.classList.add("hidden");
-      uploadImageFile = null;
-
-      loadForumPosts();
-
-    } catch (error) {
-      alert("Gagal memposting: " + error.message);
-    } finally {
-      uploadSubmitBtn.disabled = false;
-      uploadLoadingSpinner.classList.add("hidden");
     }
-  });
 
-  // Initialize footer active state and app
-  function initFooter() {
-    setActiveFooterBtn("home");
-  }
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
-  function initApp() {
-    initFooter();
-    showHomeIframe();
-  }
-</script>
+    // Open comment modal for a status
+    async function openCommentModal(statusId) {
+      currentStatusIdForComments = statusId;
+      commentList.innerHTML = `<p class="text-center text-gray-500">Memuat komentar...</p>`;
+      fadeIn(commentModal);
+      commentModal.classList.remove("pointer-events-none");
+      commentInput.value = "";
+      commentInput.focus();
 
-  <!-- LOGIN SECTION -->
-  <section id="login" class="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-6 sm:p-10">
-      <h2 class="text-3xl font-semibold text-gray-700 mb-6 text-center">Login</h2>
-      <form id="loginForm" class="space-y-4" novalidate>
-        <div>
-          <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input type="email" id="loginEmail" name="loginEmail" autocomplete="email" required
-            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" />
-        </div>
-        <div>
-          <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
-          <input type="password" id="loginPassword" name="loginPassword" required
-            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" />
-        </div>
-        <p id="loginError" class="text-red-600 text-sm hidden"></p>
-        <button type="submit" class="w-full bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-1 transition">
-          Login
-        </button>
-      </form>
-      <p class="mt-6 text-center text-gray-600">
-        Belum punya akun? <a href="#" id="toRegister" class="text-blue-600 hover:underline">Daftar di sini</a>
-      </p>
-    </div>
-  </section>
+      // Unsubscribe previous comments listener
+      if (commentsUnsub) commentsUnsub();
 
-  <!-- REGISTER SECTION -->
-  <section id="register" class="hidden min-h-screen flex items-center justify-center p-4 bg-gray-50">
-    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-6 sm:p-10">
-      <h1 class="text-3xl font-semibold text-green-700 mb-6 text-center">Registrasi Akun</h1>
-      <form id="registrationForm" novalidate>
-        <!-- Step 1 -->
-        <fieldset id="step1" class="space-y-6">
-          <div>
-            <label for="fullName" class="block text-sm font-medium text-green-700 mb-1">Nama Lengkap</label>
-            <input type="text" id="fullName" name="fullName" autocomplete="name" required
-              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
-              aria-describedby="fullNameError" />
-            <p id="fullNameError" class="mt-1 text-sm text-red-600 hidden"></p>
-          </div>
-          <div>
-            <label for="address" class="block text-sm font-medium text-green-700 mb-1">Alamat</label>
-            <input type="text" id="address" name="address" autocomplete="street-address" required
-              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
-              aria-describedby="addressError" />
-            <p id="addressError" class="mt-1 text-sm text-red-600 hidden"></p>
-          </div>
-          <div>
-            <label for="email" class="block text-sm font-medium text-green-700 mb-1">Email</label>
-            <input type="email" id="email" name="email" autocomplete="email" required
-              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
-              aria-describedby="emailError" />
-            <p id="emailError" class="mt-1 text-sm text-red-600 hidden"></p>
-          </div>
-          <div class="flex justify-end">
-            <button type="button" id="nextBtn" class="bg-green-700 text-white px-5 py-2 rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800 focus:ring-offset-1 transition">
-              Selanjutnya <i class="fas fa-arrow-right ml-2"></i>
-            </button>
-          </div>
-        </fieldset>
+      // Listen comments for this status ordered by timestamp asc
+      const commentsQuery = query(
+        collection(db, "statuses", statusId, "comments"),
+        orderBy("timestamp", "asc")
+      );
 
-        <!-- Step 2 -->
-        <fieldset id="step2" class="space-y-6 hidden">
-          <div>
-            <label for="password" class="block text-sm font-medium text-green-700 mb-1">Kata Sandi</label>
-            <input type="password" id="password" name="password" required
-              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
-              aria-describedby="passwordError passwordStrength" />
-            <p id="passwordError" class="mt-1 text-sm text-red-600 hidden"></p>
-            <p id="passwordStrength" class="mt-1 text-sm font-medium"></p>
-          </div>
-          <div>
-            <label for="whatsapp" class="block text-sm font-medium text-green-700 mb-1">Nomor WhatsApp</label>
-            <input type="text" id="whatsapp" name="whatsapp" inputmode="numeric" pattern="08[0-9]*" required
-              placeholder="Contoh: 081234567890"
-              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
-              aria-describedby="whatsappError" />
-            <p id="whatsappError" class="mt-1 text-sm text-red-600 hidden"></p>
-          </div>
-          <div>
-            <label for="referral" class="block text-sm font-medium text-green-700 mb-1">Kode Referral (opsional)</label>
-            <input type="text" id="referral" name="referral" autocomplete="off"
-              class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent" />
-          </div>
-          <div class="flex justify-between">
-            <button type="button" id="backBtn" class="border border-green-700 text-green-700 px-5 py-2 rounded-md hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-offset-1 transition">
-              <i class="fas fa-arrow-left mr-2"></i> Kembali
-            </button>
-            <button type="submit" id="submitBtn" class="bg-green-700 text-white px-5 py-2 rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800 focus:ring-offset-1 transition flex items-center">
-              Daftar
-              <svg id="loadingSpinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-              </svg>
-            </button>
-          </div>
-        </fieldset>
-      </form>
-      <p class="mt-6 text-center text-gray-600">
-        Sudah punya akun? <a href="#" id="toLogin" class="text-blue-600 hover:underline">Login di sini</a>
-      </p>
-      <p id="successMessage" class="mt-6 text-center text-green-600 font-semibold hidden">Registrasi berhasil</p>
-    </div>
-  </section>
+      commentsUnsub = onSnapshot(commentsQuery, (snapshot) => {
+        commentList.innerHTML = "";
+        if (snapshot.empty) {
+          commentList.innerHTML = `<p class="text-center text-gray-500">Belum ada komentar.</p>`;
+          return;
+        }
+        // Build nested comments tree
+        const comments = [];
+        const commentsMap = {};
+        snapshot.forEach((docSnap) => {
+          const c = { id: docSnap.id, ...docSnap.data() };
+          commentsMap[c.id] = c;
+          c.replies = [];
+        });
+        // Link replies to parents
+        Object.values(commentsMap).forEach((c) => {
+          if (c.replyTo && commentsMap[c.replyTo]) {
+            commentsMap[c.replyTo].replies.push(c);
+          } else {
+            comments.push(c);
+          }
+        });
 
-  <!-- APP CONTAINER -->
-  <div id="app-container" class="hidden flex flex-col min-h-screen">
-    <!-- Header -->
-    <header class="flex items-center justify-between bg-white shadow px-4 py-3 sticky top-0 z-40">
-      <div class="flex items-center space-x-3">
-        <img alt="GMI Official Logo, stylized letters G M I in blue and white" class="w-10 h-10 rounded" height="40" loading="lazy" src="https://storage.googleapis.com/a1aa/image/840f54b7-f384-4cf0-98f1-fc6db0b6f9d4.jpg" width="40"/>
-        <span class="font-semibold text-xl text-blue-700 select-none">
-          gmi official
-        </span>
-      </div>
-      <div class="relative">
-        <button aria-label="Open options menu" class="text-2xl text-gray-600 hover:text-gray-900 focus:outline-none" id="header-options-btn" type="button">
-          <i class="fas fa-ellipsis-v"></i>
-        </button>
-        <div aria-labelledby="header-options-btn" aria-orientation="vertical" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50" id="header-options-menu" role="menu" tabindex="-1">
-          <div class="py-1" role="none">
-            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="settings" role="menuitem" tabindex="-1" type="button">
-              Settings
-            </button>
-            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="contact" role="menuitem" tabindex="-1" type="button">
-              Contact
-            </button>
-            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="@aboutapp" role="menuitem" tabindex="-1" type="button">
-              About Apps
-            </button>
-            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="rateus" role="menuitem" tabindex="-1" type="button">
-              Rate Us
-            </button>
-            <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-spa="newsupdates" role="menuitem" tabindex="-1" type="button">
-              News or Updates
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-    <!-- Main content container -->
-    <main class="flex-grow relative overflow-hidden">
-      <!-- SPA main content -->
-      <div class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-168px)] overflow-y-auto" id="main-content"></div>
-      <!-- iframe container for home, info, about -->
-      <div class="hidden w-full h-[calc(100vh-168px)]" id="iframe-container"></div>
-      <!-- Forum container -->
-      <section class="hidden p-4 max-w-4xl mx-auto min-h-[calc(100vh-168px)] overflow-y-auto" id="forum-container"></section>
-      <!-- Profile container -->
-      <section class="hidden p-6 max-w-md mx-auto min-h-[calc(100vh-168px)] bg-white rounded-lg shadow mt-4" id="profile-container">
-        <h2 class="text-3xl font-extrabold text-blue-700 mb-6 text-center">Profil User</h2>
-        <div class="mb-6 text-center">
-          <p class="text-5xl font-extrabold text-gray-900" id="user-points-text">0</p>
-          <p class="text-sm text-gray-500">Saldo Point</p>
-        </div>
-        <div class="space-y-4 text-gray-700">
-          <div>
-            <h3 class="font-semibold">Nama Lengkap</h3>
-            <p class="text-lg" id="user-name-text"></p>
-          </div>
-          <div>
-            <h3 class="font-semibold">Email</h3>
-            <p class="text-lg break-all" id="user-email-text"></p>
-          </div>
-          <div>
-            <h3 class="font-semibold flex items-center justify-between">
-              Kode Referral
-              <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 focus:outline-none" id="referral-copy-btn" type="button">Salin</button>
-            </h3>
-            <p class="text-lg break-all select-text" id="user-referral-text"></p>
-          </div>
-        </div>
-      </section>
-    </main>
-    <!-- Post input box for forum -->
-    <div class="fixed bottom-16 left-0 right-0 max-w-4xl mx-auto px-4" id="post-input-box">
-      <div class="bg-white rounded-full shadow flex items-center px-4 py-3 cursor-pointer hover:shadow-md transition-shadow">
-        <input class="flex-grow text-gray-700 text-lg focus:outline-none cursor-pointer" id="post-input-area" placeholder="Katakan sesuatu..." readonly="" type="text"/>
-        <label class="ml-3 cursor-pointer text-gray-500 hover:text-gray-700" for="post-image-input" title="Upload gambar">
-          <i class="fas fa-image text-2xl"></i>
-        </label>
-        <input accept="image/*" class="hidden" disabled="" id="post-image-input" type="file"/>
-        <button class="ml-3 bg-blue-600 text-white px-4 py-2 rounded-full opacity-50 cursor-not-allowed" disabled="" id="post-submit-btn" type="button">Post</button>
-      </div>
-    </div>
-    <!-- Forum upload footer -->
-    <footer id="forum-upload-footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow flex flex-col p-4 max-w-4xl mx-auto z-50 hidden">
-      <textarea id="upload-textarea" rows="3" placeholder="Tulis sesuatu..." class="w-full rounded-md border border-gray-300 p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"></textarea>
-      <div class="flex items-center mt-2 space-x-3">
-        <label for="upload-image-input" class="cursor-pointer text-gray-600 hover:text-gray-900">
-          <i class="fas fa-image text-2xl"></i>
-          <span class="sr-only">Upload gambar</span>
-        </label>
-        <input type="file" id="upload-image-input" accept="image/*" class="hidden" />
-        <img id="upload-image-preview" alt="Preview gambar yang akan diupload" class="hidden max-h-24 rounded object-contain" />
-        <div class="flex-grow"></div>
-        <button id="upload-cancel-btn" type="button" class="text-red-600 hover:text-red-800 focus:outline-none">
-          <i class="fas fa-times text-xl"></i>
-          <span class="sr-only">Batal</span>
-        </button>
-        <button id="upload-submit-btn" type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none flex items-center">
-          Post
-          <svg id="upload-loading-spinner" class="animate-spin ml-2 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-          </svg>
-        </button>
-      </div>
-    </footer>
-  </div>
+        // Render comments recursively
+        function renderComments(commentsArr, level = 0) {
+          const fragment = document.createDocumentFragment();
+          commentsArr.forEach((c) => {
+            const div = document.createElement("div");
+            div.className = `border border-gray-300 rounded p-2 mb-2 bg-gray-50 ${
+              level > 0 ? "ml-6" : ""
+            }`;
+            const dateObj = c.timestamp?.toDate
+              ? c.timestamp.toDate()
+              : new Date();
+            const timeStr = dateObj.toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            });
+            const dateStr = dateObj.toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            });
+            const dateTimeStr = `${timeStr}, ${dateStr}`;
+            div.innerHTML = `
+              <div class="flex justify-between items-center text-xs text-gray-600 font-semibold mb-1">
+                <span>${escapeHtml(c.fullName)}</span>
+                <time datetime="${dateObj.toISOString()}">${dateTimeStr}</time>
+              </div>
+              <p class="text-gray-800 whitespace-pre-wrap mb-1">${escapeHtml(
+                c.text
+              )}</p>
+              <button class="replyBtn text-green-700 text-xs font-semibold hover:underline focus:outline-none" aria-label="Balas komentar oleh ${escapeHtml(
+                c.fullName
+              )}">Balas</button>
+            `;
+            // Reply button handler
+            const replyBtn = div.querySelector(".replyBtn");
+            replyBtn.addEventListener("click", () => {
+              commentInput.focus();
+              commentInput.value = `@${c.fullName} `;
+              commentInput.dataset.replyTo = c.id;
+            });
+            fragment.appendChild(div);
+            if (c.replies.length > 0) {
+              fragment.appendChild(renderComments(c.replies, level + 1));
+            }
+          });
+          return fragment;
+        }
 
-  <!-- Footer navigation -->
-  <footer id="footer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow flex justify-between items-center h-16 max-w-4xl mx-auto px-2 sm:px-6 z-50">
-    <button aria-label="Beranda" class="footer-btn flex flex-col items-center justify-center text-blue-600 focus:outline-none" data-target="home" type="button">
-      <i class="fas fa-home text-xl"></i>
-      <span class="text-xs mt-1 select-none">Beranda</span>
-    </button>
-    <button aria-label="Forum" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="forum" type="button">
-      <i class="fas fa-comments text-xl"></i>
-      <span class="text-xs mt-1 select-none">Forum</span>
-    </button>
-    <button aria-label="Informasi" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="info" type="button">
-      <i class="fas fa-info-circle text-xl"></i>
-      <span class="text-xs mt-1 select-none">Informasi</span>
-    </button>
-    <button aria-label="Tentang" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="about" type="button">
-      <i class="fas fa-info text-xl"></i>
-      <span class="text-xs mt-1 select-none">Tentang</span>
-    </button>
-    <button aria-label="Profil" class="footer-btn flex flex-col items-center justify-center text-gray-600 hover:text-blue-600 focus:outline-none" data-target="profile" type="button">
-      <i class="fas fa-user text-xl"></i>
-      <span class="text-xs mt-1 select-none">Profil</span>
-    </button>
-  </footer>
+        commentList.appendChild(renderComments(comments));
+      });
+    }
+
+    // Close comment modal
+    closeCommentModalBtn.addEventListener("click", () => {
+      fadeOut(commentModal);
+      commentModal.classList.add("pointer-events-none");
+      if (commentsUnsub) commentsUnsub();
+      currentStatusIdForComments = null;
+      commentInput.value = "";
+      commentInput.dataset.replyTo = "";
+    });
+
+    // Send comment button
+    sendCommentBtn.addEventListener("click", async () => {
+      if (!currentUser || !currentStatusIdForComments) return;
+      const text = commentInput.value.trim();
+      if (!text) return;
+      const replyTo = commentInput.dataset.replyTo || null;
+      try {
+        await addDoc(collection(db, "statuses", currentStatusIdForComments, "comments"), {
+          fullName: currentUserData.fullName,
+          uid: currentUser.uid,
+          text,
+          replyTo,
+          timestamp: serverTimestamp(),
+        });
+        commentInput.value = "";
+        commentInput.dataset.replyTo = "";
+      } catch (e) {
+        alert("Gagal mengirim komentar.");
+      }
+    });
+
+    // Login modal open/close
+    function openLoginModal() {
+      fadeIn(loginModal);
+      loginModal.classList.remove("pointer-events-none");
+      loginForm.loginEmail.focus();
+    }
+    function closeLoginModal() {
+      fadeOut(loginModal);
+      loginModal.classList.add("pointer-events-none");
+      loginForm.reset();
+    }
+
+    // Register modal open/close
+    function openRegisterModal() {
+      fadeIn(registerModal);
+      registerModal.classList.remove("pointer-events-none");
+      currentStep = 1;
+      updateRegisterStep();
+      registerForm.reset();
+      registerForm.fullName.focus();
+    }
+    function closeRegisterModal() {
+      fadeOut(registerModal);
+      registerModal.classList.add("pointer-events-none");
+      registerForm.reset();
+    }
+
+    // Login form submit
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = loginForm.loginEmail.value.trim();
+      const password = loginForm.loginPassword.value;
+      if (!email || !password) return;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        closeLoginModal();
+        navigateTo("beranda");
+      } catch (error) {
+        alert("Gagal login. Periksa email dan kata sandi.");
+      }
+    });
+
+    // Open register modal from login modal
+    openRegisterBtn.addEventListener("click", () => {
+      closeLoginModal();
+      openRegisterModal();
+    });
+
+    // Register form wizard navigation
+    prevStepBtn.addEventListener("click", () => {
+      if (currentStep > 1) {
+        currentStep--;
+        updateRegisterStep();
+      }
+    });
+    nextStepBtn.addEventListener("click", () => {
+      if (currentStep < totalSteps) {
+        // Validate current step inputs before next
+        if (!validateRegisterStep(currentStep)) return;
+        currentStep++;
+        updateRegisterStep();
+      }
+    });
+
+    // Show/hide password toggle
+    togglePasswordBtn.addEventListener("click", () => {
+      if (registerPasswordInput.type === "password") {
+        registerPasswordInput.type = "text";
+        togglePasswordBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+      } else {
+        registerPasswordInput.type = "password";
+        togglePasswordBtn.innerHTML = '<i class="fas fa-eye"></i>';
+      }
+    });
+
+    // Update register form step UI
+    function updateRegisterStep() {
+      stepFieldsets.forEach((fs) => {
+        const step = Number(fs.getAttribute("data-step"));
+        if (step === currentStep) {
+          fs.classList.remove("hidden");
+        } else {
+          fs.classList.add("hidden");
+        }
+      });
+      prevStepBtn.disabled = currentStep === 1;
+      nextStepBtn.classList.toggle("hidden", currentStep === totalSteps);
+      submitRegisterBtn.classList.toggle("hidden", currentStep !== totalSteps);
+    }
+
+    // Validate inputs of current step
+    function validateRegisterStep(step) {
+      const fs = registerForm.querySelector(`fieldset[data-step="${step}"]`);
+      if (!fs) return true;
+      const inputs = fs.querySelectorAll("input");
+      for (const input of inputs) {
+        if (!input.checkValidity()) {
+          input.reportValidity();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Register form submit
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      // Validate all steps before submit
+      for (let s = 1; s <= totalSteps; s++) {
+        if (!validateRegisterStep(s)) {
+          currentStep = s;
+          updateRegisterStep();
+          return;
+        }
+      }
+      // Collect data
+      const fullName = registerForm.fullName.value.trim();
+      const desa = registerForm.desa.value.trim();
+      const kecamatan = registerForm.kecamatan.value.trim();
+      const kabupaten = registerForm.kabupaten.value.trim();
+      const password = registerForm.registerPassword.value;
+      const email = registerForm.registerEmail.value.trim();
+      const whatsapp = registerForm.whatsapp.value.trim();
+      const referralCodeInput = registerForm.referralCode.value.trim();
+
+      // Generate unique referral code for new user (simple: first 3 letters + random 5 digits)
+      const generateReferralCode = (name) => {
+        const prefix = name.replace(/\s+/g, "").substring(0, 3).toUpperCase();
+        const randomNum = Math.floor(10000 + Math.random() * 90000);
+        return prefix + randomNum;
+      };
+      const newReferralCode = generateReferralCode(fullName);
+
+      try {
+        // Create user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const user = userCredential.user;
+
+        // Prepare user data for Firestore
+        const userData = {
+          fullName,
+          email,
+          whatsapp,
+          referral: newReferralCode,
+          address: {
+            desa,
+            kecamatan,
+            kabupaten,
+          },
+          createdAt: serverTimestamp(),
+          saldoPoin: 0,
+        };
+
+        // Save user data to Firestore
+        await setDoc(doc(db, "users", user.uid), userData);
+
+        // If referral code is provided, check and add points to referrer
+        if (referralCodeInput) {
+          // Query user with referral code
+          const q = query(
+            collection(db, "users"),
+            where("referral", "==", referralCodeInput)
+          );
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            // Add points to referrer
+            querySnapshot.forEach(async (docSnap) => {
+              const referrerRef = doc(db, "users", docSnap.id);
+              await updateDoc(referrerRef, {
+                saldoPoin: (docSnap.data().saldoPoin || 0) + 10,
+              });
+            });
+            // Add initial points to new user for using referral
+            const newUserRef = doc(db, "users", user.uid);
+            await updateDoc(newUserRef, {
+              saldoPoin: 10,
+            });
+          }
+        }
+
+        // Update displayName in Firebase Auth profile
+        await updateProfile(user, { displayName: fullName });
+
+        // Close register modal and open beranda
+        closeRegisterModal();
+        navigateTo("beranda");
+      } catch (error) {
+        alert("Gagal mendaftar: " + error.message);
+      }
+    });
+
+    // Post status form submit
+    postStatusForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) {
+        openLoginModal();
+        return;
+      }
+      const deskripsi = postStatusInput.value.trim();
+      if (!deskripsi) return;
+
+      // Upload image if any
+      let imageUrl = "";
+      if (postImageInput.files.length > 0) {
+        const file = postImageInput.files[0];
+        try {
+          imageUrl = await uploadImageToImgur(file);
+        } catch (e) {
+          alert("Gagal mengunggah gambar.");
+          return;
+        }
+      }
+
+      // Format filename: namaUser-tanggal-waktu-token.format
+      // token: random 6 chars
+      const token = Math.random().toString(36).substring(2, 8);
+      const now = new Date();
+      const pad = (n) => (n < 10 ? "0" + n : n);
+      const dateStr = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
+      const timeStr = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      const ext = imageUrl ? imageUrl.split(".").pop().split("?")[0] : "";
+      const fileName = `${currentUserData.fullName.replace(/\s+/g, "")}-${dateStr}-${timeStr}-${token}.${ext}`;
+
+      try {
+        await addDoc(collection(db, "statuses"), {
+          fullName: currentUserData.fullName,
+          deskripsi,
+          gambar: imageUrl || "",
+          likeCount: 0,
+          likedBy: [],
+          uid: currentUser.uid,
+          timestamp: serverTimestamp(),
+          fileName,
+        });
+        postStatusInput.value = "";
+        postImageInput.value = "";
+      } catch (e) {
+        alert("Gagal mengirim status.");
+      }
+    });
+
+    // Upload image to Imgur
+    async function uploadImageToImgur(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("https://api.imgur.com/3/image", {
+        method: "POST",
+        headers: {
+          Authorization: "Client-ID " + IMGUR_CLIENT_ID,
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error("Upload gagal");
+      return data.data.link;
+    }
+
+    // Auth state change listener
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        // Load user data from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          currentUserData = userDoc.data();
+        } else {
+          currentUserData = null;
+        }
+        closeLoginModal();
+        closeRegisterModal();
+        navigateTo("beranda");
+      } else {
+        currentUserData = null;
+        openLoginModal();
+      }
+    });
+
+    // Initialize app
+    navigateTo("beranda");
+  </script>
  </body>
 </html>
