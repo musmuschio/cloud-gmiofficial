@@ -720,32 +720,38 @@
             "border border-gray-300 rounded p-4 bg-white shadow-sm space-y-2";
 
           card.innerHTML = `
-            <header class="flex justify-between items-center text-sm text-gray-600 font-semibold">
-              <span>${escapeHtml(status.fullName)}</span>
-              <time datetime="${dateObj.toISOString()}">${dateTimeStr}</time>
-            </header>
-            <p class="whitespace-pre-wrap text-gray-800">${escapeHtml(status.deskripsi)}</p>
-            ${
-              status.gambar
-                ? `<img src="${status.gambar}" alt="Gambar postingan oleh ${escapeHtml(
-                    status.fullName
-                  )}" class="w-full max-h-64 object-contain rounded" loading="lazy" />`
-                : ""
-            }
-            <footer class="flex items-center justify-between text-sm text-gray-600">
-              <button class="likeBtn flex items-center space-x-1 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" aria-label="Like postingan">
-                <i class="fas fa-thumbs-up"></i>
-                <span class="likeCount">${status.likeCount || 0}</span>
-              </button>
-              <button class="commentBtn flex items-center space-x-1 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" aria-label="Komentar postingan">
-                <i class="fas fa-comment"></i>
-                <span>Komentar</span>
-              </button>
-              <button class="reportBtn flex items-center space-x-1 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 rounded" aria-label="Laporkan postingan via WhatsApp">
-                <i class="fas fa-flag"></i>
-                <span>Report</span>
-              </button>
-            </footer>
+<article class="p-4 bg-white rounded shadow mb-4">
+  <header class="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm text-gray-600 font-semibold space-y-1 sm:space-y-0">
+    <span class="break-words">${escapeHtml(status.fullName)}</span>
+    <time datetime="${dateObj.toISOString()}">${dateTimeStr}</time>
+  </header>
+
+  <p class="mt-2 whitespace-pre-wrap text-gray-800 break-words">${escapeHtml(status.deskripsi)}</p>
+
+  ${
+    status.gambar
+      ? `<img src="${status.gambar}" alt="Gambar postingan oleh ${escapeHtml(
+          status.fullName
+        )}" class="w-full max-h-64 object-contain rounded mt-2" loading="lazy" />`
+      : ""
+  }
+
+  <footer class="flex flex-wrap justify-around sm:justify-between items-center mt-3 gap-2 text-sm text-gray-600">
+    <button class="likeBtn flex items-center space-x-1 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" aria-label="Like postingan">
+      <i class="fas fa-thumbs-up"></i>
+      <span class="likeCount">${status.likeCount || 0}</span>
+    </button>
+    <button class="commentBtn flex items-center space-x-1 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" aria-label="Komentar postingan">
+      <i class="fas fa-comment"></i>
+      <span>Komentar</span>
+    </button>
+    <button class="reportBtn flex items-center space-x-1 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 rounded" aria-label="Laporkan postingan via WhatsApp">
+      <i class="fas fa-flag"></i>
+      <span>Report</span>
+    </button>
+  </footer>
+</article>
+
           `;
 
           // Like button handler
