@@ -156,7 +156,7 @@
             alamat: `${alamat1}, ${alamat2}, ${alamat3}`,
             whatsapp,
             refferal,
-            saldoPoint: 0,
+            point: 0,
             createdAt: new Date()
           };
 
@@ -164,9 +164,9 @@
             const usersRef = doc(db, "users", kodeReferral);
             const userRefDoc = await getDoc(usersRef);
             if (userRefDoc.exists()) {
-              await updateDoc(usersRef, { saldoPoint: increment(100) });
+              await updateDoc(usersRef, { point: increment(100) });
               userData.referredBy = kodeReferral;
-              userData.saldoPoint += 100;
+              userData.point += 100;
             }
           }
 
