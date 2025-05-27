@@ -295,7 +295,7 @@
     async function navigateTo(view) {
       if (!currentUser) {
         // Redirect to login.html if not authenticated
-        window.location.href = "login.html";
+        window.location.href = "registrasi.html";
         return;
       }
       currentView = view;
@@ -820,7 +820,7 @@
       e.preventDefault();
       if (!currentUser) {
         // Redirect to login.html if not authenticated
-        window.location.href = "login.html";
+        window.location.href = "registrasi.html";
         return;
       }
       const deskripsi = postStatusInput.value.trim();
@@ -897,7 +897,7 @@
       } else {
         currentUserData = null;
         // Redirect to login.html if not authenticated
-        window.location.href = "login.html";
+        window.location.href = "registrasi.html";
       }
     });
 
