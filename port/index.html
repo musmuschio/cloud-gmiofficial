@@ -135,7 +135,6 @@
      </button>
     </header>
     <section class="flex-1 overflow-y-auto px-4 py-2 space-y-3 scrollbar-thin" id="commentList" tabindex="0">
-     <!-- Comments & replies will be dynamically inserted here -->
     </section>
     <footer class="border-t border-gray-300 px-4 py-3 flex items-center space-x-2">
      <input aria-label="Input komentar" class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="commentInput" placeholder="Tulis komentar..." type="text"/>
@@ -144,140 +143,6 @@
       </i>
      </button>
     </footer>
-   </div>
-  </div>
-  <!-- Modal: Login -->
-  <div aria-labelledby="loginModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" id="loginModal" role="dialog">
-   <div class="bg-white rounded-lg w-full max-w-md p-6 mx-4">
-    <h2 class="text-2xl font-semibold mb-4 text-center" id="loginModalTitle">
-     Login
-    </h2>
-    <form class="space-y-4" id="loginForm" novalidate="">
-     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1" for="loginEmail">
-       Email
-      </label>
-      <input autocomplete="email" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="loginEmail" name="loginEmail" placeholder="Isi email aktif" required="" type="email"/>
-     </div>
-     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1" for="loginPassword">
-       Kata Sandi
-      </label>
-      <input autocomplete="current-password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="loginPassword" name="loginPassword" placeholder="Kata sandi" required="" type="password"/>
-     </div>
-     <button class="w-full bg-green-700 text-white py-2 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" type="submit">
-      Masuk
-     </button>
-    </form>
-    <p class="mt-4 text-center text-sm text-gray-600">
-     Belum punya akun? Silahkan daftar!
-     <button class="text-green-700 font-semibold hover:underline focus:outline-none" id="openRegisterBtn">
-      Daftar
-     </button>
-    </p>
-   </div>
-  </div>
-  <!-- Modal: Register (Form Wizard) -->
-  <div aria-labelledby="registerModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" id="registerModal" role="dialog">
-   <div class="bg-white rounded-lg w-full max-w-lg p-6 mx-4 max-h-[90vh] overflow-y-auto">
-    <h2 class="text-2xl font-semibold mb-6 text-center" id="registerModalTitle">
-     Registrasi Akun Baru
-    </h2>
-    <form class="space-y-6" id="registerForm" novalidate="">
-     <!-- Step 1: Nama Lengkap -->
-     <fieldset class="step-fieldset" data-step="1">
-      <legend class="sr-only">
-       Nama Lengkap
-      </legend>
-      <label class="block text-sm font-medium text-gray-700 mb-1" for="fullName">
-       Nama Lengkap
-      </label>
-      <input autocomplete="name" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="fullName" name="fullName" placeholder="Isi nama lengkap" required="" type="text"/>
-     </fieldset>
-     <!-- Step 2: Alamat (3 kolom) -->
-     <fieldset class="step-fieldset hidden" data-step="2">
-      <legend class="sr-only">
-       Alamat
-      </legend>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1" for="desa">
-         Desa
-        </label>
-        <input autocomplete="address-level3" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="desa" name="desa" placeholder="Desa" required="" type="text"/>
-       </div>
-       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1" for="kecamatan">
-         Kecamatan
-        </label>
-        <input autocomplete="address-level2" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="kecamatan" name="kecamatan" placeholder="Kecamatan" required="" type="text"/>
-       </div>
-       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1" for="kabupaten">
-         Kabupaten/Kota
-        </label>
-        <input autocomplete="address-level1" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="kabupaten" name="kabupaten" placeholder="Kabupaten/Kota" required="" type="text"/>
-       </div>
-      </div>
-     </fieldset>
-     <!-- Step 3: Kata Sandi (see/hide) -->
-     <fieldset class="step-fieldset hidden" data-step="3">
-      <legend class="sr-only">
-       Kata Sandi
-      </legend>
-      <label class="block text-sm font-medium text-gray-700 mb-1" for="registerPassword">
-       Kata Sandi
-      </label>
-      <div class="relative">
-       <input autocomplete="new-password" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 pr-10" id="registerPassword" minlength="6" name="registerPassword" placeholder="Kata sandi" required="" type="password"/>
-       <button aria-label="Tampilkan atau sembunyikan kata sandi" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-900 focus:outline-none" id="togglePasswordBtn" type="button">
-        <i class="fas fa-eye">
-        </i>
-       </button>
-      </div>
-     </fieldset>
-     <!-- Step 4: Email -->
-     <fieldset class="step-fieldset hidden" data-step="4">
-      <legend class="sr-only">
-       Email
-      </legend>
-      <label class="block text-sm font-medium text-gray-700 mb-1" for="registerEmail">
-       Email
-      </label>
-      <input autocomplete="email" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="registerEmail" name="registerEmail" placeholder="Isi email aktif" required="" type="email"/>
-     </fieldset>
-     <!-- Step 5: Nomor WhatsApp -->
-     <fieldset class="step-fieldset hidden" data-step="5">
-      <legend class="sr-only">
-       Nomor WhatsApp
-      </legend>
-      <label class="block text-sm font-medium text-gray-700 mb-1" for="whatsapp">
-       Nomor WhatsApp
-      </label>
-      <input autocomplete="tel" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="whatsapp" name="whatsapp" pattern="08[0-9]{8,12}" placeholder="08..." required="" type="tel"/>
-     </fieldset>
-     <!-- Step 6: Referral Code (optional) -->
-     <fieldset class="step-fieldset hidden" data-step="6">
-      <legend class="sr-only">
-       Referral Code
-      </legend>
-      <label class="block text-sm font-medium text-gray-700 mb-1" for="referralCode">
-       Referral Code (opsional)
-      </label>
-      <input autocomplete="off" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" id="referralCode" name="referralCode" placeholder="Kode referral jika ada" type="text"/>
-     </fieldset>
-     <div class="flex justify-between">
-      <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gray-400" disabled="" id="prevStepBtn" type="button">
-       Sebelumnya
-      </button>
-      <button class="bg-green-700 text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-800" id="nextStepBtn" type="button">
-       Berikutnya
-      </button>
-      <button class="bg-green-700 text-white px-4 py-2 rounded hidden focus:outline-none focus:ring-2 focus:ring-green-800" id="submitRegisterBtn" type="submit">
-       Daftar
-      </button>
-     </div>
-    </form>
    </div>
   </div>
   <!-- Forum Floating Post Status Input -->
@@ -346,18 +211,6 @@
     const footerNav = document.getElementById("footerNav");
     const mainContent = document.getElementById("mainContent");
 
-    const loginModal = document.getElementById("loginModal");
-    const loginForm = document.getElementById("loginForm");
-    const openRegisterBtn = document.getElementById("openRegisterBtn");
-
-    const registerModal = document.getElementById("registerModal");
-    const registerForm = document.getElementById("registerForm");
-    const prevStepBtn = document.getElementById("prevStepBtn");
-    const nextStepBtn = document.getElementById("nextStepBtn");
-    const submitRegisterBtn = document.getElementById("submitRegisterBtn");
-    const togglePasswordBtn = document.getElementById("togglePasswordBtn");
-    const registerPasswordInput = document.getElementById("registerPassword");
-
     const postStatusFooter = document.getElementById("postStatusFooter");
     const postStatusForm = document.getElementById("postStatusForm");
     const postStatusInput = document.getElementById("postStatusInput");
@@ -372,16 +225,10 @@
     // SPA navigation buttons
     const spaButtons = document.querySelectorAll("[data-spa-link]");
 
-    // Register form steps
-    const stepFieldsets = registerForm.querySelectorAll(".step-fieldset");
-    let currentStep = 1;
-    const totalSteps = stepFieldsets.length;
-
     // State
     let currentUser = null;
     let currentUserData = null;
     let currentStatusIdForComments = null;
-    let commentsData = {};
     let commentsUnsub = null;
 
     // Imgur config
@@ -446,9 +293,9 @@
 
     // Navigate to SPA view
     async function navigateTo(view) {
-      if (!currentUser && view !== "login" && view !== "register") {
-        // Force login if not authenticated
-        openLoginModal();
+      if (!currentUser) {
+        // Redirect to login.html if not authenticated
+        window.location.href = "login.html";
         return;
       }
       currentView = view;
@@ -498,12 +345,6 @@
         case "news":
           loadNews();
           break;
-        case "login":
-          openLoginModal();
-          break;
-        case "register":
-          openRegisterModal();
-          break;
         default:
           mainContent.innerHTML = `<p class="p-4 text-center text-gray-600">Halaman tidak ditemukan.</p>`;
       }
@@ -526,9 +367,6 @@
       iframe.className = "w-full h-full min-h-[calc(100vh-112px)] border-0";
       mainContent.appendChild(iframe);
     }
-
-    // Load Tentang (iframe tentang.html)
-    // Same as loadIframePage("tentang.html")
 
     // Load Profil page
     function loadProfil() {
@@ -596,6 +434,11 @@
             copyReferralBtn.innerHTML = `<i class="fas fa-copy"></i>`;
           }, 1500);
         });
+      });
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", async () => {
+        await signOut(auth);
       });
     }
 
@@ -788,7 +631,8 @@
           const likeBtn = card.querySelector(".likeBtn");
           likeBtn.addEventListener("click", async () => {
             if (!currentUser) {
-              openLoginModal();
+              // Redirect to login.html if not authenticated
+              window.location.href = "login.html";
               return;
             }
             try {
@@ -813,7 +657,8 @@
           const commentBtn = card.querySelector(".commentBtn");
           commentBtn.addEventListener("click", () => {
             if (!currentUser) {
-              openLoginModal();
+              // Redirect to login.html if not authenticated
+              window.location.href = "login.html";
               return;
             }
             openCommentModal(id);
@@ -970,206 +815,12 @@
       }
     });
 
-    // Login modal open/close
-    function openLoginModal() {
-      fadeIn(loginModal);
-      loginModal.classList.remove("pointer-events-none");
-      loginForm.loginEmail.focus();
-    }
-    function closeLoginModal() {
-      fadeOut(loginModal);
-      loginModal.classList.add("pointer-events-none");
-      loginForm.reset();
-    }
-
-    // Register modal open/close
-    function openRegisterModal() {
-      fadeIn(registerModal);
-      registerModal.classList.remove("pointer-events-none");
-      currentStep = 1;
-      updateRegisterStep();
-      registerForm.reset();
-      registerForm.fullName.focus();
-    }
-    function closeRegisterModal() {
-      fadeOut(registerModal);
-      registerModal.classList.add("pointer-events-none");
-      registerForm.reset();
-    }
-
-    // Login form submit
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = loginForm.loginEmail.value.trim();
-      const password = loginForm.loginPassword.value;
-      if (!email || !password) return;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        closeLoginModal();
-        navigateTo("beranda");
-      } catch (error) {
-        alert("Gagal login. Periksa email dan kata sandi.");
-      }
-    });
-
-    // Open register modal from login modal
-    openRegisterBtn.addEventListener("click", () => {
-      closeLoginModal();
-      openRegisterModal();
-    });
-
-    // Register form wizard navigation
-    prevStepBtn.addEventListener("click", () => {
-      if (currentStep > 1) {
-        currentStep--;
-        updateRegisterStep();
-      }
-    });
-    nextStepBtn.addEventListener("click", () => {
-      if (currentStep < totalSteps) {
-        // Validate current step inputs before next
-        if (!validateRegisterStep(currentStep)) return;
-        currentStep++;
-        updateRegisterStep();
-      }
-    });
-
-    // Show/hide password toggle
-    togglePasswordBtn.addEventListener("click", () => {
-      if (registerPasswordInput.type === "password") {
-        registerPasswordInput.type = "text";
-        togglePasswordBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-      } else {
-        registerPasswordInput.type = "password";
-        togglePasswordBtn.innerHTML = '<i class="fas fa-eye"></i>';
-      }
-    });
-
-    // Update register form step UI
-    function updateRegisterStep() {
-      stepFieldsets.forEach((fs) => {
-        const step = Number(fs.getAttribute("data-step"));
-        if (step === currentStep) {
-          fs.classList.remove("hidden");
-        } else {
-          fs.classList.add("hidden");
-        }
-      });
-      prevStepBtn.disabled = currentStep === 1;
-      nextStepBtn.classList.toggle("hidden", currentStep === totalSteps);
-      submitRegisterBtn.classList.toggle("hidden", currentStep !== totalSteps);
-    }
-
-    // Validate inputs of current step
-    function validateRegisterStep(step) {
-      const fs = registerForm.querySelector(`fieldset[data-step="${step}"]`);
-      if (!fs) return true;
-      const inputs = fs.querySelectorAll("input");
-      for (const input of inputs) {
-        if (!input.checkValidity()) {
-          input.reportValidity();
-          return false;
-        }
-      }
-      return true;
-    }
-
-    // Register form submit
-    registerForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      // Validate all steps before submit
-      for (let s = 1; s <= totalSteps; s++) {
-        if (!validateRegisterStep(s)) {
-          currentStep = s;
-          updateRegisterStep();
-          return;
-        }
-      }
-      // Collect data
-      const fullName = registerForm.fullName.value.trim();
-      const desa = registerForm.desa.value.trim();
-      const kecamatan = registerForm.kecamatan.value.trim();
-      const kabupaten = registerForm.kabupaten.value.trim();
-      const password = registerForm.registerPassword.value;
-      const email = registerForm.registerEmail.value.trim();
-      const whatsapp = registerForm.whatsapp.value.trim();
-      const referralCodeInput = registerForm.referralCode.value.trim();
-
-      // Generate unique referral code for new user (simple: first 3 letters + random 5 digits)
-      const generateReferralCode = (name) => {
-        const prefix = name.replace(/\s+/g, "").substring(0, 3).toUpperCase();
-        const randomNum = Math.floor(10000 + Math.random() * 90000);
-        return prefix + randomNum;
-      };
-      const newReferralCode = generateReferralCode(fullName);
-
-      try {
-        // Create user in Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        const user = userCredential.user;
-
-        // Prepare user data for Firestore
-        const userData = {
-          fullName,
-          email,
-          whatsapp,
-          referral: newReferralCode,
-          address: {
-            desa,
-            kecamatan,
-            kabupaten,
-          },
-          createdAt: serverTimestamp(),
-          saldoPoin: 0,
-        };
-
-        // Save user data to Firestore
-        await setDoc(doc(db, "users", user.uid), userData);
-
-        // If referral code is provided, check and add points to referrer
-        if (referralCodeInput) {
-          // Query user with referral code
-          const q = query(
-            collection(db, "users"),
-            where("referral", "==", referralCodeInput)
-          );
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            // Add points to referrer
-            querySnapshot.forEach(async (docSnap) => {
-              const referrerRef = doc(db, "users", docSnap.id);
-              await updateDoc(referrerRef, {
-                saldoPoin: (docSnap.data().saldoPoin || 0) + 10,
-              });
-            });
-            // Add initial points to new user for using referral
-            const newUserRef = doc(db, "users", user.uid);
-            await updateDoc(newUserRef, {
-              saldoPoin: 10,
-            });
-          }
-        }
-
-        // Update displayName in Firebase Auth profile
-        await updateProfile(user, { displayName: fullName });
-
-        // Close register modal and open beranda
-        closeRegisterModal();
-        navigateTo("beranda");
-      } catch (error) {
-        alert("Gagal mendaftar: " + error.message);
-      }
-    });
-
     // Post status form submit
     postStatusForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!currentUser) {
-        openLoginModal();
+        // Redirect to login.html if not authenticated
+        window.location.href = "login.html";
         return;
       }
       const deskripsi = postStatusInput.value.trim();
@@ -1242,17 +893,16 @@
         } else {
           currentUserData = null;
         }
-        closeLoginModal();
-        closeRegisterModal();
         navigateTo("beranda");
       } else {
         currentUserData = null;
-        openLoginModal();
+        // Redirect to login.html if not authenticated
+        window.location.href = "login.html";
       }
     });
 
     // Initialize app
-    navigateTo("beranda");
+    // We do not call navigateTo here because onAuthStateChanged will handle it
   </script>
  </body>
 </html>
