@@ -1,0 +1,154 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login Admin - CMD Style</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=OCR+A&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'OCR A', monospace;
+      background-color: #000000;
+      color: #00ff00;
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #00ff00;
+      color: #00ff00;
+      font-family: 'OCR A', monospace;
+      font-size: 1rem;
+      padding: 0.15rem 0.25rem;
+      width: 100%;
+      outline-offset: 2px;
+    }
+    input::placeholder {
+      color: #00ff0044;
+    }
+    input:focus {
+      outline: none;
+      border-bottom-color: #00ff00;
+    }
+    button {
+      background: transparent;
+      border: none;
+      color: #00ff00;
+      font-family: 'OCR A', monospace;
+      font-size: 1rem;
+      margin-top: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    button:hover {
+      text-decoration: underline;
+    }
+    form {
+      max-width: 400px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <form id="loginForm" onsubmit="loginAdmin(event)" autocomplete="off" spellcheck="false" novalidate>
+    <label for="username">Username:</label>
+    <input
+      type="text"
+      id="username"
+      name="username"
+      placeholder="admin"
+      required
+      autocomplete="username"
+      autocapitalize="none"
+      autocorrect="off"
+      spellcheck="false"
+    />
+    <label for="token" class="mt-6">Token:</label>
+    <input
+      type="text"
+      id="token"
+      name="token"
+      placeholder="Enter your token"
+      required
+      autocomplete="one-time-code"
+      autocapitalize="none"
+      autocorrect="off"
+      spellcheck="false"
+    />
+    <button type="submit" aria-label="Login">
+      <i class="fas fa-terminal"></i> Login
+    </button>
+  </form>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.loginAdmin = async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const tokenInput = document.getElementById("token").value.trim();
+
+      if (username !== "admin") {
+        alert("Username harus 'admin'");
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "adminTokens"), orderBy("createdAt", "desc"), limit(1));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+          alert("Tidak ada token ditemukan.");
+          return;
+        }
+
+        const doc = querySnapshot.docs[0];
+        const { token, createdAt } = doc.data();
+
+        const now = Date.now();
+        const createdAtMillis = createdAt.toMillis();
+        const validDuration = 6 * 60 * 60 * 1000;
+
+        if (tokenInput === token && (now - createdAtMillis) <= validDuration) {
+          localStorage.setItem("adminLogin", "true");
+          localStorage.setItem("adminLoginTime", now);
+          alert("Login berhasil!");
+          window.location.href = "admininistrator.html";
+        } else {
+          alert("Token tidak valid atau sudah kedaluwarsa.");
+        }
+      } catch (error) {
+        alert("Terjadi kesalahan saat memeriksa token. Silakan coba lagi.");
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
