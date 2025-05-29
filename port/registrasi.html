@@ -1,246 +1,349 @@
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
+  <title>Form Pendaftaran Wizard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registrasi Wizard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4 py-10">
+  <main class="bg-white w-full max-w-md rounded-lg shadow-md p-8">
+
+    <form id="registerForm" class="space-y-6" novalidate>
+      <!-- Step 1 -->
+      <section data-step="1" class="step-section">
+        <div>
+          <label for="fullname" class="block text-gray-700 font-semibold mb-1">Nama Lengkap</label>
+          <input
+            type="text"
+            id="fullname"
+            placeholder="Pastikan gunakan nama asli"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="name"
+          />
+        </div>
+        <div>
+          <label for="email" class="block text-gray-700 font-semibold mb-1">Email</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="Masukkan email aktif anda"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="email"
+          />
+        </div>
+        <div>
+          <label for="password" class="block text-gray-700 font-semibold mb-1">Kata Sandi</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Kata sandi"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="new-password"
+          />
+          <p class="mt-1 text-sm text-red-600 font-semibold">
+            <i class="fas fa-exclamation-circle mr-1"></i> Jangan gunakan kata sandi yang sama dengan akun email dan sosmed
+          </p>
+        </div>
+        <div>
+          <label for="whatsapp" class="block text-gray-700 font-semibold mb-1">WhatsApp</label>
+          <input
+            type="text"
+            id="whatsapp"
+            placeholder="Contoh: 08xx - xxxx - xxxx"
+            required
+            pattern="^0\d{8,15}$"
+            title="Masukkan nomor WhatsApp dengan format 08xx - xxxx - xxxx"
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="tel"
+          />
+        </div>
+      </section>
+
+      <!-- Step 2 -->
+      <section data-step="2" class="step-section hidden">
+        <div>
+          <label for="desa" class="block text-gray-700 font-semibold mb-1">Desa/Perumahan</label>
+          <input
+            type="text"
+            id="desa"
+            placeholder="Desa atau Perumahan"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="address-level3"
+          />
+        </div>
+        <div>
+          <label for="kecamatan" class="block text-gray-700 font-semibold mb-1">Kecamatan</label>
+          <input
+            type="text"
+            id="kecamatan"
+            placeholder="Kecamatan"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="address-level2"
+          />
+        </div>
+        <div>
+          <label for="kabupaten" class="block text-gray-700 font-semibold mb-1">Kabupaten</label>
+          <input
+            type="text"
+            id="kabupaten"
+            placeholder="Kabupaten"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="address-level1"
+          />
+        </div>
+        <div>
+          <label for="provinsi" class="block text-gray-700 font-semibold mb-1">Provinsi</label>
+          <input
+            type="text"
+            id="provinsi"
+            placeholder="Provinsi"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="region"
+          />
+        </div>
+      </section>
+
+      <!-- Step 3 -->
+      <section data-step="3" class="step-section hidden">
+        <div>
+          <label for="referralInput" class="block text-gray-700 font-semibold mb-1">Kode Referral</label>
+          <input
+            type="text"
+            id="referralInput"
+            placeholder="Opsional"
+            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+            autocomplete="off"
+          />
+          <p class="mt-1 text-sm text-green-600 font-semibold flex items-center">
+            <i class="fas fa-info-circle mr-1"></i> Jika anda memasukkan kode referral milik kerabat anda akan mendapatkan 100 point
+          </p>
+        </div>
+        <div class="flex items-center mt-6">
+          <input
+            type="checkbox"
+            id="termsCheck"
+            required
+            class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+          />
+          <label for="termsCheck" class="ml-3 text-gray-700 font-semibold select-none cursor-pointer">
+            Anda siap mematuhi persyaratan layanan ini
+          </label>
+        </div>
+      </section>
+
+      <!-- Navigation Buttons -->
+      <div class="flex justify-between mt-8">
+        <button
+          type="button"
+          id="prevBtn"
+          class="bg-gray-300 text-gray-700 font-semibold py-2 px-5 rounded-md hover:bg-gray-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          Sebelumnya
+        </button>
+        <button
+          type="button"
+          id="nextBtn"
+          class="bg-green-600 text-white font-semibold py-2 px-5 rounded-md hover:bg-green-700 transition"
+        >
+          Selanjutnya
+        </button>
+        <button
+          type="submit"
+          id="submitBtn"
+          class="bg-green-600 text-white font-semibold py-2 px-5 rounded-md hover:bg-green-700 transition hidden"
+        >
+          Daftar Sekarang
+        </button>
+      </div>
+    </form>
+  </main>
+
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
     import {
       getFirestore,
       doc,
       setDoc,
-      getDoc,
+      getDocs,
       updateDoc,
-      increment
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+      collection,
+      query,
+      where,
+    } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-      authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR"
-    };
+     const firebaseConfig = {
+    apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+    authDomain: "gmi-enterprise23.firebaseapp.com",
+    projectId: "gmi-enterprise23",
+    storageBucket: "gmi-enterprise23.firebasestorage.app",
+    messagingSenderId: "974090028804",
+    appId: "1:974090028804:web:43ae563ffd9433463c7251",
+    measurementId: "G-S27YB5Z8PR"
+  };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("registerForm");
-      const steps = Array.from(document.querySelectorAll(".step"));
-      const btnNext = document.getElementById("btnNext");
-      const btnPrev = document.getElementById("btnPrev");
-      const btnSubmit = document.getElementById("btnSubmit");
-      const passwordInput = document.getElementById("password");
-      const togglePasswordBtn = document.getElementById("togglePassword");
+    function generateReferralCode() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
 
-      let currentStep = 0;
+    const form = document.getElementById("registerForm");
+    const steps = Array.from(document.querySelectorAll(".step-section"));
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const submitBtn = document.getElementById("submitBtn");
 
-      function showStep(index) {
-        steps.forEach((step, i) => {
-          step.classList.toggle("hidden", i !== index);
-        });
-        btnPrev.disabled = index === 0;
-        btnNext.classList.toggle("hidden", index === steps.length - 1);
-        btnSubmit.classList.toggle("hidden", index !== steps.length - 1);
+    let currentStep = 0;
+
+    function showStep(step) {
+      steps.forEach((section, i) => {
+        section.classList.toggle("hidden", i !== step);
+      });
+      prevBtn.disabled = step === 0;
+      nextBtn.classList.toggle("hidden", step === steps.length - 1);
+      submitBtn.classList.toggle("hidden", step !== steps.length - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function validateStep(step) {
+      const inputs = Array.from(steps[step].querySelectorAll("input[required]"));
+      for (const input of inputs) {
+        if (input.type === "checkbox") {
+          if (!input.checked) return false;
+        } else if (!input.value.trim()) {
+          return false;
+        }
+        if (input.id === "whatsapp") {
+          // Validate WhatsApp format: 08xx - xxxx - xxxx or 08xxxxxxxxxx (digits only)
+          const val = input.value.trim();
+          // Accept digits, spaces, dashes
+          const cleaned = val.replace(/[\s-]/g, "");
+          if (!/^08\d{8,13}$/.test(cleaned)) return false;
+        }
       }
+      return true;
+    }
 
+    nextBtn.addEventListener("click", () => {
+      if (!validateStep(currentStep)) {
+        alert("Mohon lengkapi semua field yang wajib diisi dengan benar sebelum melanjutkan.");
+        return;
+      }
+      currentStep++;
       showStep(currentStep);
+    });
 
-      btnNext.addEventListener("click", () => {
-        if (!validateStep(currentStep)) return;
-        currentStep++;
-        showStep(currentStep);
-      });
+    prevBtn.addEventListener("click", () => {
+      currentStep--;
+      showStep(currentStep);
+    });
 
-      btnPrev.addEventListener("click", () => {
-        currentStep--;
-        showStep(currentStep);
-      });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      togglePasswordBtn.addEventListener("click", () => {
-        passwordInput.type = passwordInput.type === "password" ? "text" : "password";
-        togglePasswordBtn.innerHTML = passwordInput.type === "password" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-      });
-
-      function validateStep(step) {
-        if (step === 0) {
-          const fullName = form.fullName.value.trim();
-          const email = form.email.value.trim();
-          const password = form.password.value;
-          if (fullName === "") {
-            alert("Nama Lengkap harus diisi");
-            return false;
-          }
-          if (email === "") {
-            alert("Email harus diisi");
-            return false;
-          }
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(email)) {
-            alert("Email tidak valid");
-            return false;
-          }
-          if (password.length < 6) {
-            alert("Kata sandi minimal 6 karakter");
-            return false;
-          }
-        } else if (step === 1) {
-          const alamat1 = form.alamat1.value.trim();
-          const alamat2 = form.alamat2.value.trim();
-          const alamat3 = form.alamat3.value.trim();
-          if (alamat1 === "") {
-            alert("Desa harus diisi");
-            return false;
-          }
-          if (alamat2 === "") {
-            alert("Kecamatan harus diisi");
-            return false;
-          }
-          if (alamat3 === "") {
-            alert("Kabupaten/Kota harus diisi");
-            return false;
-          }
-        } else if (step === 2) {
-          const whatsapp = form.whatsapp.value.trim();
-          if (whatsapp === "") {
-            alert("No. WhatsApp harus diisi");
-            return false;
-          }
-          const waRegex = /^(\+62|0)[0-9]{6,}$/;
-          if (!waRegex.test(whatsapp)) {
-            alert("No. WhatsApp tidak valid");
-            return false;
-          }
-        }
-        return true;
+      if (!validateStep(currentStep)) {
+        alert("Mohon lengkapi semua field yang wajib diisi dengan benar.");
+        return;
       }
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!validateStep(currentStep)) return;
+      // Ambil semua nilai input
+      const fullname = document.getElementById("fullname").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const whatsappRaw = document.getElementById("whatsapp").value.trim();
+      // Normalize WhatsApp number: remove spaces and dashes, convert leading 0 to +62
+      let whatsapp = whatsappRaw.replace(/[\s-]/g, "");
+      if (whatsapp.startsWith("0")) {
+        whatsapp = "+62" + whatsapp.slice(1);
+      }
+      const desa = document.getElementById("desa").value.trim();
+      const kecamatan = document.getElementById("kecamatan").value.trim();
+      const kabupaten = document.getElementById("kabupaten").value.trim();
+      const provinsi = document.getElementById("provinsi").value.trim();
+      const referralInput = document.getElementById("referralInput").value.trim().toUpperCase();
+      const termsCheck = document.getElementById("termsCheck").checked;
+      const ownReferral = generateReferralCode();
 
-        const fullName = form.fullName.value.trim();
-        const email = form.email.value.trim();
-        const password = form.password.value;
-        const alamat1 = form.alamat1.value.trim();
-        const alamat2 = form.alamat2.value.trim();
-        const alamat3 = form.alamat3.value.trim();
-        const whatsapp = form.whatsapp.value.trim();
-        const referralInput = form.kodeReferral.value.trim();
+      if (!termsCheck) {
+        alert("Anda harus menyetujui persyaratan layanan untuk melanjutkan.");
+        return;
+      }
 
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          const uid = userCredential.user.uid;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
 
-          const userData = {
-            fullName,
-            email,
-            alamat: `${alamat1}, ${alamat2}, ${alamat3}`,
-            whatsapp,
-            point: 0,
-            createdAt: new Date()
-          };
+        let referredBy = "";
+        let points = 0;
 
-          if (referralInput !== "") {
-            const usersRef = doc(db, "users", referralInput);
-            const userRefDoc = await getDoc(usersRef);
-            if (userRefDoc.exists()) {
-              await updateDoc(usersRef, { point: increment(100) });
-              userData.referredBy = referralInput;
-              userData.point += 100;
+        if (referralInput !== "") {
+          const q = query(collection(db, "users"), where("referral", "==", referralInput));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            referredBy = referralInput;
+            points += 100;
+
+            for (const docSnap of querySnapshot.docs) {
+              const refUserRef = doc(db, "users", docSnap.id);
+              const refData = docSnap.data();
+              const currentPoints = refData.points || 0;
+
+              await updateDoc(refUserRef, {
+                points: currentPoints + 200,
+              });
             }
+          } else {
+            alert("Kode referral tidak ditemukan. Pendaftaran tetap diproses.");
           }
-
-          await setDoc(doc(db, "users", uid), userData);
-          alert("Registrasi berhasil!");
-          window.location.href = "login.html";
-        } catch (error) {
-          alert("Gagal registrasi: " + error.message);
         }
-      });
+
+        await setDoc(doc(db, "users", uid), {
+          fullname,
+          email,
+          whatsapp,
+          desa,
+          kecamatan,
+          kabupaten,
+          provinsi,
+          referral: ownReferral,
+          referredBy,
+          points,
+        });
+
+        alert("Pendaftaran berhasil! Selamat datang.");
+        window.location.href = "forum.html";
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Terjadi kesalahan: " + error.message);
+      }
     });
+
+    showStep(currentStep);
   </script>
-</head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4">
-  <form id="registerForm" class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-semibold text-center mb-6 text-green-700">Registrasi</h2>
-
-    <div class="step" id="step1">
-      <div class="mb-5">
-        <label for="fullName" class="block text-gray-700 mb-1 font-medium">Nama Lengkap</label>
-        <input type="text" id="fullName" name="fullName" placeholder="Nama Lengkap" required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
-      <div class="mb-5">
-        <label for="email" class="block text-gray-700 mb-1 font-medium">Email</label>
-        <input type="email" id="email" name="email" placeholder="Email" required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
-      <div class="mb-5 relative">
-        <label for="password" class="block text-gray-700 mb-1 font-medium">Kata Sandi (min 6 karakter)</label>
-        <input type="password" id="password" name="password" placeholder="Kata Sandi (min 6 karakter)" required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pr-10" />
-        <button type="button" id="togglePassword" aria-label="Toggle password visibility" 
-          class="absolute top-9 right-3 text-gray-500 hover:text-gray-700 focus:outline-none">
-          <i class="fas fa-eye"></i>
-        </button>
-      </div>
-    </div>
-
-    <div class="step hidden" id="step2">
-      <div class="mb-5">
-        <label for="alamat1" class="block text-gray-700 mb-1 font-medium">Desa</label>
-        <input type="text" id="alamat1" name="alamat1" placeholder="Desa" required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
-      <div class="mb-5">
-        <label for="alamat2" class="block text-gray-700 mb-1 font-medium">Kecamatan</label>
-        <input type="text" id="alamat2" name="alamat2" placeholder="Kecamatan" required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
-      <div class="mb-5">
-        <label for="alamat3" class="block text-gray-700 mb-1 font-medium">Kabupaten/Kota</label>
-        <input type="text" id="alamat3" name="alamat3" placeholder="Kabupaten/Kota" required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
-    </div>
-
-    <div class="step hidden" id="step3">
-      <div class="mb-5">
-        <label for="whatsapp" class="block text-gray-700 mb-1 font-medium">No. WhatsApp (+62...)</label>
-        <input type="text" id="whatsapp" name="whatsapp" placeholder="No. WhatsApp (+62...)" required
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
-      <div class="mb-6">
-        <label for="kodeReferral" class="block text-gray-700 mb-1 font-medium">Kode Referral (opsional)</label>
-        <input type="text" id="kodeReferral" name="kodeReferral" placeholder="Kode Referral (opsional)"
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
-      </div>
-    </div>
-
-    <div class="flex justify-between">
-      <button type="button" id="btnPrev" disabled
-        class="bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300">
-        Sebelumnya
-      </button>
-      <button type="button" id="btnNext"
-        class="bg-green-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-green-700 transition-colors duration-300">
-        Selanjutnya
-      </button>
-      <button type="submit" id="btnSubmit" class="hidden bg-green-700 text-white font-semibold py-2 px-6 rounded-md hover:bg-green-800 transition-colors duration-300">
-        Daftar
-      </button>
-    </div>
-  </form>
 </body>
 </html>
