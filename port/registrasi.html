@@ -1,9 +1,222 @@
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registrasi Wizard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUser WithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      updateDoc,
+      increment
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("registerForm");
+      const steps = Array.from(document.querySelectorAll(".step"));
+      const btnNext = document.getElementById("btnNext");
+      const btnPrev = document.getElementById("btnPrev");
+      const btnSubmit = document.getElementById("btnSubmit");
+      const passwordInput = document.getElementById("password");
+      const togglePasswordBtn = document.getElementById("togglePassword");
+
+      let currentStep = 0;
+
+      function showStep(index) {
+        steps.forEach((step, i) => {
+          step.classList.toggle("hidden", i !== index);
+        });
+        btnPrev.disabled = index === 0;
+        btnNext.classList.toggle("hidden", index === steps.length - 1);
+        btnSubmit.classList.toggle("hidden", index !== steps.length - 1);
+      }
+
+      showStep(currentStep);
+
+      btnNext.addEventListener("click", () => {
+        if (!validateStep(currentStep)) return;
+        currentStep++;
+        showStep(currentStep);
+      });
+
+      btnPrev.addEventListener("click", () => {
+        currentStep--;
+        showStep(currentStep);
+      });
+
+      togglePasswordBtn.addEventListener("click", () => {
+        passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+        togglePasswordBtn.innerHTML = passwordInput.type === "password" ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+      });
+
+      function validateStep(step) {
+        if (step === 0) {
+          const fullName = form.fullName.value.trim();
+          const email = form.email.value.trim();
+          const password = form.password.value;
+          if (fullName === "") {
+            alert("Nama Lengkap harus diisi");
+            return false;
+          }
+          if (email === "") {
+            alert("Email harus diisi");
+            return false;
+          }
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            alert("Email tidak valid");
+            return false;
+          }
+          if (password.length < 6) {
+            alert("Kata sandi minimal 6 karakter");
+            return false;
+          }
+        } else if (step === 1) {
+          const alamat1 = form.alamat1.value.trim();
+          const alamat2 = form.alamat2.value.trim();
+          const alamat3 = form.alamat3.value.trim();
+          if (alamat1 === "") {
+            alert("Desa harus diisi");
+            return false;
+          }
+          if (alamat2 === "") {
+            alert("Kecamatan harus diisi");
+            return false;
+          }
+          if (alamat3 === "") {
+            alert("Kabupaten/Kota harus diisi");
+            return false;
+          }
+        } else if (step === 2) {
+          const whatsapp = form.whatsapp.value.trim();
+          if (whatsapp === "") {
+            alert("No. WhatsApp harus diisi");
+            return false;
+          }
+          const waRegex = /^(\+62|0)[0-9]{6,}$/;
+          if (!waRegex.test(whatsapp)) {
+            alert("No. WhatsApp tidak valid");
+            return false;
+          }
+        }
+        return true;
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!validateStep(currentStep)) return;
+
+        const fullName = form.fullName.value.trim();
+        const email = form.email.value.trim();
+        const password = form.password.value;
+        const alamat1 = form.alamat1.value.trim();
+        const alamat2 = form.alamat2.value.trim();
+        const alamat3 = form.alamat3.value.trim();
+        const whatsapp = form.whatsapp.value.trim();
+        const referralInput = form.kodeReferral.value.trim(); // Ambil input referral
+
+        try {
+          const userCredential = await createUser WithEmailAndPassword(auth, email, password);
+          const uid = userCredential.user.uid;
+
+          const userData = {
+            fullName,
+            email,
+            alamat: `${alamat1}, ${alamat2}, ${alamat3}`,
+            whatsapp,
+            point: 0,
+            createdAt: new Date()
+          };
+
+          if (referralInput !== "") { // Cek input referral
+            const usersRef = doc(db, "users", referralInput);
+            const userRefDoc = await getDoc(usersRef);
+            if (userRefDoc.exists()) {
+              await updateDoc(usersRef, { point: increment(100) }); // Tambah poin ke pengguna yang mereferensikan
+              userData.referredBy = referralInput; // Simpan referral
+              userData.point += 100; // Tambah poin ke pengguna baru
+            }
+          }
+
+          await setDoc(doc(db, "users", uid), userData);
+          alert("Registrasi berhasil!");
+          window.location.href = "login.html";
+        } catch (error) {
+          alert("Gagal registrasi: " + error.message);
+        }
+      });
+    });
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4">
+  <form id="registerForm" class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-semibold text-center mb-6 text-green-700">Registrasi</h2>
+
+    <!-- Step 1 -->
+    <div class="step" id="step1">
+      <div class="mb-5">
+        <label for="fullName" class="block text-gray-700 mb-1 font-medium">Nama Lengkap</label>
+        <input type="text" id="fullName" name="fullName" placeholder="Nama Lengkap" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+      </div>
+      <div class="mb-5">
+        <label for="email" class="block text-gray-700 mb-1 font-medium">Email</label>
+        <input type="email" id="email" name="email" placeholder="Email" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+      </div>
+      <div class="mb-5 relative">
+        <label for="password" class="block text-gray-700 mb-1 font-medium">Kata Sandi (min 6 karakter)</label>
+        <input type="password" id="password" name="password" placeholder="Kata Sandi (min 6 karakter)" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 pr-10" />
+        <button type="button" id="togglePassword" aria-label="Toggle password visibility" 
+          class="absolute top-9 right-3 text-gray-500 hover:text-gray-700 focus:outline-none">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step hidden" id="step2">
+      <div class="mb-5">
+        <label for="alamat1" class="block text-gray-700 mb-1 font-medium">Desa</label>
+        <input type="text" id="alamat1" name="alamat1" placeholder="Desa" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+      </div>
+      <div class="mb-5">
+        <label for="alamat2" class="block text-gray-700 mb-1 font-medium">Kecamatan</label>
+        <input type="text" id="alamat2" name="alamat2" placeholder="Kecamatan" required
+          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
+      </div>
       <div class="mb-5">
         <label for="alamat3" class="block text-gray-700 mb-1 font-medium">Kabupaten/Kota</label>
         <input type="text" id="alamat3" name="alamat3" placeholder="Kabupaten/Kota" required
           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
       </div>
     </div>
+
     <!-- Step 3 -->
     <div class="step hidden" id="step3">
       <div class="mb-5">
@@ -17,6 +230,7 @@
           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
       </div>
     </div>
+
     <div class="flex justify-between">
       <button type="button" id="btnPrev" disabled
         class="bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300">
