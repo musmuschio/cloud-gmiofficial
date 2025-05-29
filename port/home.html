@@ -1,0 +1,124 @@
+<html lang="id">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Beranda - GMI
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <script type="module">
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const newsContainer = document.getElementById('news-container');
+      const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
+
+      onSnapshot(q, (snapshot) => {
+        newsContainer.innerHTML = '';
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const createdAt = data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000) : new Date();
+          const formattedDate = createdAt.toLocaleString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+
+          const newsItem = document.createElement('article');
+          newsItem.className = "bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row md:space-x-6";
+
+          // Image placeholder on left for md+ screens
+          const imgWrapper = document.createElement('div');
+          imgWrapper.className = "flex-shrink-0 mb-4 md:mb-0 md:w-48 h-32 md:h-40 rounded overflow-hidden";
+          const img = document.createElement('img');
+          img.src = "https://placehold.co/300x200/png?text=Berita+Image";
+          img.alt = `Gambar ilustrasi berita berjudul ${data.title}`;
+          img.className = "w-full h-full object-cover";
+          imgWrapper.appendChild(img);
+
+          const contentWrapper = document.createElement('div');
+          contentWrapper.className = "flex flex-col justify-between";
+
+          const title = document.createElement('h2');
+          title.className = "text-xl font-semibold text-gray-900";
+          title.textContent = data.title;
+
+          const date = document.createElement('time');
+          date.className = "text-sm text-gray-500 mt-1";
+          date.dateTime = createdAt.toISOString();
+          date.textContent = formattedDate;
+
+          const content = document.createElement('p');
+          content.className = "mt-3 text-gray-700 whitespace-pre-line";
+          content.textContent = data.content;
+
+          // Like button container
+          const likeContainer = document.createElement('div');
+          likeContainer.className = "mt-4 flex items-center space-x-2";
+
+          const likeButton = document.createElement('button');
+          likeButton.className = "flex items-center space-x-2 text-gray-600 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded";
+          likeButton.setAttribute('aria-label', `Like berita berjudul ${data.title}`);
+
+          const likeIcon = document.createElement('i');
+          likeIcon.className = "fas fa-thumbs-up";
+
+          const likeCount = document.createElement('span');
+          likeCount.className = "font-medium select-none";
+          likeCount.textContent = data.likes !== undefined ? data.likes : 0;
+
+          likeButton.appendChild(likeIcon);
+          likeButton.appendChild(likeCount);
+
+          likeContainer.appendChild(likeButton);
+
+          // Like button click handler
+          likeButton.addEventListener('click', async () => {
+            const docRef = doc(db, "news", docSnap.id);
+            try {
+              await updateDoc(docRef, {
+                likes: increment(1)
+              });
+            } catch (error) {
+              console.error("Gagal menambahkan like:", error);
+            }
+          });
+
+          contentWrapper.appendChild(title);
+          contentWrapper.appendChild(date);
+          contentWrapper.appendChild(content);
+          contentWrapper.appendChild(likeContainer);
+
+          newsItem.appendChild(imgWrapper);
+          newsItem.appendChild(contentWrapper);
+
+          newsContainer.appendChild(newsItem);
+        });
+      });
+    });
+  </script>
+ </head>
+ <body class="bg-gray-50 min-h-screen flex flex-col">
+  <main class="flex-grow max-w-5xl mx-auto p-4 w-full">
+   <h1 class="text-3xl font-extrabold text-gray-900 mb-6">
+    Berita Terbaru
+   </h1>
+   <section class="space-y-6" id="news-container">
+   </section>
+  </main>
+ </body>
+</html>
