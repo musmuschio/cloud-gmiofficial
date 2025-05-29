@@ -369,7 +369,7 @@
         mainContent.innerHTML = `<p class="p-4 text-center text-gray-600">Memuat data profil...</p>`;
         return;
       }
-      const { fullName, email, referral, Point = 0 } = currentUserData;
+      const { fullName, email, referral, point = 0 } = currentUserData;
       const container = document.createElement("section");
       container.className = "p-6 max-w-md mx-auto";
 
