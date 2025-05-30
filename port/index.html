@@ -431,11 +431,18 @@
         });
       });
 
-      const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", async () => {
-        await signOut(auth);
-      });
+const logoutBtn = document.getElementById("logoutBtn");
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      currentUser  = null; // Reset currentUser 
+      currentUser Data = null; // Reset currentUser Data
+      window.location.href = "login.html"; // Redirect to login page
+    } catch (error) {
+      alert("Gagal logout: " + error.message);
     }
+  });
+}
 
     // Load Settings page (SPA)
     function loadSettings() {
