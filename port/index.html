@@ -114,6 +114,10 @@
       Profil
      </span>
     </button>
+    <button id="logoutFooterBtn" class="flex flex-col items-center justify-center flex-1 focus:outline-none focus:ring-2 focus:ring-red-700" title="Logout" aria-label="Logout">
+     <i class="fas fa-sign-out-alt text-xl text-white"></i>
+     <span class="text-xs text-white">Logout</span>
+    </button>
    </nav>
   </div>
   <!-- MODALS -->
@@ -217,6 +221,8 @@
     const commentInput = document.getElementById("commentInput");
     const sendCommentBtn = document.getElementById("sendCommentBtn");
 
+    const logoutFooterBtn = document.getElementById("logoutFooterBtn");
+
     // SPA navigation buttons
     const spaButtons = document.querySelectorAll("[data-spa-link]");
 
@@ -281,6 +287,18 @@
         headerMenu.classList.add("hidden");
         menuToggleBtn.setAttribute("aria-expanded", "false");
       });
+    });
+
+    // Logout button in footer handler
+    logoutFooterBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        currentUser = null;
+        currentUserData = null;
+        window.location.href = "registrasi.html";
+      } catch (error) {
+        alert("Gagal logout. Silakan coba lagi.");
+      }
     });
 
     // Navigation state
@@ -360,7 +378,7 @@
       mainContent.appendChild(iframe);
     }
 
-    // Load Profil page with Logout button
+    // Load Profil page
     function loadProfil() {
       if (!currentUserData) {
         mainContent.innerHTML = `<p class="p-4 text-center text-gray-600">Memuat data profil...</p>`;
@@ -384,9 +402,6 @@
         </button>
       </div>
     </div>
-    <button id="logoutBtn" class="mt-8 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-700" aria-label="Logout">
-      <i class="fas fa-sign-out-alt mr-2"></i> Logout
-    </button>
   </main>
   <br><br>
   <div class="max-w-md w-full grid grid-cols-2 gap-4">
@@ -425,19 +440,6 @@
             copyReferralBtn.innerHTML = `<i class="fas fa-copy"></i>`;
           }, 1500);
         });
-      });
-
-      // Logout button handler
-      const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", async () => {
-        try {
-          await signOut(auth);
-          currentUser = null;
-          currentUserData = null;
-          window.location.href = "registrasi.html";
-        } catch (error) {
-          alert("Gagal logout. Silakan coba lagi.");
-        }
       });
     }
 
