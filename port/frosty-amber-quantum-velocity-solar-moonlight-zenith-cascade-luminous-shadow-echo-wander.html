@@ -1,28 +1,28 @@
-<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Generate Token Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-  <div class="bg-white p-6 rounded shadow max-w-md w-full text-center">
-    <h2 class="text-2xl font-bold mb-4">Token Admin (8 frasa, berlaku 3 jam)</h2>
+  <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+    <h2 class="text-3xl font-extrabold mb-6 text-gray-800">Token Admin (8 frasa, berlaku 3 jam)</h2>
 
-    <button onclick="generateToken()" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 w-full">
-      🔐 Buat Token Baru
+    <button onclick="generateToken()" class="flex items-center justify-center gap-2 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition w-full text-lg font-semibold">
+      <i class="fas fa-lock"></i> Buat Token Baru
     </button>
 
-    <div id="tokenWrapper" class="mt-4 hidden">
-      <p class="text-sm text-gray-600 mb-1">Token Anda:</p>
-      <div id="tokenResult" class="bg-gray-100 p-3 rounded text-sm font-mono break-all"></div>
-      <button onclick="copyToken()" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-        📋 Salin Token
+    <div id="tokenWrapper" class="mt-6 hidden">
+      <p class="text-sm text-gray-600 mb-2">Token Anda:</p>
+      <div id="tokenResult" class="bg-gray-100 p-4 rounded font-mono text-sm break-words select-all text-gray-900"></div>
+      <button onclick="copyToken()" class="mt-4 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition mx-auto text-sm font-medium">
+        <i class="fas fa-clipboard"></i> Salin Token
       </button>
     </div>
   </div>
@@ -62,7 +62,13 @@
     function copyToken() {
       const tokenText = document.getElementById("tokenResult").innerText;
       navigator.clipboard.writeText(tokenText).then(() => {
-        Swal.fire("Disalin!", "Token telah disalin ke clipboard.", "success");
+        Swal.fire({
+          icon: 'success',
+          title: 'Disalin!',
+          text: 'Token telah disalin ke clipboard.',
+          timer: 1500,
+          showConfirmButton: false
+        });
       });
     }
 
@@ -93,10 +99,20 @@
         document.getElementById("tokenWrapper").classList.remove("hidden");
         document.getElementById("tokenResult").innerText = token;
 
-        Swal.fire("Sukses!", "Token berhasil dibuat dan akan berlaku selama 3 jam.", "success");
+        Swal.fire({
+          icon: 'success',
+          title: 'Sukses!',
+          text: 'Token berhasil dibuat dan akan berlaku selama 3 jam.',
+          timer: 2000,
+          showConfirmButton: false
+        });
       } catch (err) {
         console.error(err);
-        Swal.fire("Gagal!", "Tidak bisa menyimpan token ke database.", "error");
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: 'Tidak bisa menyimpan token ke database.'
+        });
       }
     }
   </script>
