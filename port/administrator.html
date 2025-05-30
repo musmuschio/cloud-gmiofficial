@@ -259,6 +259,7 @@
       return data.data.link;
     }
 
+    // Posting Berita ke collection "news"
     async function postBerita() {
       const judul = document.getElementById("judulBerita").value.trim();
       const deskripsi = document.getElementById("deskripsiBerita").value.trim();
@@ -271,8 +272,8 @@
       try {
         Swal.fire({ title: "Uploading...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         const imgUrl = await uploadToImgur(file);
-        await addDoc(collection(db, "berita"), { judul, deskripsi, gambar: imgUrl, tanggal: Date.now() });
-        Swal.fire("Sukses", "Berita berhasil diposting!", "success");
+        await addDoc(collection(db, "news"), { judul, deskripsi, gambar: imgUrl, tanggal: Date.now() });
+        Swal.fire("Sukses", "Berita berhasil diposting ke database news!", "success");
         document.getElementById("judulBerita").value = "";
         document.getElementById("deskripsiBerita").value = "";
         document.getElementById("gambarBerita").value = "";
@@ -281,6 +282,7 @@
       }
     }
 
+    // Kirim Informasi ke collection "informasi"
     async function kirimInformasi() {
       const deskripsi = document.getElementById("deskripsiInformasi").value.trim();
       const file = document.getElementById("gambarInformasi").files[0];
@@ -293,7 +295,7 @@
         Swal.fire({ title: "Uploading...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         const imgUrl = await uploadToImgur(file);
         await addDoc(collection(db, "informasi"), { deskripsi, gambar: imgUrl, tanggal: Date.now() });
-        Swal.fire("Sukses", "Informasi berhasil dikirim!", "success");
+        Swal.fire("Sukses", "Informasi berhasil dikirim ke database informasi!", "success");
         document.getElementById("deskripsiInformasi").value = "";
         document.getElementById("gambarInformasi").value = "";
       } catch (e) {
