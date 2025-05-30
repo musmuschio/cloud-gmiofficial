@@ -837,25 +837,6 @@
       }
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", async () => {
-        try {
-          await signOut(auth);
-          alert("Logout berhasil");
-          window.location.href = "login.html"; // redirect
-        } catch (error) {
-          console.error("Logout error:", error);
-          alert("Gagal logout: " + error.message);
-        }
-      });
-    } else {
-      console.warn("Tombol logout tidak ditemukan di DOM.");
-    }
-    });
-
     // Upload image to Imgur
     async function uploadImageToImgur(file) {
       const formData = new FormData();
