@@ -1,81 +1,86 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login Token Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen p-4">
+  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Login Admin</h2>
+    <input
+      id="tokenInput"
+      type="text"
+      placeholder="Masukkan token acak"
+      class="w-full p-3 border border-gray-300 rounded-md mb-6 focus:outline-none focus:ring-2 focus:ring-blue-600"
+      autocomplete="off"
+      aria-label="Masukkan token acak"
+    />
+    <button
+      onclick="cekToken()"
+      class="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-semibold py-3 rounded-md flex justify-center items-center gap-2"
+      aria-label="Login dengan token"
+    >
+      <i class="fas fa-sign-in-alt"></i> Login
+    </button>
+    <p class="text-center text-sm text-gray-500 mt-5">
+      Token berlaku 3 jam sejak dibuat
+    </p>
+  </div>
 
+  <script>
+    // Konfigurasi Firebase Anda
     const firebaseConfig = {
-      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-      authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.appspot.com",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR"
+      apiKey: "API_KEY_ANDA",
+      authDomain: "PROJECT_ID.firebaseapp.com",
+      projectId: "PROJECT_ID",
+      storageBucket: "PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID",
     };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
     async function cekToken() {
-      const tokenInput = document.getElementById("tokenAdmin").value.trim();
-      if (!tokenInput) {
-        Swal.fire("Error", "Masukkan token admin!", "error");
+      const token = document.getElementById("tokenInput").value.trim();
+      if (!token) {
+        Swal.fire("Kosong", "Silakan masukkan token!", "warning");
         return;
       }
 
       try {
-        Swal.fire({
-          title: "Memeriksa token...",
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading()
-        });
-
-        const tokenDocRef = doc(db, "adminTokens", tokenInput);
-        const tokenDocSnap = await getDoc(tokenDocRef);
-
-        if (!tokenDocSnap.exists()) {
-          Swal.fire("Error", "Token tidak valid!", "error");
+        const tokenDoc = await db.collection("adminTokens").doc(token).get();
+        if (!tokenDoc.exists) {
+          Swal.fire("Gagal", "Token tidak valid!", "error");
           return;
         }
 
-        const data = tokenDocSnap.data();
-        const sekarang = Date.now();
-        const duaJam = 2 * 60 * 60 * 1000;
+        const createdAt = tokenDoc.data().createdAt.toDate();
+        const now = new Date();
+        const diffMs = now - createdAt;
+        const diffHours = diffMs / (1000 * 60 * 60);
 
-        if (sekarang - data.timestamp > duaJam) {
-          Swal.fire("Error", "Token sudah kadaluarsa, minta token baru!", "error");
-          return;
+        if (diffHours > 3) {
+          Swal.fire("Kadaluarsa", "Token ini sudah lebih dari 3 jam.", "error");
+        } else {
+          sessionStorage.setItem("adminToken", token);
+          sessionStorage.setItem("tokenTimestamp", Date.now());
+          Swal.fire("Sukses", "Token valid, masuk ke halaman admin!", "success").then(() => {
+            window.location.href = "admin.html";
+          });
         }
-
-        sessionStorage.setItem("adminToken", tokenInput);
-        sessionStorage.setItem("tokenTimestamp", data.timestamp);
-
-        Swal.fire("Berhasil", "Token valid. Mengarahkan ke panel admin...", "success").then(() => {
-          window.location.href = "administrator.html";
-        });
-
       } catch (err) {
-        Swal.fire("Error", "Gagal memeriksa token!", "error");
         console.error(err);
+        Swal.fire("Error", "Terjadi kesalahan saat memverifikasi token", "error");
       }
     }
   </script>
-</head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
-  <div class="bg-white rounded-lg p-6 shadow-lg w-full max-w-md">
-    <h1 class="text-2xl font-bold mb-6 text-center">Masukkan Token Admin</h1>
-    <input type="text" id="tokenAdmin" placeholder="Token Admin" class="w-full border border-gray-300 rounded-md p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-    <button onclick="cekToken()" class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 font-semibold flex justify-center items-center gap-2">
-      <i class="fas fa-key"></i> Submit Token
-    </button>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
 </body>
 </html>
