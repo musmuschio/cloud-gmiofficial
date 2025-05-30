@@ -325,9 +325,6 @@
         case "profil":
           loadProfil();
           break;
-        case "settings":
-          loadSettings();
-          break;
         case "contact":
           loadContact();
           break;
@@ -432,11 +429,20 @@
       });
 
     // Load Settings page (SPA)
-      const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", async () => {
+    document.addEventListener("DOMContentLoaded", () => {
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+        try {
         await signOut(auth);
+        alert("Berhasil logout");
+        location.href = "login.html"; // redirect jika perlu
+        } catch (error) {
+        alert("Gagal logout: " + error.message);
+        }
       });
-   }
+    }
+});
 
     // Load Contact page (SPA)
     function loadContact() {
