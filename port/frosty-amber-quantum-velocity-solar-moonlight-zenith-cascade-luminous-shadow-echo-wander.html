@@ -11,17 +11,17 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-  <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-    <h2 class="text-3xl font-extrabold mb-6 text-gray-800">Token Admin (8 frasa, berlaku 3 jam)</h2>
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full text-center">
+    <h2 class="text-2xl font-bold mb-6">Token Admin (8 frasa, berlaku 3 jam)</h2>
 
-    <button onclick="generateToken()" class="flex items-center justify-center gap-2 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition w-full text-lg font-semibold">
+    <button onclick="generateToken()" class="bg-green-600 text-white py-3 px-5 rounded-lg hover:bg-green-700 w-full flex items-center justify-center gap-2 text-lg font-semibold transition">
       <i class="fas fa-lock"></i> Buat Token Baru
     </button>
 
     <div id="tokenWrapper" class="mt-6 hidden">
       <p class="text-sm text-gray-600 mb-2">Token Anda:</p>
-      <div id="tokenResult" class="bg-gray-100 p-4 rounded font-mono text-sm break-words select-all text-gray-900"></div>
-      <button onclick="copyToken()" class="mt-4 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition mx-auto text-sm font-medium">
+      <div id="tokenResult" class="bg-gray-100 p-4 rounded-lg text-sm font-mono break-words select-all text-gray-800"></div>
+      <button onclick="copyToken()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2 transition">
         <i class="fas fa-clipboard"></i> Salin Token
       </button>
     </div>
@@ -69,6 +69,12 @@
           timer: 1500,
           showConfirmButton: false
         });
+      }).catch(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: 'Tidak dapat menyalin token.',
+        });
       });
     }
 
@@ -77,13 +83,17 @@
       const now = new Date();
       const threshold = new Date(now.getTime() - (3 * 60 * 60 * 1000)); // 3 jam lalu
 
-      const snapshot = await db.collection("adminTokens").get();
-      snapshot.forEach(doc => {
-        const createdAt = doc.data().createdAt?.toDate?.();
-        if (createdAt && createdAt < threshold) {
-          db.collection("adminTokens").doc(doc.id).delete();
-        }
-      });
+      try {
+        const snapshot = await db.collection("adminTokens").get();
+        snapshot.forEach(doc => {
+          const createdAt = doc.data().createdAt?.toDate?.();
+          if (createdAt && createdAt < threshold) {
+            db.collection("adminTokens").doc(doc.id).delete();
+          }
+        });
+      } catch (error) {
+        console.error("Error deleting expired tokens:", error);
+      }
     }
 
     // Generate dan simpan token
@@ -111,7 +121,7 @@
         Swal.fire({
           icon: 'error',
           title: 'Gagal!',
-          text: 'Tidak bisa menyimpan token ke database.'
+          text: 'Tidak bisa menyimpan token ke database.',
         });
       }
     }
