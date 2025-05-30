@@ -360,7 +360,7 @@
       mainContent.appendChild(iframe);
     }
 
-    // Load Profil page
+    // Load Profil page with Logout button
     function loadProfil() {
       if (!currentUserData) {
         mainContent.innerHTML = `<p class="p-4 text-center text-gray-600">Memuat data profil...</p>`;
@@ -379,11 +379,14 @@
       <p id="email" class="text-gray-700 break-words">${email}</p>
       <div class="mt-4 flex justify-center items-center space-x-2">
         <input type="text" readonly id="referralCodeInput" class="border border-gray-300 rounded px-3 py-1 text-center w-48 select-all" aria-label="Kode referral milik user" value="${referral}" />
-        <button id="copyBtn" class="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" aria-label="Salin kode ">
+        <button id="copyReferralBtn" class="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" aria-label="Salin kode ">
           <i class="fas fa-copy"></i>
         </button>
       </div>
     </div>
+    <button id="logoutBtn" class="mt-8 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-700" aria-label="Logout">
+      <i class="fas fa-sign-out-alt mr-2"></i> Logout
+    </button>
   </main>
   <br><br>
   <div class="max-w-md w-full grid grid-cols-2 gap-4">
@@ -423,6 +426,20 @@
           }, 1500);
         });
       });
+
+      // Logout button handler
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          await signOut(auth);
+          currentUser = null;
+          currentUserData = null;
+          window.location.href = "registrasi.html";
+        } catch (error) {
+          alert("Gagal logout. Silakan coba lagi.");
+        }
+      });
+    }
 
     // Load Contact page (SPA)
     function loadContact() {
