@@ -59,24 +59,34 @@
     }
 
     // Salin token ke clipboard
-    function copyToken() {
-      const tokenText = document.getElementById("tokenResult").innerText;
-      navigator.clipboard.writeText(tokenText).then(() => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Disalin!',
-          text: 'Token telah disalin ke clipboard.',
-          timer: 1500,
-          showConfirmButton: false
+    window.copyToken = () => {
+      const text = document.getElementById("tokenResult").innerText;
+      if (navigator.clipboard && window.isSecureContext) {
+        // Modern method (HTTPS or localhost)
+        navigator.clipboard.writeText(text).then(() => {
+          Swal.fire("Disalin!", "Token telah disalin ke clipboard.", "success");
+        }).catch(err => {
+          Swal.fire("Gagal", "Tidak dapat menyalin token.", "error");
+          console.error("Clipboard error:", err);
         });
-      }).catch(() => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal!',
-          text: 'Tidak dapat menyalin token.',
-        });
-      });
-    }
+      } else {
+        // Fallback untuk HTTP
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";  // supaya tidak scroll
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+          const success = document.execCommand("copy");
+          Swal.fire("Disalin!", "Token telah disalin ke clipboard.", "success");
+        } catch (err) {
+          Swal.fire("Gagal", "Clipboard tidak didukung di browser ini.", "error");
+        }
+        document.body.removeChild(textarea);
+      }
+    };
+
 
     // Hapus token lebih dari 3 jam
     async function deleteExpiredTokens() {
