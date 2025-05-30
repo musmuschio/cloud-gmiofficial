@@ -1,399 +1,246 @@
 <html lang="id">
+
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Panel - GMI</title>
+  <title>Administrator Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-    rel="stylesheet"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js" type="module"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js" type="module"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <header class="bg-white shadow p-4">
+    <h1 class="text-2xl font-bold text-gray-800 text-center">Panel Administrator</h1>
+  </header>
+
+  <main class="container mx-auto px-4 py-6 flex-grow max-w-5xl">
+    <section class="mb-10 bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900">Posting Berita (Home)</h2>
+      <input type="text" id="judulBerita" placeholder="Judul Berita" class="w-full border border-gray-300 rounded-md p-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <textarea id="deskripsiBerita" placeholder="Deskripsi Berita" rows="4" class="w-full border border-gray-300 rounded-md p-2 mb-3 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      <input type="file" id="gambarBerita" accept="image/*" class="w-full mb-4" />
+      <button onclick="postBerita()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 w-full sm:w-auto">
+        <i class="fas fa-upload"></i> Posting
+      </button>
+    </section>
+
+    <section class="mb-10 bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900">Kirim Informasi (Flayer dan Deskripsi)</h2>
+      <textarea id="deskripsiInformasi" placeholder="Deskripsi Informasi" rows="4" class="w-full border border-gray-300 rounded-md p-2 mb-3 resize-y focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+      <input type="file" id="gambarInformasi" accept="image/*" class="w-full mb-4" />
+      <button onclick="kirimInformasi()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 w-full sm:w-auto">
+        <i class="fas fa-paper-plane"></i> Kirim
+      </button>
+    </section>
+
+    <section class="mb-10 bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900">Pemantauan Status User (Forum)</h2>
+      <div id="listStatus" class="space-y-4 max-h-96 overflow-y-auto"></div>
+    </section>
+
+    <section class="mb-10 bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900">Data Lengkap User</h2>
+      <div id="listUser" class="space-y-4 max-h-96 overflow-y-auto"></div>
+    </section>
+
+    <section class="mb-10 bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900">Data Affiliate User</h2>
+      <div id="listAffiliate" class="space-y-4 max-h-96 overflow-y-auto"></div>
+    </section>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-gray-600 text-sm">
+    &copy; 2024 Administrator Panel
+  </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      onSnapshot,
-      doc,
-      updateDoc,
-      deleteDoc,
-      addDoc,
-      serverTimestamp,
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
       authDomain: "gmi-enterprise23.firebaseapp.com",
       projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      storageBucket: "gmi-enterprise23.appspot.com",
       messagingSenderId: "974090028804",
       appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR",
+      measurementId: "G-S27YB5Z8PR"
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    window.addEventListener("DOMContentLoaded", () => {
-      const userList = document.getElementById("userList");
-      const statusList = document.getElementById("statusList");
-      const form = document.getElementById("postForm");
-      const judulInput = document.getElementById("judul");
-      const isiInput = document.getElementById("isi");
-
-      // Load Users
-      const usersQuery = query(collection(db, "users"), orderBy("createdAt", "desc"));
-      onSnapshot(usersQuery, (snapshot) => {
-        userList.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          const u = docSnap.data();
-          const createdAt = u.createdAt?.seconds
-            ? new Date(u.createdAt.seconds * 1000)
-            : null;
-          const createdAtStr = createdAt
-            ? createdAt.toLocaleString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "-";
-
-          const tr = document.createElement("tr");
-          tr.className = "border-b";
-
-          tr.innerHTML = `
-            <td class="p-2">
-              <input type="text" class="w-full border rounded px-2 py-1 text-sm" value="${u.fullName || ""}" id="name-${docSnap.id}" />
-            </td>
-            <td class="p-2">
-              <input type="email" class="w-full border rounded px-2 py-1 text-sm" value="${u.email || ""}" id="email-${docSnap.id}" />
-            </td>
-            <td class="p-2">
-              <input type="text" class="w-full border rounded px-2 py-1 text-sm" value="${u.whatsapp || ""}" id="wa-${docSnap.id}" />
-            </td>
-            <td class="p-2">
-              <input type="text" class="w-full border rounded px-2 py-1 text-sm bg-gray-100 cursor-not-allowed" value="${u.referral || "-"}" disabled />
-            </td>
-            <td class="p-2">
-              <input type="number" min="0" class="w-full border rounded px-2 py-1 text-sm" value="${u.point || 0}" id="point-${docSnap.id}" />
-            </td>
-            <td class="p-2 text-sm text-gray-600">${createdAtStr}</td>
-            <td class="p-2 flex space-x-2">
-              <button aria-label="Simpan user" class="bg-green-600 hover:bg-green-700 text-white p-2 rounded text-sm flex items-center justify-center" data-id="${docSnap.id}" data-action="save" type="button">
-                <i class="fas fa-save"></i>
-              </button>
-              <button aria-label="Hapus user" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded text-sm flex items-center justify-center" data-id="${docSnap.id}" data-action="delete" type="button">
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </td>
-          `;
-          userList.appendChild(tr);
-        });
-      });
-
-      // Load Statuses
-      const statusesQuery = query(collection(db, "statuses"), orderBy("timestamp", "desc"));
-      onSnapshot(statusesQuery, (snapshot) => {
-        statusList.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          const s = docSnap.data();
-          const timestamp = s.timestamp?.seconds
-            ? new Date(s.timestamp.seconds * 1000)
-            : null;
-          const timeStr = timestamp
-            ? timestamp.toLocaleString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "-";
-
-          const li = document.createElement("li");
-          li.className =
-            "border border-gray-300 rounded p-3 mb-2 bg-white shadow-sm";
-          li.innerHTML = `
-            <p class="font-semibold text-gray-800">${s.userName || "-"}</p>
-            <p class="text-gray-700 whitespace-pre-line">${s.description || ""}</p>
-            <p class="text-xs text-gray-500 mt-1">${timeStr}</p>
-          `;
-          statusList.appendChild(li);
-        });
-      });
-
-      // Event delegation for user save/delete buttons
-      userList.addEventListener("click", async (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        const id = btn.getAttribute("data-id");
-        const action = btn.getAttribute("data-action");
-        if (!id || !action) return;
-
-        if (action === "save") {
-          try {
-            const name = document.getElementById(`name-${id}`).value.trim();
-            const email = document.getElementById(`email-${id}`).value.trim();
-            const wa = document.getElementById(`wa-${id}`).value.trim();
-            const pointVal = document.getElementById(`point-${id}`).value;
-            const point = parseInt(pointVal);
-            if (!name || !email || isNaN(point) || point < 0) {
-              alert("Mohon isi data dengan benar.");
-              return;
-            }
-            await updateDoc(doc(db, "users", id), {
-              fullName: name,
-              email: email,
-              whatsapp: wa,
-              point: point,
-            });
-            alert("User diperbarui");
-          } catch (err) {
-            alert("Gagal memperbarui user: " + err.message);
-          }
-        } else if (action === "delete") {
-          if (confirm("Hapus user ini?")) {
-            try {
-              await deleteDoc(doc(db, "users", id));
-              alert("User dihapus");
-            } catch (err) {
-              alert("Gagal menghapus user: " + err.message);
-            }
-          }
-        }
-      });
-
-      // Post Berita
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const judul = judulInput.value.trim();
-        const isi = isiInput.value.trim();
-        if (!judul || !isi) {
-          alert("Judul dan isi berita harus diisi.");
-          return;
-        }
-        try {
-          await addDoc(collection(db, "news"), {
-            title: judul,
-            content: isi,
-            createdAt: serverTimestamp(),
-          });
-          alert("Berita terkirim");
-          judulInput.value = "";
-          isiInput.value = "";
-        } catch (err) {
-          alert("Gagal mengirim berita: " + err.message);
-        }
-      });
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = "kloterAdmin.html";
+      } else {
+        loadStatus();
+        loadUser();
+        loadAffiliate();
+      }
     });
 
-    const flyerForm = document.getElementById("flyerForm");
-const flyerTitle = document.getElementById("flyerTitle");
-const flyerContent = document.getElementById("flyerContent");
-const flyerImage = document.getElementById("flyerImage");
-
-flyerForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const title = flyerTitle.value.trim();
-  const content = flyerContent.value.trim();
-  const image = flyerImage.value.trim();
-
-  if (!title || !content) {
-    alert("Judul dan deskripsi flyer wajib diisi.");
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "informasi"), {
-      title,
-      content,
-      image: image || null,
-      createdAt: serverTimestamp(),
-    });
-    alert("Flyer berhasil dikirim ke halaman informasi.");
-    flyerTitle.value = "";
-    flyerContent.value = "";
-    flyerImage.value = "";
-  } catch (err) {
-    alert("Gagal mengirim flyer: " + err.message);
-  }
-});
-
-
-    // Memantau pengguna affiliate
-const affiliateList = document.getElementById("affiliateList");
-onSnapshot(usersQuery, (snapshot) => {
-  affiliateList.innerHTML = "";
-  snapshot.forEach((docSnap) => {
-    const u = docSnap.data();
-    if (u.isAffiliate) {
-      const li = document.createElement("li");
-      li.className = "p-2 border-b text-sm";
-      li.innerHTML = `<strong>${u.fullName}</strong> - ${u.email} (${u.point || 0} poin)`;
-      affiliateList.appendChild(li);
+    async function uploadToImgur(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("https://api.imgur.com/3/image", {
+        method: "POST",
+        headers: {
+          Authorization: "Client-ID 55ce2fc3e30b2f8"
+        },
+        body: formData
+      });
+      const data = await res.json();
+      return data.data.link;
     }
-  });
-});
 
-  </script>
-</head>
-<body class="bg-gray-50 min-h-screen p-4 flex flex-col max-w-6xl mx-auto">
-  <h1 class="text-3xl font-bold mb-6 text-center text-blue-700">Admin Panel GMI</h1>
+    async function postBerita() {
+      const judul = document.getElementById("judulBerita").value.trim();
+      const deskripsi = document.getElementById("deskripsiBerita").value.trim();
+      const file = document.getElementById("gambarBerita").files[0];
+      if (!judul || !deskripsi || !file) {
+        Swal.fire("Error", "Lengkapi semua data!", "error");
+        return;
+      }
 
-  <div class="mb-6 border-b border-gray-300">
-    <nav class="flex space-x-4" aria-label="Tabs" role="tablist" id="tabs">
-      <button
-        role="tab"
-        aria-selected="true"
-        aria-controls="dashboard"
-        id="tab-dashboard"
-        class="px-4 py-2 font-semibold text-blue-700 border-b-2 border-blue-700 focus:outline-none"
-        type="button"
-      >
-        Dashboard
-      </button>
-      <button
-        role="tab"
-        aria-selected="false"
-        aria-controls="postingan"
-        id="tab-postingan"
-        class="px-4 py-2 font-semibold text-gray-600 hover:text-blue-700 border-b-2 border-transparent focus:outline-none"
-        type="button"
-      >
-        Postingan
-      </button>
-      <button
-        role="tab"
-        aria-selected="false"
-        aria-controls="kirim"
-        id="tab-kirim"
-        class="px-4 py-2 font-semibold text-gray-600 hover:text-blue-700 border-b-2 border-transparent focus:outline-none"
-        type="button"
-      >
-        Kirim Berita
-      </button>
-    </nav>
-  </div>
-
-  <section
-    id="dashboard"
-    role="tabpanel"
-    aria-labelledby="tab-dashboard"
-    class="tab-panel"
-  >
-    <h2 class="text-xl font-semibold mt-8 mb-4 text-gray-800">Affiliate Terdaftar</h2>
-    <ul id="affiliateList" class="bg-white border rounded shadow p-4 max-h-60 overflow-y-auto text-gray-700"></ul>
-    <h2 class="text-xl font-semibold mb-4 text-gray-800">Data Pengguna</h2>
-    <div class="overflow-x-auto border rounded shadow bg-white">
-      <table class="min-w-full border-collapse table-auto">
-        <thead class="bg-blue-100 text-blue-800 font-semibold">
-          <tr>
-            <th class="p-2 border border-blue-200 text-left">Nama</th>
-            <th class="p-2 border border-blue-200 text-left">Email</th>
-            <th class="p-2 border border-blue-200 text-left">WA</th>
-            <th class="p-2 border border-blue-200 text-left">Referral</th>
-            <th class="p-2 border border-blue-200 text-left">Point</th>
-            <th class="p-2 border border-blue-200 text-left">Waktu</th>
-            <th class="p-2 border border-blue-200 text-left">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="userList" class="text-gray-700"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <section
-    id="postingan"
-    role="tabpanel"
-    aria-labelledby="tab-postingan"
-    class="hidden tab-panel"
-  >
-    <h2 class="text-xl font-semibold mb-4 text-gray-800">Postingan Status</h2>
-    <ul id="statusList" class="max-h-[400px] overflow-y-auto"></ul>
-  </section>
-
-  <section
-    id="kirim"
-    role="tabpanel"
-    aria-labelledby="tab-kirim"
-    class="hidden tab-panel"
-  >
-    <hr class="my-6">
-    <h2 class="text-xl font-semibold mb-4 text-gray-800">Posting Flyer ke Informasi</h2>
-    <form id="flyerForm" class="space-y-4 mb-6">
-    <input type="text" id="flyerTitle" placeholder="Judul flyer" required class="w-full p-2 border rounded" />
-    <textarea id="flyerContent" placeholder="Deskripsi flyer" required class="w-full p-2 border rounded"></textarea>
-    <input type="url" id="flyerImage" placeholder="URL gambar flyer (Opsional)" class="w-full p-2 border rounded" />
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Kirim Flyer</button>
-    </form>
-
-    <h2 class="text-xl font-semibold mb-4 text-gray-800">Kirim Berita ke Home</h2>
-    <form id="postForm" class="max-w-xl space-y-4 bg-white p-6 rounded shadow">
-      <input
-        type="text"
-        id="judul"
-        placeholder="Judul Berita"
-        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-      />
-      <textarea
-        id="isi"
-        placeholder="Isi Berita"
-        rows="6"
-        class="w-full border border-gray-300 rounded px-3 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-      ></textarea>
-      <button
-        type="submit"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        Kirim
-      </button>
-    </form>
-  </section>
-
-  <script>
-  const now = Date.now();
-  const loginTime = parseInt(localStorage.getItem("adminLoginTime"));
-  const isLoggedIn = localStorage.getItem("adminLogin");
-
-  const validDuration = 6 * 60 * 60 * 1000;
-
-  if (isLoggedIn !== "true" || (now - loginTime > validDuration)) {
-    alert("Sesi admin kedaluwarsa. Silakan login ulang.");
-    localStorage.removeItem("adminLogin");
-    localStorage.removeItem("adminLoginTime");
-    window.location.href = "kloterAdmin.html";
-  }
-    // Tabs functionality
-    const tabs = document.querySelectorAll("[role=tab]");
-    const tabPanels = document.querySelectorAll("[role=tabpanel]");
-
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        tabs.forEach((t) => {
-          t.setAttribute("aria-selected", "false");
-          t.classList.remove("border-blue-700", "text-blue-700");
-          t.classList.add("border-transparent", "text-gray-600");
-        });
-        tab.setAttribute("aria-selected", "true");
-        tab.classList.add("border-blue-700", "text-blue-700");
-        tab.classList.remove("border-transparent", "text-gray-600");
-
-        const target = tab.getAttribute("aria-controls");
-        tabPanels.forEach((panel) => {
-          if (panel.id === target) {
-            panel.classList.remove("hidden");
-          } else {
-            panel.classList.add("hidden");
+      try {
+        Swal.fire({
+          title: "Uploading...",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
           }
         });
+        const imgUrl = await uploadToImgur(file);
+        await addDoc(collection(db, "berita"), { judul, deskripsi, gambar: imgUrl, tanggal: Date.now() });
+        Swal.fire("Sukses", "Berita berhasil diposting!", "success");
+        document.getElementById("judulBerita").value = "";
+        document.getElementById("deskripsiBerita").value = "";
+        document.getElementById("gambarBerita").value = "";
+      } catch (e) {
+        Swal.fire("Error", "Gagal memposting berita.", "error");
+      }
+    }
+
+    async function kirimInformasi() {
+      const deskripsi = document.getElementById("deskripsiInformasi").value.trim();
+      const file = document.getElementById("gambarInformasi").files[0];
+      if (!deskripsi || !file) {
+        Swal.fire("Error", "Lengkapi semua data!", "error");
+        return;
+      }
+
+      try {
+        Swal.fire({
+          title: "Uploading...",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        const imgUrl = await uploadToImgur(file);
+        await addDoc(collection(db, "informasi"), { deskripsi, gambar: imgUrl, tanggal: Date.now() });
+        Swal.fire("Sukses", "Informasi berhasil dikirim!", "success");
+        document.getElementById("deskripsiInformasi").value = "";
+        document.getElementById("gambarInformasi").value = "";
+      } catch (e) {
+        Swal.fire("Error", "Gagal mengirim informasi.", "error");
+      }
+    }
+
+    async function loadStatus() {
+      const statusRef = await getDocs(query(collection(db, "statuses"), orderBy("waktu", "desc")));
+      const list = document.getElementById("listStatus");
+      list.innerHTML = "";
+      statusRef.forEach(docSnap => {
+        const data = docSnap.data();
+        const el = document.createElement("div");
+        el.classList.add("bg-red-50", "border", "border-red-300", "rounded-md", "p-4", "shadow-sm", "flex", "flex-col", "sm:flex-row", "sm:justify-between", "items-start", "sm:items-center");
+        el.innerHTML = `
+          <div>
+            <b class="text-red-700 text-lg">${escapeHtml(data.nama)}</b>
+            <p class="text-red-600 mt-1 whitespace-pre-wrap">${escapeHtml(data.deskripsi)}</p>
+          </div>
+          <button aria-label="Hapus status" class="mt-3 sm:mt-0 bg-red-600 hover:bg-red-700 text-white rounded px-3 py-1 text-sm flex items-center gap-2" onclick='hapusStatus("${docSnap.id}")'>
+            <i class="fas fa-trash-alt"></i> Hapus
+          </button>
+        `;
+        list.appendChild(el);
       });
-    });
+    }
+
+    async function hapusStatus(id) {
+      try {
+        await deleteDoc(doc(db, "statuses", id));
+        Swal.fire("Dihapus", "Status telah dihapus!", "info");
+        loadStatus();
+      } catch {
+        Swal.fire("Error", "Gagal menghapus status.", "error");
+      }
+    }
+
+    async function loadUser() {
+      const userRef = await getDocs(collection(db, "users"));
+      const list = document.getElementById("listUser");
+      list.innerHTML = "";
+      userRef.forEach(docSnap => {
+        const u = docSnap.data();
+        const el = document.createElement("div");
+        el.classList.add("bg-blue-50", "border", "border-blue-300", "rounded-md", "p-4", "shadow-sm");
+        el.innerHTML = `
+          <b class="text-blue-700 text-lg">${escapeHtml(u.nama)}</b>
+          <p class="mt-1 text-blue-600"><i class="fas fa-envelope mr-2"></i>Email: ${escapeHtml(u.email)}</p>
+          <p class="text-blue-600"><i class="fab fa-whatsapp mr-2"></i>WhatsApp: ${escapeHtml(u.wa)}</p>
+          <p class="text-blue-600"><i class="fas fa-map-marker-alt mr-2"></i>Alamat: ${escapeHtml(u.alamat)}</p>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    async function loadAffiliate() {
+      const ref = await getDocs(collection(db, "referrals"));
+      const list = document.getElementById("listAffiliate");
+      list.innerHTML = "";
+      ref.forEach(docSnap => {
+        const r = docSnap.data();
+        const el = document.createElement("div");
+        el.classList.add("bg-green-50", "border", "border-green-300", "rounded-md", "p-4", "shadow-sm");
+        el.innerHTML = `
+          <p class="text-green-700 font-semibold">User: <b>${escapeHtml(r.user)}</b></p>
+          <p class="text-green-600">Referral: ${escapeHtml(r.referral)}</p>
+          <p class="text-green-600">Point: ${r.point || 0}</p>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    // Simple escape function to prevent XSS in inserted HTML
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text.replace(/[&<>"']/g, function (m) {
+        switch (m) {
+          case "&":
+            return "&amp;";
+          case "<":
+            return "&lt;";
+          case ">":
+            return "&gt;";
+          case '"':
+            return "&quot;";
+          case "'":
+            return "&#39;";
+          default:
+            return m;
+        }
+      });
+    }
   </script>
 </body>
+
 </html>
