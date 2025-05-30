@@ -76,15 +76,19 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        window.location.href = "kloterAdmin.html";
-      } else {
-        loadStatus();
-        loadUser();
-        loadAffiliate();
-      }
-    });
+   onAuthStateChanged(auth, user => {
+  if (user) {
+    loadStatus();
+    loadUser();
+    loadAffiliate();
+  } else {
+    // Tunda redirect sedikit agar tidak looping
+    setTimeout(() => {
+      window.location.href = "kloterAdmin.html";
+    }, 1000);
+  }
+});
+
 
     async function uploadToImgur(file) {
       const formData = new FormData();
