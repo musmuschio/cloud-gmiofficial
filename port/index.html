@@ -114,10 +114,6 @@
       Profil
      </span>
     </button>
-    <button id="logoutFooterBtn" class="flex flex-col items-center justify-center flex-1 focus:outline-none focus:ring-2 focus:ring-red-700" title="Logout" aria-label="Logout">
-     <i class="fas fa-sign-out-alt text-xl text-white"></i>
-     <span class="text-xs text-white">Logout</span>
-    </button>
    </nav>
   </div>
   <!-- MODALS -->
@@ -140,6 +136,31 @@
      <button aria-label="Kirim komentar" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-700" id="sendCommentBtn">
       <i class="fas fa-paper-plane">
       </i>
+     </button>
+    </footer>
+   </div>
+  </div>
+  <!-- Modal: Confirm Image Upload -->
+  <div aria-labelledby="confirmImageModalTitle" aria-modal="true" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end sm:items-center z-50 opacity-0 pointer-events-none transition-opacity duration-300" id="confirmImageModal" role="dialog">
+   <div class="bg-white rounded-t-lg sm:rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
+    <header class="flex justify-between items-center border-b border-gray-300 px-4 py-3">
+     <h2 class="text-lg font-semibold text-center flex-1" id="confirmImageModalTitle">
+      Konfirmasi Unggah Gambar
+     </h2>
+     <button aria-label="Tutup konfirmasi" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 rounded" id="closeConfirmImageModalBtn">
+      <i class="fas fa-times text-xl"></i>
+     </button>
+    </header>
+    <section class="flex-1 overflow-y-auto px-4 py-4 flex flex-col items-center space-y-4 scrollbar-thin" id="confirmImagePreviewSection" tabindex="0">
+     <img alt="Preview gambar yang akan diunggah" class="max-w-full max-h-64 rounded object-contain" id="confirmImagePreview" src=""/>
+     <p class="text-gray-700 text-center">Apakah Anda yakin ingin mengunggah gambar ini?</p>
+    </section>
+    <footer class="border-t border-gray-300 px-4 py-3 flex justify-end space-x-3">
+     <button class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500" id="cancelConfirmImageBtn" type="button">
+      Batal
+     </button>
+     <button class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" id="confirmUploadImageBtn" type="button">
+      Kirim Gambar
      </button>
     </footer>
    </div>
@@ -221,7 +242,11 @@
     const commentInput = document.getElementById("commentInput");
     const sendCommentBtn = document.getElementById("sendCommentBtn");
 
-    const logoutFooterBtn = document.getElementById("logoutFooterBtn");
+    const confirmImageModal = document.getElementById("confirmImageModal");
+    const closeConfirmImageModalBtn = document.getElementById("closeConfirmImageModalBtn");
+    const confirmImagePreview = document.getElementById("confirmImagePreview");
+    const confirmUploadImageBtn = document.getElementById("confirmUploadImageBtn");
+    const cancelConfirmImageBtn = document.getElementById("cancelConfirmImageBtn");
 
     // SPA navigation buttons
     const spaButtons = document.querySelectorAll("[data-spa-link]");
@@ -231,6 +256,10 @@
     let currentUserData = null;
     let currentStatusIdForComments = null;
     let commentsUnsub = null;
+
+    // For image upload confirmation
+    let pendingImageFile = null;
+    let pendingImageDataUrl = null;
 
     // Imgur config
     const IMGUR_CLIENT_ID = "55ce2fc3e30b2f8";
@@ -287,18 +316,6 @@
         headerMenu.classList.add("hidden");
         menuToggleBtn.setAttribute("aria-expanded", "false");
       });
-    });
-
-    // Logout button in footer handler
-    logoutFooterBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        currentUser = null;
-        currentUserData = null;
-        window.location.href = "registrasi.html";
-      } catch (error) {
-        alert("Gagal logout. Silakan coba lagi.");
-      }
     });
 
     // Navigation state
@@ -378,7 +395,7 @@
       mainContent.appendChild(iframe);
     }
 
-    // Load Profil page
+    // Load Profil page with Logout button next to QnA Admin
     function loadProfil() {
       if (!currentUserData) {
         mainContent.innerHTML = `<p class="p-4 text-center text-gray-600">Memuat data profil...</p>`;
@@ -397,14 +414,14 @@
       <p id="email" class="text-gray-700 break-words">${email}</p>
       <div class="mt-4 flex justify-center items-center space-x-2">
         <input type="text" readonly id="referralCodeInput" class="border border-gray-300 rounded px-3 py-1 text-center w-48 select-all" aria-label="Kode referral milik user" value="${referral}" />
-        <button id="copyReferralBtn" class="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" aria-label="Salin kode ">
+        <button id="copyBtn" class="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-800" aria-label="Salin kode ">
           <i class="fas fa-copy"></i>
         </button>
       </div>
     </div>
   </main>
   <br><br>
-  <div class="max-w-md w-full grid grid-cols-2 gap-4">
+  <div class="max-w-md w-full grid grid-cols-3 gap-4">
     <a href="tutorial.html" class="flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-700">
       <i class="fas fa-chalkboard-teacher"></i>
       <span>Tutorial</span>
@@ -425,21 +442,37 @@
       <i class="fas fa-question-circle"></i>
       <span>QnA Admin</span>
     </a>
+    <button id="logoutBtn" class="flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-700" type="button" aria-label="Logout">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </button>
   </div>
       `;
       mainContent.appendChild(container);
 
-      const copyReferralBtn = document.getElementById("copyReferralBtn");
+      const copyBtn = document.getElementById("copyBtn");
       const referralCodeInput = document.getElementById("referralCodeInput");
-      copyReferralBtn.addEventListener("click", () => {
+      copyBtn.addEventListener("click", () => {
         referralCodeInput.select();
         referralCodeInput.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(referralCodeInput.value).then(() => {
-          copyReferralBtn.innerHTML = `<i class="fas fa-check"></i>`;
+          copyBtn.innerHTML = `<i class="fas fa-check"></i>`;
           setTimeout(() => {
-            copyReferralBtn.innerHTML = `<i class="fas fa-copy"></i>`;
+            copyBtn.innerHTML = `<i class="fas fa-copy"></i>`;
           }, 1500);
         });
+      });
+
+      // Logout button handler
+      const logoutBtn = document.getElementById("logoutBtn");
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          await signOut(auth);
+          // After sign out, redirect to registrasi.html
+          window.location.href = "registrasi.html";
+        } catch (error) {
+          alert("Gagal logout. Silakan coba lagi.");
+        }
       });
     }
 
@@ -801,7 +834,7 @@
       }
     });
 
-    // Post status form submit
+    // Post status form submit with image upload confirmation modal
     postStatusForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!currentUser) {
@@ -812,18 +845,59 @@
       const deskripsi = postStatusInput.value.trim();
       if (!deskripsi) return;
 
-      // Upload image if any
-      let imageUrl = "";
       if (postImageInput.files.length > 0) {
-        const file = postImageInput.files[0];
-        try {
-          imageUrl = await uploadImageToImgur(file);
-        } catch (e) {
-          alert("Gagal mengunggah gambar.");
-          return;
-        }
+        // Show confirmation modal with preview
+        pendingImageFile = postImageInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          pendingImageDataUrl = event.target.result;
+          confirmImagePreview.src = pendingImageDataUrl;
+          fadeIn(confirmImageModal);
+          confirmImageModal.classList.remove("pointer-events-none");
+        };
+        reader.readAsDataURL(pendingImageFile);
+      } else {
+        // No image, send directly
+        await sendStatus(deskripsi, "");
       }
+    });
 
+    // Cancel confirm image modal
+    cancelConfirmImageBtn.addEventListener("click", () => {
+      fadeOut(confirmImageModal);
+      confirmImageModal.classList.add("pointer-events-none");
+      pendingImageFile = null;
+      pendingImageDataUrl = null;
+      postImageInput.value = "";
+    });
+    closeConfirmImageModalBtn.addEventListener("click", () => {
+      fadeOut(confirmImageModal);
+      confirmImageModal.classList.add("pointer-events-none");
+      pendingImageFile = null;
+      pendingImageDataUrl = null;
+      postImageInput.value = "";
+    });
+
+    // Confirm upload image button
+    confirmUploadImageBtn.addEventListener("click", async () => {
+      if (!pendingImageFile) return;
+      try {
+        const imageUrl = await uploadImageToImgur(pendingImageFile);
+        const deskripsi = postStatusInput.value.trim();
+        await sendStatus(deskripsi, imageUrl);
+      } catch (e) {
+        alert("Gagal mengunggah gambar.");
+      } finally {
+        fadeOut(confirmImageModal);
+        confirmImageModal.classList.add("pointer-events-none");
+        pendingImageFile = null;
+        pendingImageDataUrl = null;
+        postImageInput.value = "";
+      }
+    });
+
+    // Send status helper
+    async function sendStatus(deskripsi, imageUrl) {
       // Format filename: namaUser-tanggal-waktu-token.format
       // token: random 6 chars
       const token = Math.random().toString(36).substring(2, 8);
@@ -846,11 +920,10 @@
           fileName,
         });
         postStatusInput.value = "";
-        postImageInput.value = "";
       } catch (e) {
         alert("Gagal mengirim status.");
       }
-    });
+    }
 
     // Upload image to Imgur
     async function uploadImageToImgur(file) {
