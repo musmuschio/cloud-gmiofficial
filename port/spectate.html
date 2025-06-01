@@ -1,0 +1,171 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spectate Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 min-h-screen">
+  <h1 class="text-2xl font-bold mb-4">👥 Daftar Users</h1>
+  <div id="usersList" class="space-y-4"></div>
+
+  <hr class="my-6"/>
+
+  <h1 class="text-2xl font-bold mb-4">📝 Daftar Statuses</h1>
+  <div id="statusList" class="space-y-4"></div>
+
+  <!-- Modal Edit User -->
+  <div id="editModal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+    <div class="bg-white p-6 rounded-lg w-full max-w-md space-y-4">
+      <h2 class="text-xl font-semibold">Edit User</h2>
+      <input id="editName" class="w-full border border-gray-300 rounded p-2" placeholder="Nama Lengkap" />
+      <input id="editEmail" class="w-full border border-gray-300 rounded p-2" placeholder="Email" />
+      <input id="editDesa" class="w-full border border-gray-300 rounded p-2" placeholder="Desa" />
+      <input id="editKecamatan" class="w-full border border-gray-300 rounded p-2" placeholder="Kecamatan" />
+      <input id="editKabupaten" class="w-full border border-gray-300 rounded p-2" placeholder="Kabupaten" />
+      <input id="editProvinsi" class="w-full border border-gray-300 rounded p-2" placeholder="Provinsi" />
+      <div class="flex justify-end space-x-2">
+        <button id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">Simpan</button>
+        <button id="cancelBtn" class="text-red-600 hover:text-red-800 px-4 py-2 rounded transition">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const usersDiv = document.getElementById("usersList");
+    const statusesDiv = document.getElementById("statusList");
+    const editModal = document.getElementById('editModal');
+    const editName = document.getElementById("editName");
+    const editEmail = document.getElementById("editEmail");
+    const editDesa = document.getElementById("editDesa");
+    const editKecamatan = document.getElementById("editKecamatan");
+    const editKabupaten = document.getElementById("editKabupaten");
+    const editProvinsi = document.getElementById("editProvinsi");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+
+    let selectedUserId = null;
+
+    function closeModal() {
+      editModal.classList.add('hidden');
+      selectedUserId = null;
+    }
+
+    function openEditModal(user) {
+      selectedUserId = user.id;
+      editName.value = user.fullName || '';
+      editEmail.value = user.email || '';
+      editDesa.value = user.desa || '';
+      editKecamatan.value = user.kecamatan || '';
+      editKabupaten.value = user.kabupaten || '';
+      editProvinsi.value = user.provinsi || '';
+      editModal.classList.remove('hidden');
+    }
+
+    saveBtn.addEventListener('click', async () => {
+      if (!selectedUserId) return;
+      try {
+        const userRef = doc(db, 'users', selectedUserId);
+        await updateDoc(userRef, {
+          fullName: editName.value,
+          email: editEmail.value,
+          desa: editDesa.value,
+          kecamatan: editKecamatan.value,
+          kabupaten: editKabupaten.value,
+          provinsi: editProvinsi.value,
+        });
+        alert("Data berhasil diupdate!");
+        closeModal();
+        loadUsers();
+      } catch (error) {
+        alert("Gagal mengupdate data: " + error.message);
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      closeModal();
+    });
+
+    async function loadUsers() {
+      usersDiv.innerHTML = '';
+      try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        usersSnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const user = { ...data, id: docSnap.id };
+          const userDiv = document.createElement('div');
+          userDiv.className = "bg-white p-4 rounded shadow";
+          userDiv.innerHTML = `
+            <p><strong>Nama:</strong> ${data.fullName || '-'}</p>
+            <p><strong>Email:</strong> ${data.email || '-'}</p>
+            <p><strong>Alamat:</strong> ${data.desa || '-'}, ${data.kecamatan || '-'}, ${data.kabupaten || '-'}, ${data.provinsi || '-'}</p>
+            <p><strong>WhatsApp:</strong> ${data.whatsapp || '-'}</p>
+            <p><strong>Point:</strong> ${data.points || 0}</p>
+            <button class="mt-2 text-blue-600 underline" type="button">Edit</button>
+          `;
+          userDiv.querySelector('button').addEventListener('click', () => openEditModal(user));
+          usersDiv.appendChild(userDiv);
+        });
+      } catch (error) {
+        usersDiv.innerHTML = `<p class="text-red-600">Gagal memuat data users: ${error.message}</p>`;
+      }
+    }
+
+    async function loadStatuses() {
+      statusesDiv.innerHTML = '';
+      try {
+        const statusesCol = collection(db, 'statuses');
+        const q = query(statusesCol, orderBy("timestamp", "desc"));
+        const statusesSnapshot = await getDocs(q);
+        statusesSnapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const statusDiv = document.createElement('div');
+          statusDiv.className = "bg-white p-4 rounded shadow";
+          const dateStr = data.timestamp && data.timestamp.seconds ? new Date(data.timestamp.seconds * 1000).toLocaleString() : '-';
+          statusDiv.innerHTML = `
+            <p><strong>Nama:</strong> ${data.fullName || '-'}</p>
+            <img src="${data.gambar || 'https://placehold.co/128x128?text=No+Image'}" alt="Foto status dari ${data.fullName || 'user'} dengan deskripsi ${data.deskripsi || ''}" class="w-32 h-32 object-cover my-2 rounded" />
+            <p><strong>Deskripsi:</strong> ${data.deskripsi || '-'}</p>
+            <p class="text-sm text-gray-500">${dateStr}</p>
+            <button class="text-red-600 mt-2 underline" type="button">Hapus</button>
+          `;
+          statusDiv.querySelector('button').addEventListener('click', () => deleteStatus(docSnap.id));
+          statusesDiv.appendChild(statusDiv);
+        });
+      } catch (error) {
+        statusesDiv.innerHTML = `<p class="text-red-600">Gagal memuat data statuses: ${error.message}</p>`;
+      }
+    }
+
+    async function deleteStatus(id) {
+      if (confirm("Yakin ingin menghapus status ini?")) {
+        try {
+          await deleteDoc(doc(db, 'statuses', id));
+          alert("Status dihapus!");
+          loadStatuses();
+        } catch (error) {
+          alert("Gagal menghapus status: " + error.message);
+        }
+      }
+    }
+
+    loadUsers();
+    loadStatuses();
+  </script>
+</body>
+</html>
