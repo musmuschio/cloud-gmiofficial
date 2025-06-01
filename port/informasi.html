@@ -1,132 +1,142 @@
-<!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Informasi Pelatihan</title>
   <meta charset="UTF-8" />
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  <style>
-    #waModal {
-      display: none;
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6); z-index: 99;
-    }
-    .modal-content {
-      background: #fff;
-      padding: 20px;
-      margin: 10% auto;
-      width: 90%; max-width: 400px;
-      border-radius: 10px;
-      position: relative;
-    }
-    .close {
-      position: absolute; top: 10px; right: 15px;
-      font-size: 20px; cursor: pointer;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Informasi Pelatihan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 </head>
-<body>
-  <h1>Daftar Pelatihan</h1>
-  <div id="pelatihan"></div>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <main class="container mx-auto p-4 flex-grow">
+    <div id="pelatihanList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+  </main>
 
-  <!-- Modal WhatsApp -->
-  <div id="waModal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">×</span>
-      <h3>Daftar via WhatsApp</h3>
-      <label>Nama:</label><br>
-      <input type="text" id="namaInput"><br><br>
-      <label>Alamat:</label><br>
-      <textarea id="alamatInput" rows="3" style="width:100%"></textarea><br><br>
-      <button onclick="kirimWhatsApp()">Kirim ke WhatsApp</button>
+  <!-- Modal Daftar -->
+  <div id="modalDaftar" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg w-full max-w-md p-6 shadow-lg">
+      <h2 class="text-xl font-semibold mb-4 text-gray-900">Form Pendaftaran</h2>
+      <form id="formDaftar" class="space-y-4">
+        <input type="hidden" id="judulPelatihan" />
+        <input type="hidden" id="mentorPelatihan" />
+        <input type="hidden" id="tanggalPelatihan" />
+        <div>
+          <label for="namaLengkap" class="block text-gray-700 mb-1">Nama Lengkap</label>
+          <input id="namaLengkap" type="text" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
+        </div>
+        <div>
+          <label for="desa" class="block text-gray-700 mb-1">Desa</label>
+          <input id="desa" type="text" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
+        </div>
+        <div>
+          <label for="kecamatan" class="block text-gray-700 mb-1">Kecamatan</label>
+          <input id="kecamatan" type="text" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
+        </div>
+        <div>
+          <label for="kabupaten" class="block text-gray-700 mb-1">Kabupaten</label>
+          <input id="kabupaten" type="text" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
+        </div>
+        <div>
+          <label for="provinsi" class="block text-gray-700 mb-1">Provinsi</label>
+          <input id="provinsi" type="text" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
+        </div>
+        <div>
+          <label for="kodeAffiliate" class="block text-gray-700 mb-1">Kode Affiliate</label>
+          <input id="kodeAffiliate" type="text" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded transition">Kirim ke WhatsApp</button>
+          <button type="button" onclick="closeModal()" class="text-red-600 hover:text-red-800 px-5 py-2 rounded border border-red-600 transition">Batal</button>
+        </div>
+      </form>
     </div>
   </div>
 
   <script>
+    // Replace with your Firebase config
+    const firebaseConfig = {
+      // Your Firebase config here
+    };
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
-    const pelatihanEl = document.getElementById('pelatihan');
-    let gambarLink = '';
 
-    db.collection('flayer').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-      pelatihanEl.innerHTML = '';
+    const pelatihanList = document.getElementById('pelatihanList');
+
+    db.collection("flayer").orderBy("createdAt", "desc").get().then(snapshot => {
       snapshot.forEach(doc => {
         const data = doc.data();
-        const div = document.createElement('div');
-        div.innerHTML = `
-          <img src="${data.gambar}" width="200"><br>
-          <strong>${data.judul}</strong><br>
-          Mentor: ${data.mentor}<br>
-          Tanggal: ${data.hari}-${data.bulan}-${data.tahun}<br>
-          <p>${data.deskripsi}</p>
-          <button onclick="bukaModal('${data.gambar}')">Daftar</button>
-          <button onclick="share('${doc.id}')">Bagikan</button>
-          <hr>
+        const card = document.createElement("div");
+        card.className = "bg-white rounded-lg shadow-md overflow-hidden flex flex-col";
+        card.innerHTML = `
+          <img src="${data.gambar}" alt="Gambar pelatihan berjudul ${data.judul} dengan mentor ${data.mentor}" class="w-full h-48 object-cover" />
+          <div class="p-4 flex flex-col flex-grow">
+            <h2 class="font-semibold text-lg text-gray-900 mb-1">${data.judul}</h2>
+            <p class="text-gray-700 mb-1"><i class="fas fa-chalkboard-teacher mr-2"></i>Mentor: ${data.mentor}</p>
+            <p class="text-gray-700 mb-4"><i class="fas fa-calendar-alt mr-2"></i>Tanggal: ${data.hari} ${data.bulan} ${data.tahun}</p>
+            <div class="mt-auto flex gap-3">
+              <button onclick="bukaModal('${escapeQuotes(data.judul)}', '${escapeQuotes(data.mentor)}', '${escapeQuotes(data.hari + ' ' + data.bulan + ' ' + data.tahun)}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition">Daftar</button>
+              <button onclick="shareLink('${doc.id}')" class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-white py-2 rounded transition">Share</button>
+            </div>
+          </div>
         `;
-        pelatihanEl.appendChild(div);
+        pelatihanList.appendChild(card);
       });
     });
 
-    function bukaModal(gambar) {
-      gambarLink = gambar;
-      const user = auth.currentUser;
-
-      if (user) {
-        const uid = user.uid;
-        db.collection('users').doc(uid).get().then(doc => {
-          if (doc.exists) {
-            const data = doc.data();
-            const nama = data.fullName || '';
-            const alamat = `${data.desa || ''}, ${data.kecamatan || ''}, ${data.kabupaten || ''}, ${data.provinsi || ''}`;
-            document.getElementById('namaInput').value = nama;
-            document.getElementById('alamatInput').value = alamat;
-          } else {
-            alert("Data user tidak ditemukan.");
-          }
-          document.getElementById('waModal').style.display = 'block';
-        }).catch(error => {
-          alert("Gagal ambil data user: " + error.message);
-          document.getElementById('waModal').style.display = 'block';
-        });
-      } else {
-        alert("Silakan login dulu untuk daftar.");
-      }
+    function escapeQuotes(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 
-    function kirimWhatsApp() {
-      const nama = document.getElementById('namaInput').value.trim();
-      const alamat = document.getElementById('alamatInput').value.trim();
-
-      if (!nama || !alamat) {
-        alert('Silakan isi nama dan alamat!');
+    function bukaModal(judul, mentor, tanggal) {
+      const user = JSON.parse(localStorage.getItem("userdata"));
+      if (!user) {
+        alert("Silakan login terlebih dahulu");
         return;
       }
-
-      const pesan = `${gambarLink}\n\nNama : ${nama}\nAlamat : ${alamat}`;
-      const url = `https://api.whatsapp.com/send/?phone=6281281100065&text=${encodeURIComponent(pesan)}`;
-      window.open(url, '_blank');
-      closeModal();
-    }
-
-    function share(id) {
-      const uid = localStorage.getItem('uid') || 'anonymous';
-      const link = `${location.origin}/informasi.html?id=${id}&ref=${uid}`;
-      navigator.clipboard.writeText(link);
-      alert('Link disalin, bagikan ke sosial media!');
+      document.getElementById("judulPelatihan").value = judul;
+      document.getElementById("mentorPelatihan").value = mentor;
+      document.getElementById("tanggalPelatihan").value = tanggal;
+      document.getElementById("namaLengkap").value = user.nama || "";
+      document.getElementById("desa").value = user.alamat?.desa || "";
+      document.getElementById("kecamatan").value = user.alamat?.kecamatan || "";
+      document.getElementById("kabupaten").value = user.alamat?.kabupaten || "";
+      document.getElementById("provinsi").value = user.alamat?.provinsi || "";
+      document.getElementById("kodeAffiliate").value = user.kodeAffiliate || "-";
+      document.getElementById("modalDaftar").classList.remove("hidden");
+      document.body.style.overflow = "hidden";
     }
 
     function closeModal() {
-      document.getElementById('waModal').style.display = 'none';
+      document.getElementById("modalDaftar").classList.add("hidden");
+      document.body.style.overflow = "";
     }
 
-    // Optional: pastikan user login sudah terdeteksi (set localStorage jika belum)
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        localStorage.setItem('uid', user.uid);
-      }
+    document.getElementById("formDaftar").addEventListener("submit", e => {
+      e.preventDefault();
+      const judulPelatihan = document.getElementById("judulPelatihan").value;
+      const mentorPelatihan = document.getElementById("mentorPelatihan").value;
+      const tanggalPelatihan = document.getElementById("tanggalPelatihan").value;
+      const namaLengkap = document.getElementById("namaLengkap").value;
+      const desa = document.getElementById("desa").value;
+      const kecamatan = document.getElementById("kecamatan").value;
+      const kabupaten = document.getElementById("kabupaten").value;
+      const provinsi = document.getElementById("provinsi").value;
+      const kodeAffiliate = document.getElementById("kodeAffiliate").value;
+
+      const msg = `Saya ingin daftar pelatihan:\nJudul: ${judulPelatihan}\nMentor: ${mentorPelatihan}\nTanggal: ${tanggalPelatihan}\nNama: ${namaLengkap}\nAlamat: ${desa}, ${kecamatan}, ${kabupaten}, ${provinsi}\nKode Affiliate: ${kodeAffiliate}`;
+      const waLink = `https://wa.me/6281234567890?text=${encodeURIComponent(msg)}`;
+      window.open(waLink, '_blank');
     });
+
+    function shareLink(id) {
+      const user = JSON.parse(localStorage.getItem("userdata"));
+      const kode = user?.kodeAffiliate || "";
+      const link = `${location.origin}/informasi.html?id=${id}&ref=${kode}`;
+      navigator.clipboard.writeText(link).then(() => alert("Link disalin: " + link));
+    }
   </script>
 </body>
 </html>
