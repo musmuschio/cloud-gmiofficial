@@ -1,66 +1,132 @@
-<html lang="id">
+<!DOCTYPE html>
+<html>
 <head>
+  <title>Informasi Pelatihan</title>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Informasi - GMI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    #waModal {
+      display: none;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); z-index: 99;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      margin: 10% auto;
+      width: 90%; max-width: 400px;
+      border-radius: 10px;
+      position: relative;
+    }
+    .close {
+      position: absolute; top: 10px; right: 15px;
+      font-size: 20px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Daftar Pelatihan</h1>
+  <div id="pelatihan"></div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-      authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR"
-    };
+  <!-- Modal WhatsApp -->
+  <div id="waModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">×</span>
+      <h3>Daftar via WhatsApp</h3>
+      <label>Nama:</label><br>
+      <input type="text" id="namaInput"><br><br>
+      <label>Alamat:</label><br>
+      <textarea id="alamatInput" rows="3" style="width:100%"></textarea><br><br>
+      <button onclick="kirimWhatsApp()">Kirim ke WhatsApp</button>
+    </div>
+  </div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  <script>
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const pelatihanEl = document.getElementById('pelatihan');
+    let gambarLink = '';
 
-    const informasiList = document.getElementById("informasi-list");
-
-    const q = query(collection(db, "informasi"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
-      informasiList.innerHTML = "";
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const date = data.createdAt?.seconds
-          ? new Date(data.createdAt.seconds * 1000)
-          : null;
-
-        const timeStr = date
-          ? date.toLocaleString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit"
-            })
-          : "-";
-
-        const card = document.createElement("div");
-        card.className = "bg-white rounded-xl shadow p-4 mb-4 border border-gray-200";
-        card.innerHTML = `
-          <h3 class="text-lg font-bold text-blue-700 mb-1">${data.judul || "Tanpa Judul"}</h3>
-          <p class="text-gray-700 whitespace-pre-line mb-2">${data.isi || ""}</p>
-          <p class="text-sm text-gray-500">${timeStr}</p>
+    db.collection('flayer').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+      pelatihanEl.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <img src="${data.gambar}" width="200"><br>
+          <strong>${data.judul}</strong><br>
+          Mentor: ${data.mentor}<br>
+          Tanggal: ${data.hari}-${data.bulan}-${data.tahun}<br>
+          <p>${data.deskripsi}</p>
+          <button onclick="bukaModal('${data.gambar}')">Daftar</button>
+          <button onclick="share('${doc.id}')">Bagikan</button>
+          <hr>
         `;
-        informasiList.appendChild(card);
+        pelatihanEl.appendChild(div);
       });
     });
+
+    function bukaModal(gambar) {
+      gambarLink = gambar;
+      const user = auth.currentUser;
+
+      if (user) {
+        const uid = user.uid;
+        db.collection('users').doc(uid).get().then(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            const nama = data.fullName || '';
+            const alamat = `${data.desa || ''}, ${data.kecamatan || ''}, ${data.kabupaten || ''}, ${data.provinsi || ''}`;
+            document.getElementById('namaInput').value = nama;
+            document.getElementById('alamatInput').value = alamat;
+          } else {
+            alert("Data user tidak ditemukan.");
+          }
+          document.getElementById('waModal').style.display = 'block';
+        }).catch(error => {
+          alert("Gagal ambil data user: " + error.message);
+          document.getElementById('waModal').style.display = 'block';
+        });
+      } else {
+        alert("Silakan login dulu untuk daftar.");
+      }
+    }
+
+    function kirimWhatsApp() {
+      const nama = document.getElementById('namaInput').value.trim();
+      const alamat = document.getElementById('alamatInput').value.trim();
+
+      if (!nama || !alamat) {
+        alert('Silakan isi nama dan alamat!');
+        return;
+      }
+
+      const pesan = `${gambarLink}\n\nNama : ${nama}\nAlamat : ${alamat}`;
+      const url = `https://api.whatsapp.com/send/?phone=6281281100065&text=${encodeURIComponent(pesan)}`;
+      window.open(url, '_blank');
+      closeModal();
+    }
+
+    function share(id) {
+      const uid = localStorage.getItem('uid') || 'anonymous';
+      const link = `${location.origin}/informasi.html?id=${id}&ref=${uid}`;
+      navigator.clipboard.writeText(link);
+      alert('Link disalin, bagikan ke sosial media!');
+    }
+
+    function closeModal() {
+      document.getElementById('waModal').style.display = 'none';
+    }
+
+    // Optional: pastikan user login sudah terdeteksi (set localStorage jika belum)
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        localStorage.setItem('uid', user.uid);
+      }
+    });
   </script>
-</head>
-<body class="bg-gray-100 min-h-screen p-4">
-  <main id="informasi-list" class="max-w-3xl mx-auto"></main>
 </body>
 </html>
