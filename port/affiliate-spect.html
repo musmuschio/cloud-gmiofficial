@@ -1,0 +1,52 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Monitor Affiliate - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const listEl = document.getElementById('list');
+      const affiliateCol = collection(db, 'affiliate');
+
+      onSnapshot(affiliateCol, (snapshot) => {
+        let html = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          html += `
+            <div class="p-4 border border-gray-300 rounded-md shadow-sm mb-4 bg-white">
+              <h2 class="text-lg font-semibold text-gray-800 mb-2"><i class="fas fa-user-circle mr-2 text-indigo-600"></i>${doc.id}</h2>
+              <p class="text-gray-700">Share: <span class="font-medium">${data.share || 0}</span></p>
+              <p class="text-gray-700">Click: <span class="font-medium">${data.click || 0}</span></p>
+              <p class="text-gray-700">Point: <span class="font-medium">${data.point || 0}</span></p>
+            </div>
+          `;
+        });
+        listEl.innerHTML = html || `<p class="text-gray-500 text-center py-10">No affiliate data found.</p>`;
+      });
+    });
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
+  <main class="w-full max-w-3xl">
+    <div id="list"></div>
+  </main>
+</body>
+</html>
