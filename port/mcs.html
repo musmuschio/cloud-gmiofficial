@@ -1,0 +1,98 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Upload Pelatihan - MCS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <main class="w-full max-w-lg bg-white rounded-lg shadow-md p-8">
+    <h1 class="text-3xl font-semibold mb-6 text-center text-gray-800">Upload Pelatihan</h1>
+    <form id="trainingForm" class="space-y-5" autocomplete="off" novalidate>
+      <input type="text" id="judul" placeholder="Judul" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <input type="text" id="mentor" placeholder="Mentor" required class="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <textarea id="deskripsi" placeholder="Deskripsi" required rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      <label for="gambarFile" class="block text-gray-700 font-medium mb-1">Upload Gambar Pelatihan</label>
+      <input type="file" id="gambarFile" accept="image/*" required class="w-full text-gray-700" />
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-md flex items-center justify-center gap-2 transition-colors duration-300">
+        <i class="fas fa-upload"></i> Upload
+      </button>
+    </form>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.appspot.com",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById('trainingForm');
+    const gambarFileInput = document.getElementById('gambarFile');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (gambarFileInput.files.length === 0) {
+        alert('Mohon pilih file gambar terlebih dahulu.');
+        return;
+      }
+
+      const file = gambarFileInput.files[0];
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const response = await fetch('https://api.imgur.com/3/image', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Client-ID 55ce2fc3e30b2f8'
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          alert('Gagal mengupload gambar ke Imgur.');
+          return;
+        }
+
+        const imageUrl = data.data.link;
+        const imageName = data.data.id;
+        const now = new Date();
+
+        const trainingData = {
+          judul: document.getElementById('judul').value.trim(),
+          mentor: document.getElementById('mentor').value.trim(),
+          deskripsi: document.getElementById('deskripsi').value.trim(),
+          gambar: imageUrl,
+          namaGambar: imageName,
+          hari: now.getDate().toString().padStart(2, '0'),
+          bulan: (now.getMonth() + 1).toString().padStart(2, '0'),
+          tahun: now.getFullYear().toString(),
+          createdAt: now.toISOString()
+        };
+
+        await addDoc(collection(db, "flayer"), trainingData);
+
+        alert('Pelatihan berhasil diunggah!');
+        form.reset();
+      } catch (error) {
+        alert('Terjadi kesalahan saat mengupload: ' + error.message);
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
