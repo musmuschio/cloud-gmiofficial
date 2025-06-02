@@ -97,17 +97,19 @@ async function checkTokenAndLoad() {
       const expiresAt = data.expiresAt.toDate();
       const now = new Date();
 
-      // Check if token is expired or more than 6 hours old
-      const sixHoursMs = 6 * 60 * 60 * 1000;
-      if (expiresAt.getTime() < now.getTime() || (expiresAt.getTime() - now.getTime()) > sixHoursMs) {
+      // Jangan redirect kalau token valid
+      if (expiresAt.getTime() < now.getTime()) {
+        // Token kadaluarsa
         window.location.href = "kloterAdmin.html";
         return;
       }
 
-      // Limit countdown to max 6 hours from now
-      const countdownEnd = new Date(Math.min(expiresAt.getTime(), now.getTime() + sixHoursMs));
+      // Hitung countdown hanya sampai waktu expired (maksimal 6 jam dari sekarang untuk batas tampilan)
+      const maxDuration = 6 * 60 * 60 * 1000; // 6 jam dalam ms
+      const countdownEnd = new Date(Math.min(expiresAt.getTime(), now.getTime() + maxDuration));
       startCountdown(countdownEnd);
     } else {
+      // Tidak ada token sama sekali
       window.location.href = "kloterAdmin.html";
     }
   } catch (error) {
