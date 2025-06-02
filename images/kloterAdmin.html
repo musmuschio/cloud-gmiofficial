@@ -7,51 +7,104 @@
   </title>
   <script src="https://cdn.tailwindcss.com">
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&amp;display=swap" rel="stylesheet"/>
-  <link crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&amp;display=swap" rel="stylesheet"/>
   <style>
    body {
-      font-family: 'Inter', sans-serif;
-      overflow: hidden;
+      font-family: "Inter", sans-serif;
     }
   </style>
  </head>
- <body>
-  <div class="min-h-screen p-20 flex flex-col justify-start" style="background-color: #f3f2ef;">
-   <img alt="Light silk fabric texture background with soft folds and shadows" class="fixed inset-0 w-full h-full object-cover -z-10" height="1080" src="https://storage.googleapis.com/a1aa/image/48690fda-a46f-4e76-78ab-2e79610b93dd.jpg" width="1920"/>
-   <div class="flex justify-between items-start w-full max-w-7xl mx-auto">
-    <div class="max-w-3xl">
-     <p class="text-gray-700 text-lg font-normal mb-2">
-      WELCOME TO,
-     </p>
-     <h1 class="text-gray-700 font-extrabold text-6xl leading-tight mb-8">
-      GREEN ENGINEER!
-     </h1>
-     <p class="text-gray-700 font-extrabold text-xl mb-2">
+ <body class="min-h-screen bg-white relative">
+  <img alt="White silk fabric background with soft folds and shadows" class="absolute inset-0 w-full h-full object-cover -z-10" height="1080" src="https://storage.googleapis.com/a1aa/image/9870eb9a-2777-4772-3fca-52511c19f9f1.jpg" width="1920"/>
+  <div class="max-w-7xl mx-auto px-6 py-20 sm:py-24 md:py-28 lg:py-32 flex flex-col md:flex-row md:items-start md:justify-between gap-10">
+   <div class="max-w-3xl flex flex-col gap-6">
+    <p class="text-gray-700 text-lg font-normal uppercase tracking-wide">
+     WELCOME TO,
+    </p>
+    <h1 class="text-gray-800 font-extrabold text-5xl sm:text-6xl md:text-7xl leading-tight uppercase">
+     GREEN ENGINEER!
+    </h1>
+    <div>
+     <p class="text-gray-700 font-extrabold text-xl uppercase mb-2">
       ADMINISTRASI :
      </p>
-     <ul class="text-gray-700 font-extrabold text-xl list-disc list-inside">
+     <ul class="list-disc list-inside text-gray-700 font-extrabold text-xl">
       <li>
        Green Medicine Institute
       </li>
      </ul>
     </div>
-    <div class="flex flex-col items-center">
-     <img alt="Green Medicine Institute logo with hexagon shape and stylized text in dark teal" class="w-48 h-48 object-contain" height="200" src="https://storage.googleapis.com/a1aa/image/6a82ea50-1457-44e3-e1c4-ae61cd42ed44.jpg" width="200"/>
-    </div>
    </div>
-   <form action="#" class="mt-20 max-w-4xl bg-[#4a7fcf] rounded-lg p-8 flex flex-col sm:flex-row items-center gap-6" method="POST">
-    <label class="text-white font-extrabold text-xl flex-shrink-0 w-full sm:w-auto" for="token">
+   <div class="flex flex-col items-center md:items-end gap-4">
+    <img alt="Green Medicine Institute logo with hexagonal shape and stylized text in dark teal" class="w-40 h-40 object-contain" height="200" src="https://storage.googleapis.com/a1aa/image/e01543c9-6343-479b-ce17-9f5b680815bb.jpg" width="200"/>
+   </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-6">
+   <div class="bg-[#4479c4] rounded-lg w-full max-w-xl p-6">
+    <label class="block text-white font-extrabold text-lg mb-3" for="kirimtoken">
      isi Token Terbaru :
     </label>
-    <input autocomplete="off" class="flex-grow rounded-md px-4 py-3 text-lg focus:outline-none" id="token" name="token" type="text"/>
-    <button class="bg-[#00b04b] rounded-md px-6 py-3 text-white font-semibold text-lg hover:bg-[#009e3f] transition-colors flex items-center justify-center" type="submit">
-     <i class="fas fa-paper-plane"></i>
-    </button>
-   </form>
-   <p class="mt-4 max-w-4xl text-gray-600 text-xs underline decoration-gray-600 decoration-1">
-    NB : TOKEN HANYA BERLAKU 6 JAM! JIKA TOKEN HABIS SEGERA MELAPOR KE OPERATOR UTK VERIFIKSI ULNG TOKEN!
-   </p>
+    <div class="flex gap-4">
+     <input class="flex-grow rounded-md px-4 py-2 text-lg" id="kirimtoken" placeholder="" type="text"/>
+     <button onclick="cekToken()" class="bg-[#00b04b] rounded-md px-6 py-2 text-white font-bold text-lg" type="button">
+      Submit
+     </button>
+    </div>
+   </div>
   </div>
+  <p class="max-w-7xl mx-auto px-6 text-xs text-gray-600 underline tracking-wide pt-6">
+   NB : TOKEN HANYA BERLAKU 6 JAM! JIKA TOKEN HABIS SEGERA MELAPOR KE OPERATOR UTK VERIFIKSI ULNG TOKEN!
+  </p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    window.cekToken = async function() {
+      const inputToken = document.getElementById('kirimtoken').value.trim();
+      if (!inputToken) return alert("Token tidak boleh kosong");
+
+      try {
+        const q = query(collection(db, "tokenAdmin"), where("token", "==", inputToken));
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+          alert("Token salah atau tidak terdaftar");
+          return;
+        }
+        const doc = snapshot.docs[0];
+        const tokenData = doc.data();
+        const createdAt = tokenData.createdAt.toDate();
+        const now = new Date();
+        const diffMs = now - createdAt;
+        const diffHours = diffMs / (1000 * 60 * 60);
+
+        if (diffHours > 6) {
+          alert("Token sudah kadaluarsa. Silakan minta token baru.");
+        } else {
+          localStorage.setItem("adminToken", inputToken);
+          alert("Login berhasil! Mengalihkan ke halaman administrator...");
+          window.location.href = "administrator.html";
+        }
+      } catch (err) {
+        alert("Gagal memeriksa token: " + err.message);
+      }
+    }
+  </script>
  </body>
 </html>
