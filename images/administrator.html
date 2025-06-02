@@ -1,0 +1,29 @@
+  <script>
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      alert("Anda belum login. Redirect ke halaman login...");
+      window.location.href = "kloterAdmin.html";
+    } else {
+      // Verifikasi token dan durasi lagi (opsional untuk keamanan tambahan)
+      db.collection("tokenAdmin").where("token", "==", token).get()
+        .then(snapshot => {
+          if (snapshot.empty) {
+            alert("Token tidak valid. Silakan login ulang.");
+            window.location.href = "kloterAdmin.html";
+          } else {
+            const doc = snapshot.docs[0];
+            const tokenData = doc.data();
+            const createdAt = tokenData.createdAt.toDate();
+            const now = new Date();
+            const diffMs = now - createdAt;
+            const diffHours = diffMs / (1000 * 60 * 60);
+
+            if (diffHours > 6) {
+              alert("Sesi sudah habis. Silakan login ulang.");
+              localStorage.removeItem("adminToken");
+              window.location.href = "kloterAdmin.html";
+            }
+          }
+        });
+    }
+  </script>
