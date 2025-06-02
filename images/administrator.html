@@ -1,17 +1,126 @@
-  <script>
-    const token = localStorage.getItem("adminToken");
-    if (!token) {
-      alert("Anda belum login. Redirect ke halaman login...");
-      window.location.href = "kloterAdmin.html";
-    } else {
-      // Verifikasi token dan durasi lagi (opsional untuk keamanan tambahan)
-      db.collection("tokenAdmin").where("token", "==", token).get()
-        .then(snapshot => {
-          if (snapshot.empty) {
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SPA with Firebase Token & Countdown</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+  />
+  <style>
+    /* Scrollbar for user list */
+    #userList {
+      scrollbar-width: thin;
+      scrollbar-color: #4a7ccf #e5e7eb;
+    }
+    #userList::-webkit-scrollbar {
+      width: 8px;
+    }
+    #userList::-webkit-scrollbar-track {
+      background: #e5e7eb;
+    }
+    #userList::-webkit-scrollbar-thumb {
+      background-color: #4a7ccf;
+      border-radius: 10px;
+      border: 2px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+  <div class="flex flex-wrap justify-between items-center border-b border-gray-400">
+    <div class="flex flex-wrap">
+      <button id="btnSpectate" class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">Spectate</button>
+      <button id="btnNews" class="bg-[#a9b9d9] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">News</button>
+      <button id="btnMcs" class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">Mcs</button>
+      <button id="btnMoa" class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">MoA</button>
+      <button disabled class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 opacity-50 cursor-not-allowed"></button>
+      <button disabled class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 opacity-50 cursor-not-allowed"></button>
+    </div>
+    <div class="flex flex-wrap text-white text-xs font-normal">
+      <div class="bg-gray-600 border border-gray-400 w-[160px] text-center py-2 flex items-center justify-center">ADMINISTRATOR V 1.0</div>
+      <div class="bg-gray-600 border border-gray-400 w-[160px] text-center py-2 flex items-center justify-center">ADMINISTRATOR V 1.0</div>
+      <div class="bg-gray-700 border border-gray-400 w-[160px] text-center py-2 flex justify-center items-center gap-1 font-mono">
+        <span>TOKEN</span><span>:</span>
+        <span id="tokenValue" class="text-green-500 break-all select-text">Loading...</span>
+      </div>
+      <div class="bg-gray-700 border border-gray-400 w-[160px] text-center py-2 flex justify-center items-center gap-1 font-mono">
+        <span>DURATION</span><span>:</span>
+        <span id="durationValue" class="text-red-600">--:--:--</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-1 border-t border-gray-600 min-h-0">
+    <!-- Left frame -->
+    <div class="flex-1 border-r border-gray-600 relative min-h-0 flex flex-col">
+      <iframe id="frame1" class="flex-1 min-h-0 w-full" src="" frameborder="0" title="Frame 1"></iframe>
+    </div>
+    <!-- Right frame -->
+    <div class="flex-1 relative min-h-0 flex flex-col">
+      <iframe id="frame2" class="flex-1 min-h-0 w-full" src="" frameborder="0" title="Frame 2"></iframe>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Elements
+    const tokenValueEl = document.getElementById("tokenValue");
+    const durationValueEl = document.getElementById("durationValue");
+    const frame1 = document.getElementById("frame1");
+    const frame2 = document.getElementById("frame2");
+
+    // Buttons
+    const btnSpectate = document.getElementById("btnSpectate");
+    const btnNews = document.getElementById("btnNews");
+    const btnMcs = document.getElementById("btnMcs");
+    const btnMoa = document.getElementById("btnMoa");
+
+    // State
+    let countdownInterval = null;
+
+    // Utility: format seconds to HH:mm:ss
+    function formatDuration(seconds) {
+      const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
+      const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+      const s = (seconds % 60).toString().padStart(2, "0");
+      return `${h}:${m}:${s}`;
+    }
+
+    // Check admin token in localStorage and verify session
+    async function verifyAdminToken() {
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        alert("Anda belum login. Redirect ke halaman login...");
+        window.location.href = "kloterAdmin.html";
+        return false;
+      } else {
+        try {
+          const tokenQuery = query(collection(db, "tokenAdmin"), where("token", "==", token));
+          const tokenSnapshot = await getDocs(tokenQuery);
+          if (tokenSnapshot.empty) {
             alert("Token tidak valid. Silakan login ulang.");
             window.location.href = "kloterAdmin.html";
+            return false;
           } else {
-            const doc = snapshot.docs[0];
+            const doc = tokenSnapshot.docs[0];
             const tokenData = doc.data();
             const createdAt = tokenData.createdAt.toDate();
             const now = new Date();
@@ -22,8 +131,131 @@
               alert("Sesi sudah habis. Silakan login ulang.");
               localStorage.removeItem("adminToken");
               window.location.href = "kloterAdmin.html";
+              return false;
             }
           }
-        });
+          return true;
+        } catch (error) {
+          console.error("Error verifying token:", error);
+          alert("Terjadi kesalahan saat verifikasi token. Silakan login ulang.");
+          window.location.href = "kloterAdmin.html";
+          return false;
+        }
+      }
     }
+
+    // Load latest token from Firestore collection "tokenAdmin"
+    async function loadLatestToken() {
+      try {
+        const tokenQuery = query(collection(db, "tokenAdmin"), orderBy("expiresAt", "desc"), limit(1));
+        const tokenSnapshot = await getDocs(tokenQuery);
+
+        if (tokenSnapshot.empty) {
+          tokenValueEl.textContent = "No token found";
+          durationValueEl.textContent = "--:--:--";
+          return;
+        }
+
+        const tokenDoc = tokenSnapshot.docs[0];
+        const data = tokenDoc.data();
+        tokenValueEl.textContent = data.token || "No token";
+
+        startCountdown(data.expiresAt.toDate());
+      } catch (error) {
+        tokenValueEl.textContent = "Error loading token";
+        durationValueEl.textContent = "--:--:--";
+        console.error("Error loading token:", error);
+      }
+    }
+
+    // Start countdown timer to expiresAt date
+    function startCountdown(expiresAt) {
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      function updateCountdown() {
+        const now = new Date();
+        let diff = Math.floor((expiresAt - now) / 1000);
+        if (diff < 0) diff = 0;
+        durationValueEl.textContent = formatDuration(diff);
+
+        if (diff === 0) {
+          // Reload token on expiry
+          loadLatestToken();
+        }
+      }
+
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
+    }
+
+    // SPA content for each button
+    function renderSpectate() {
+      // Load user.html in frame1, clear frame2
+      frame1.src = "user.html";
+      frame2.src = "";
+    }
+
+    function renderNews() {
+      // frame1: jurnalis.html content
+      frame1.src = "jurnalis.html";
+      // frame2: home.html content
+      frame2.src = "home.html";
+    }
+
+    function renderMcs() {
+      // frame1: mcs.html content
+      frame1.src = "mcs.html";
+      // frame2: informasi.html content
+      frame2.src = "informasi.html";
+    }
+
+    function renderMoa() {
+      // Show spect-affiliate.html content in frame1, clear frame2
+      frame1.src = "spect-affiliate.html";
+      frame2.src = "";
+    }
+
+    // Button click handlers to switch SPA views and update button styles
+    function setActiveButton(activeBtn) {
+      [btnSpectate, btnNews, btnMcs, btnMoa].forEach(btn => {
+        if (btn === activeBtn) {
+          btn.classList.remove("bg-[#4a7ccf]");
+          btn.classList.add("bg-[#a9b9d9]");
+        } else {
+          btn.classList.remove("bg-[#a9b9d9]");
+          btn.classList.add("bg-[#4a7ccf]");
+        }
+      });
+    }
+
+    btnSpectate.addEventListener("click", () => {
+      setActiveButton(btnSpectate);
+      renderSpectate();
+    });
+
+    btnNews.addEventListener("click", () => {
+      setActiveButton(btnNews);
+      renderNews();
+    });
+
+    btnMcs.addEventListener("click", () => {
+      setActiveButton(btnMcs);
+      renderMcs();
+    });
+
+    btnMoa.addEventListener("click", () => {
+      setActiveButton(btnMoa);
+      renderMoa();
+    });
+
+    // Initialization: verify token, then load token info and default SPA view
+    (async () => {
+      const verified = await verifyAdminToken();
+      if (!verified) return;
+      loadLatestToken();
+      setActiveButton(btnNews);
+      renderNews();
+    })();
   </script>
+</body>
+</html>
