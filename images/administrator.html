@@ -42,11 +42,11 @@
       <div class="bg-gray-600 border border-gray-400 w-[160px] text-center py-2 flex items-center justify-center">ADMINISTRATOR V 1.0</div>
       <div class="bg-gray-700 border border-gray-400 w-[160px] text-center py-2 flex justify-center items-center gap-1 font-mono">
         <span>TOKEN</span><span>:</span>
-        <span id="tokenValue" class="text-green-500 break-all select-text">Loading...</span>
+        <span id="token" class="text-green-500 break-all select-text">Loading...</span>
       </div>
       <div class="bg-gray-700 border border-gray-400 w-[160px] text-center py-2 flex justify-center items-center gap-1 font-mono">
         <span>DURATION</span><span>:</span>
-        <span id="durationValue" class="text-red-600">--:--:--</span>
+        <span id="countdown" class="text-red-600">--:-- menit lagi</span>
       </div>
     </div>
   </div>
@@ -64,7 +64,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -82,8 +82,8 @@
     const db = getFirestore(app);
 
     // Elements
-    const tokenValueEl = document.getElementById("tokenValue");
-    const durationValueEl = document.getElementById("durationValue");
+    const tokenEl = document.getElementById("token");
+    const countdownEl = document.getElementById("countdown");
     const frame1 = document.getElementById("frame1");
     const frame2 = document.getElementById("frame2");
 
@@ -96,121 +96,63 @@
     // State
     let countdownInterval = null;
 
-    // Utility: format seconds to HH:mm:ss
-    function formatDuration(seconds) {
-      const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
-      const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
-      const s = (seconds % 60).toString().padStart(2, "0");
-      return `${h}:${m}:${s}`;
-    }
-
-    // Check admin token in localStorage and verify session
-    async function verifyAdminToken() {
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        alert("Anda belum login. Redirect ke halaman login...");
-        window.location.href = "kloterAdmin.html";
-        return false;
-      } else {
-        try {
-          const tokenQuery = query(collection(db, "tokenAdmin"), where("token", "==", token));
-          const tokenSnapshot = await getDocs(tokenQuery);
-          if (tokenSnapshot.empty) {
-            alert("Token tidak valid. Silakan login ulang.");
-            window.location.href = "kloterAdmin.html";
-            return false;
-          } else {
-            const doc = tokenSnapshot.docs[0];
-            const tokenData = doc.data();
-            const createdAt = tokenData.createdAt.toDate();
-            const now = new Date();
-            const diffMs = now - createdAt;
-            const diffHours = diffMs / (1000 * 60 * 60);
-
-            if (diffHours > 6) {
-              alert("Sesi sudah habis. Silakan login ulang.");
-              localStorage.removeItem("adminToken");
-              window.location.href = "kloterAdmin.html";
-              return false;
-            }
-          }
-          return true;
-        } catch (error) {
-          console.error("Error verifying token:", error);
-          alert("Terjadi kesalahan saat verifikasi token. Silakan login ulang.");
-          window.location.href = "kloterAdmin.html";
-          return false;
-        }
-      }
-    }
-
-    // Load latest token from Firestore collection "tokenAdmin"
-    async function loadLatestToken() {
+    async function loadToken() {
       try {
-        const tokenQuery = query(collection(db, "tokenAdmin"), orderBy("expiresAt", "desc"), limit(1));
-        const tokenSnapshot = await getDocs(tokenQuery);
+        const snapshot = await db.collection("tokenAdmin").orderBy("expiresAt", "desc").limit(1).get();
+        if (!snapshot.empty) {
+          const data = snapshot.docs[0].data();
+          const token = data.token;
+          const expiresAt = data.expiresAt.toDate(); // Firestore Timestamp → JS Date
 
-        if (tokenSnapshot.empty) {
-          tokenValueEl.textContent = "No token found";
-          durationValueEl.textContent = "--:--:--";
-          return;
+          tokenEl.textContent = token;
+
+          startCountdown(expiresAt);
+        } else {
+          alert("Token tidak ditemukan.");
+          window.location.href = "kloterAdmin.html";
         }
-
-        const tokenDoc = tokenSnapshot.docs[0];
-        const data = tokenDoc.data();
-        tokenValueEl.textContent = data.token || "No token";
-
-        startCountdown(data.expiresAt.toDate());
       } catch (error) {
-        tokenValueEl.textContent = "Error loading token";
-        durationValueEl.textContent = "--:--:--";
-        console.error("Error loading token:", error);
+        console.error("Gagal mengambil token:", error);
+        alert("Terjadi kesalahan. Redirect ke login.");
+        window.location.href = "kloterAdmin.html";
       }
     }
 
-    // Start countdown timer to expiresAt date
-    function startCountdown(expiresAt) {
+    function startCountdown(expirationTime) {
       if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = expirationTime - now;
 
-      function updateCountdown() {
-        const now = new Date();
-        let diff = Math.floor((expiresAt - now) / 1000);
-        if (diff < 0) diff = 0;
-        durationValueEl.textContent = formatDuration(diff);
-
-        if (diff === 0) {
-          // Reload token on expiry
-          loadLatestToken();
+        if (distance < 0) {
+          clearInterval(countdownInterval);
+          countdownEl.textContent = "Token expired";
+          window.location.href = "kloterAdmin.html";
+        } else {
+          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+          countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} menit lagi`;
         }
-      }
-
-      updateCountdown();
-      countdownInterval = setInterval(updateCountdown, 1000);
+      }, 1000);
     }
 
     // SPA content for each button
     function renderSpectate() {
-      // Load user.html in frame1, statuses.html in frame2
       frame1.src = "user.html";
       frame2.src = "statuses.html";
     }
 
     function renderNews() {
-      // frame1: jurnalis.html content
       frame1.src = "jurnalis.html";
-      // frame2: home.html content
       frame2.src = "home.html";
     }
 
     function renderMcs() {
-      // frame1: mcs.html content
       frame1.src = "mcs.html";
-      // frame2: informasi.html content
       frame2.src = "informasi.html";
     }
 
     function renderMoa() {
-      // Show spect-affiliate.html content in frame1, clear frame2
       frame1.src = "spect-affiliate.html";
       frame2.src = "";
     }
@@ -248,14 +190,12 @@
       renderMoa();
     });
 
-    // Initialization: verify token, then load token info and default SPA view
-    (async () => {
-      const verified = await verifyAdminToken();
-      if (!verified) return;
-      loadLatestToken();
-      setActiveButton(btnNews);
-      renderNews();
-    })();
+    // Initialize default view: News
+    setActiveButton(btnNews);
+    renderNews();
+
+    // Load token and start countdown
+    loadToken();
   </script>
 </body>
 </html>
