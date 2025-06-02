@@ -63,131 +63,131 @@
   </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-    authDomain: "gmi-enterprise23.firebaseapp.com",
-    projectId: "gmi-enterprise23",
-    storageBucket: "gmi-enterprise23.appspot.com",  // <-- diperbaiki dari `.firebaseapp` jadi `.appspot.com`
-    messagingSenderId: "974090028804",
-    appId: "1:974090028804:web:43ae563ffd9433463c7251",
-    measurementId: "G-S27YB5Z8PR"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+  authDomain: "gmi-enterprise23.firebaseapp.com",
+  projectId: "gmi-enterprise23",
+  storageBucket: "gmi-enterprise23.appspot.com",
+  messagingSenderId: "974090028804",
+  appId: "1:974090028804:web:43ae563ffd9433463c7251",
+  measurementId: "G-S27YB5Z8PR"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  const tokenEl = document.getElementById("token");
-  const countdownEl = document.getElementById("countdown");
-  const frame1 = document.getElementById("frame1");
-  const frame2 = document.getElementById("frame2");
+const tokenEl = document.getElementById("token");
+const countdownEl = document.getElementById("countdown");
+const frame1 = document.getElementById("frame1");
+const frame2 = document.getElementById("frame2");
 
-  const btnSpectate = document.getElementById("btnSpectate");
-  const btnNews = document.getElementById("btnNews");
-  const btnMcs = document.getElementById("btnMcs");
-  const btnMoa = document.getElementById("btnMoa");
+const btnSpectate = document.getElementById("btnSpectate");
+const btnNews = document.getElementById("btnNews");
+const btnMcs = document.getElementById("btnMcs");
+const btnMoa = document.getElementById("btnMoa");
 
-  let countdownInterval = null;
+let countdownInterval = null;
 
-  async function loadToken() {
-    try {
-      const q = query(collection(db, "tokenAdmin"), orderBy("expiresAt", "desc"), limit(1));
-      const snapshot = await getDocs(q);
+async function loadToken() {
+  try {
+    const q = query(collection(db, "tokenAdmin"), orderBy("expiresAt", "desc"), limit(1));
+    const snapshot = await getDocs(q);
 
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        const data = doc.data();
-        const token = data.token;
-        const expiresAt = data.expiresAt.toDate();
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      const data = doc.data();
+      const token = data.token;
+      const expiresAt = data.expiresAt.toDate();
 
-        tokenEl.textContent = token;
-        startCountdown(expiresAt);
-      } else {
-        alert("Token tidak ditemukan.");
-        window.location.href = "kloterAdmin.html";
-      }
-    } catch (error) {
-      console.error("Gagal mengambil token:", error);
-      alert("Terjadi kesalahan. Redirect ke login.");
+      tokenEl.textContent = token;
+      startCountdown(expiresAt);
+    } else {
+      alert("Token tidak ditemukan.");
       window.location.href = "kloterAdmin.html";
     }
+  } catch (error) {
+    console.error("Gagal mengambil token:", error);
+    alert("Terjadi kesalahan. Redirect ke login.");
+    window.location.href = "kloterAdmin.html";
   }
+}
 
-  function startCountdown(expirationTime) {
-    if (countdownInterval) clearInterval(countdownInterval);
-    countdownInterval = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = expirationTime - now;
+function startCountdown(expirationTime) {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    const now = new Date().getTime();
+    const distance = expirationTime - now;
 
-      if (distance < 0) {
-        clearInterval(countdownInterval);
-        countdownEl.textContent = "Token expired";
-        window.location.href = "kloterAdmin.html";
-      } else {
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} menit lagi`;
-      }
-    }, 1000);
-  }
+    if (distance < 0) {
+      clearInterval(countdownInterval);
+      countdownEl.textContent = "Token expired";
+      window.location.href = "kloterAdmin.html";
+    } else {
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} menit lagi`;
+    }
+  }, 1000);
+}
 
-  function renderSpectate() {
-    frame1.src = "user.html";
-    frame2.src = "statuses.html";
-  }
+function renderSpectate() {
+  frame1.src = "user.html";
+  frame2.src = "statuses.html";
+}
 
-  function renderNews() {
-    frame1.src = "jurnalis.html";
-    frame2.src = "home.html";
-  }
+function renderNews() {
+  frame1.src = "jurnalis.html";
+  frame2.src = "home.html";
+}
 
-  function renderMcs() {
-    frame1.src = "mcs.html";
-    frame2.src = "informasi.html";
-  }
+function renderMcs() {
+  frame1.src = "mcs.html";
+  frame2.src = "informasi.html";
+}
 
-  function renderMoa() {
-    frame1.src = "spect-affiliate.html";
-    frame2.src = "";
-  }
+function renderMoa() {
+  frame1.src = "spect-affiliate.html";
+  frame2.src = "";
+}
 
-  function setActiveButton(activeBtn) {
-    [btnSpectate, btnNews, btnMcs, btnMoa].forEach(btn => {
-      if (btn === activeBtn) {
-        btn.classList.remove("bg-[#4a7ccf]");
-        btn.classList.add("bg-[#a9b9d9]");
-      } else {
-        btn.classList.remove("bg-[#a9b9d9]");
-        btn.classList.add("bg-[#4a7ccf]");
-      }
-    });
-  }
-
-  btnSpectate.addEventListener("click", () => {
-    setActiveButton(btnSpectate);
-    renderSpectate();
+function setActiveButton(activeBtn) {
+  [btnSpectate, btnNews, btnMcs, btnMoa].forEach(btn => {
+    if (btn === activeBtn) {
+      btn.classList.remove("bg-[#4a7ccf]");
+      btn.classList.add("bg-[#a9b9d9]");
+    } else {
+      btn.classList.remove("bg-[#a9b9d9]");
+      btn.classList.add("bg-[#4a7ccf]");
+    }
   });
+}
 
-  btnNews.addEventListener("click", () => {
-    setActiveButton(btnNews);
-    renderNews();
-  });
+btnSpectate.addEventListener("click", () => {
+  setActiveButton(btnSpectate);
+  renderSpectate();
+});
 
-  btnMcs.addEventListener("click", () => {
-    setActiveButton(btnMcs);
-    renderMcs();
-  });
-
-  btnMoa.addEventListener("click", () => {
-    setActiveButton(btnMoa);
-    renderMoa();
-  });
-
+btnNews.addEventListener("click", () => {
   setActiveButton(btnNews);
   renderNews();
-  loadToken();
+});
+
+btnMcs.addEventListener("click", () => {
+  setActiveButton(btnMcs);
+  renderMcs();
+});
+
+btnMoa.addEventListener("click", () => {
+  setActiveButton(btnMoa);
+  renderMoa();
+});
+
+setActiveButton(btnNews);
+renderNews();
+loadToken();
 </script>
 
 </body>
