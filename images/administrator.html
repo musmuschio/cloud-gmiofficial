@@ -41,10 +41,6 @@
       <div class="bg-gray-600 border border-gray-400 w-[160px] text-center py-2 flex items-center justify-center">ADMINISTRATOR V 1.0</div>
       <div class="bg-gray-600 border border-gray-400 w-[160px] text-center py-2 flex items-center justify-center">ADMINISTRATOR V 1.0</div>
       <div class="bg-gray-700 border border-gray-400 w-[160px] text-center py-2 flex justify-center items-center gap-1 font-mono">
-        <span>TOKEN</span><span>:</span>
-        <span id="token" class="text-green-500 break-all select-text">Loading...</span>
-      </div>
-      <div class="bg-gray-700 border border-gray-400 w-[160px] text-center py-2 flex justify-center items-center gap-1 font-mono">
         <span>DURATION</span><span>:</span>
         <span id="countdown" class="text-red-600">--:-- menit lagi</span>
       </div>
@@ -79,7 +75,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const tokenEl = document.getElementById("token");
 const countdownEl = document.getElementById("countdown");
 const frame1 = document.getElementById("frame1");
 const frame2 = document.getElementById("frame2");
@@ -91,7 +86,7 @@ const btnMoa = document.getElementById("btnMoa");
 
 let countdownInterval = null;
 
-async function loadToken() {
+async function checkTokenAndLoad() {
   try {
     const q = query(collection(db, "tokenAdmin"), orderBy("expiresAt", "desc"), limit(1));
     const snapshot = await getDocs(q);
@@ -99,18 +94,24 @@ async function loadToken() {
     if (!snapshot.empty) {
       const doc = snapshot.docs[0];
       const data = doc.data();
-      const token = data.token;
       const expiresAt = data.expiresAt.toDate();
+      const now = new Date();
 
-      tokenEl.textContent = token;
-      startCountdown(expiresAt);
+      // Check if token is expired or more than 6 hours old
+      const sixHoursMs = 6 * 60 * 60 * 1000;
+      if (expiresAt.getTime() < now.getTime() || (expiresAt.getTime() - now.getTime()) > sixHoursMs) {
+        window.location.href = "kloterAdmin.html";
+        return;
+      }
+
+      // Limit countdown to max 6 hours from now
+      const countdownEnd = new Date(Math.min(expiresAt.getTime(), now.getTime() + sixHoursMs));
+      startCountdown(countdownEnd);
     } else {
-      alert("Token tidak ditemukan.");
       window.location.href = "kloterAdmin.html";
     }
   } catch (error) {
-    console.error("Gagal mengambil token:", error);
-    alert("Terjadi kesalahan. Redirect ke login.");
+    console.error("Error checking token:", error);
     window.location.href = "kloterAdmin.html";
   }
 }
@@ -188,7 +189,7 @@ btnMoa.addEventListener("click", () => {
 // Default to News tab on load
 setActiveButton(btnNews);
 renderNews();
-loadToken();
+checkTokenAndLoad();
 </script>
 
 </body>
