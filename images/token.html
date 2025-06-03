@@ -1,22 +1,21 @@
+<!-- token.html -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Generate Token</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Token Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
-  <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6">
-    <h1 class="text-2xl font-semibold mb-6 text-center text-gray-800">Generate Token</h1>
-    <button id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md flex items-center justify-center gap-2">
-      <i class="fas fa-key"></i> Generate Token
-    </button>
-    <div id="result" class="mt-8 bg-gray-100 rounded-md p-4 text-center hidden">
-      <p class="text-lg font-mono text-gray-900 mb-2" id="tokenValue"></p>
-      <p class="text-sm text-gray-600" id="expiryTime"></p>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+    <h1 class="text-xl font-bold mb-4 text-center">🎯 Generate Token</h1>
+    <button id="generateBtn" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Generate Token</button>
+    <div id="result" class="mt-4 hidden">
+      <p class="text-center font-mono text-lg" id="tokenValue"></p>
+      <p class="text-center text-sm text-gray-500" id="expiryTime"></p>
     </div>
   </div>
 
@@ -24,63 +23,33 @@
     const firebaseConfig = {
       apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
       authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR"
+      projectId: "gmi-enterprise23"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function generateRandomToken(length = 8) {
+    function generateToken(length = 8) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let token = '';
-      for (let i = 0; i < length; i++) {
-        token += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return token;
+      return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     }
 
     function formatDate(date) {
-      return date.toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      });
+      return date.toLocaleString();
     }
 
-    document.getElementById('generateBtn').addEventListener('click', async () => {
-      const token = generateRandomToken(8);
+    document.getElementById('generateBtn').onclick = async () => {
+      const token = generateToken();
       const createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
-      try {
-        // Add token to Firestore
-        const docRef = await db.collection('token').add({
-          value: token,
-          createdAt: createdAt,
-        });
+      const docRef = await db.collection('token').add({ value: token, createdAt });
+      const snap = await docRef.get();
+      const createdDate = snap.data().createdAt?.toDate() || new Date();
+      const expiryDate = new Date(createdDate.getTime() + 6 * 3600000);
 
-        // Because createdAt is serverTimestamp, we fetch the document again to get the timestamp
-        const docSnap = await docRef.get();
-        const createdAtTimestamp = docSnap.data().createdAt?.toDate() || new Date();
-
-        // Calculate expiry time based on createdAt + 6 hours
-        const expiryDate = new Date(createdAtTimestamp.getTime() + 6 * 60 * 60 * 1000);
-
-        // Show token and expiry time
-        const resultDiv = document.getElementById('result');
-        document.getElementById('tokenValue').textContent = `Token: ${token}`;
-        document.getElementById('expiryTime').textContent = `Expires at: ${formatDate(expiryDate)}`;
-        resultDiv.classList.remove('hidden');
-      } catch (error) {
-        alert('Error generating token: ' + error.message);
-      }
-    });
+      document.getElementById('tokenValue').textContent = `Token: ${token}`;
+      document.getElementById('expiryTime').textContent = `Expires at: ${formatDate(expiryDate)}`;
+      document.getElementById('result').classList.remove('hidden');
+    };
   </script>
 </body>
 </html>
