@@ -1,0 +1,115 @@
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kelola Pengguna</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-100 p-4 min-h-screen flex flex-col">
+  <h2 class="text-2xl font-bold mb-4 text-center">Daftar Pengguna</h2>
+  <div class="overflow-x-auto flex-grow">
+    <table class="table-auto min-w-full bg-white shadow-md rounded border border-gray-300">
+      <thead class="bg-blue-600 text-white text-sm select-none">
+        <tr>
+          <th class="px-3 py-2 whitespace-nowrap">Nama</th>
+          <th class="px-3 py-2 whitespace-nowrap">Email</th>
+          <th class="px-3 py-2 whitespace-nowrap">WhatsApp</th>
+          <th class="px-3 py-2 whitespace-nowrap">Desa</th>
+          <th class="px-3 py-2 whitespace-nowrap">Kecamatan</th>
+          <th class="px-3 py-2 whitespace-nowrap">Kabupaten</th>
+          <th class="px-3 py-2 whitespace-nowrap">Provinsi</th>
+          <th class="px-3 py-2 whitespace-nowrap">Referral</th>
+          <th class="px-3 py-2 whitespace-nowrap">Referred By</th>
+          <th class="px-3 py-2 whitespace-nowrap">Poin</th>
+          <th class="px-3 py-2 whitespace-nowrap">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="usersTable" class="text-sm"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const usersTable = document.getElementById("usersTable");
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+    }
+
+    function renderUsers() {
+      usersTable.innerHTML = "";
+      db.collection("users").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const row = document.createElement("tr");
+          row.className = "border-b border-gray-200";
+
+          row.innerHTML = `
+            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.fullName)}" data-id="${doc.id}" data-field="fullName" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="email" value="${escapeHtml(d.email)}" data-id="${doc.id}" data-field="email" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="tel" value="${escapeHtml(d.whatsapp)}" data-id="${doc.id}" data-field="whatsapp" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.desa)}" data-id="${doc.id}" data-field="desa" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.kecamatan)}" data-id="${doc.id}" data-field="kecamatan" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.kabupaten)}" data-id="${doc.id}" data-field="kabupaten" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.provinsi)}" data-id="${doc.id}" data-field="provinsi" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.referral)}" data-id="${doc.id}" data-field="referral" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.referredBy)}" data-id="${doc.id}" data-field="referredBy" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 max-w-[5rem]"><input type="number" min="0" value="${d.points || 0}" data-id="${doc.id}" data-field="points" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
+            <td class="border px-2 py-1 text-center whitespace-nowrap">
+              <button aria-label="Hapus pengguna ${escapeHtml(d.fullName)}" class="text-red-600 hover:text-red-800 font-semibold focus:outline-none focus:ring-2 focus:ring-red-400 rounded" onclick="deleteUser('${doc.id}')">Hapus</button>
+            </td>
+          `;
+          usersTable.appendChild(row);
+        });
+
+        document.querySelectorAll(".editable").forEach(input => {
+          input.addEventListener("change", e => {
+            const id = e.target.dataset.id;
+            const field = e.target.dataset.field;
+            let value = e.target.value;
+            if (field === "points") {
+              value = parseInt(value);
+              if (isNaN(value) || value < 0) {
+                value = 0;
+                e.target.value = 0;
+              }
+            }
+            db.collection("users").doc(id).update({ [field]: value }).then(() => {
+              e.target.classList.add("bg-green-100");
+              setTimeout(() => e.target.classList.remove("bg-green-100"), 800);
+            }).catch(err => {
+              alert("Gagal memperbarui data: " + err.message);
+            });
+          });
+        });
+      }).catch(err => {
+        usersTable.innerHTML = `<tr><td colspan="11" class="text-center text-red-600 py-4">Gagal memuat data pengguna: ${err.message}</td></tr>`;
+      });
+    }
+
+    function deleteUser(id) {
+      if (confirm("Yakin ingin menghapus user ini?")) {
+        db.collection("users").doc(id).delete().then(() => renderUsers()).catch(err => {
+          alert("Gagal menghapus user: " + err.message);
+        });
+      }
+    }
+
+    window.onload = renderUsers;
+  </script>
+</body>
+</html>
