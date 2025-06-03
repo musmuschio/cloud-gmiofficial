@@ -9,6 +9,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="min-h-screen bg-gray-100 p-4 sm:p-6 md:p-10">
+  <header class="max-w-7xl mx-auto mb-8">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Statistik Affiliate Semua User</h1>
+  </header>
+
   <main class="max-w-7xl mx-auto" id="dataList">
     <div class="flex justify-center items-center space-x-2 text-gray-500" id="loadingIndicator">
       <i class="fas fa-spinner fa-spin text-2xl"></i>
@@ -35,16 +39,19 @@
       const loadingIndicator = document.getElementById('loadingIndicator');
 
       try {
-        const userSnapshot = await db.collection('users').where('isAffiliate', '==', true).get();
+        // Ambil semua user tanpa filter isAffiliate
+        const userSnapshot = await db.collection('users').get();
 
         if (userSnapshot.empty) {
-          container.innerHTML = `<p class="text-center text-gray-600 text-lg">Tidak ada data affiliate ditemukan.</p>`;
+          container.innerHTML = `<p class="text-center text-gray-600 text-lg">Tidak ada data user ditemukan.</p>`;
           return;
         }
 
         container.innerHTML = '';
         for (let userDoc of userSnapshot.docs) {
           const userData = userDoc.data();
+
+          // Anggap semua user otomatis affiliate
           const commissionsSnap = await db.collection('commissions')
             .where('userId', '==', userDoc.id)
             .get();
@@ -56,11 +63,11 @@
             clicks += c.data().clicks || 0;
           });
 
-          // Create card container
+          // Buat kartu user
           const card = document.createElement('div');
           card.className = 'bg-white rounded-lg shadow-md p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between';
 
-          // Left side: user info
+          // Info user kiri
           const userInfo = document.createElement('div');
           userInfo.className = 'space-y-1 text-gray-800';
 
@@ -72,7 +79,7 @@
           emailEl.innerHTML = `<strong>Email:</strong> ${userData.email || '-'}`;
           userInfo.appendChild(emailEl);
 
-          // Middle side: stats
+          // Statistik tengah
           const stats = document.createElement('div');
           stats.className = 'mt-4 sm:mt-0 flex flex-col sm:flex-row sm:space-x-8 text-gray-700';
 
@@ -84,7 +91,7 @@
           totalEl.innerHTML = `<strong>Total Komisi:</strong> Rp ${total.toLocaleString('id-ID')}`;
           stats.appendChild(totalEl);
 
-          // Right side: referral link with copy button
+          // Referral link kanan dengan tombol salin
           const referralContainer = document.createElement('div');
           referralContainer.className = 'mt-4 sm:mt-0 flex flex-col sm:items-end';
 
