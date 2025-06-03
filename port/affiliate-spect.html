@@ -1,24 +1,30 @@
-<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Monitoring Affiliate</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
-<body class="p-6 bg-gray-100">
-  <h1 class="text-2xl font-bold mb-6">Statistik Affiliate Semua User</h1>
-  <div id="dataList" class="space-y-4"></div>
+<body class="min-h-screen bg-gray-100 p-4 sm:p-6 md:p-10">
+  <main class="max-w-7xl mx-auto" id="dataList">
+    <div class="flex justify-center items-center space-x-2 text-gray-500" id="loadingIndicator">
+      <i class="fas fa-spinner fa-spin text-2xl"></i>
+      <span class="text-lg">Memuat data affiliate...</span>
+    </div>
+  </main>
 
   <script>
     const firebaseConfig = {
-      apiKey: "API_KEY_ANDA",
-      authDomain: "PROJECT_ID.firebaseapp.com",
-      projectId: "PROJECT_ID",
-      storageBucket: "PROJECT_ID.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -26,31 +32,90 @@
 
     async function loadAffiliateData() {
       const container = document.getElementById('dataList');
-      const userSnapshot = await db.collection('users').where('isAffiliate', '==', true).get();
+      const loadingIndicator = document.getElementById('loadingIndicator');
 
-      for (let userDoc of userSnapshot.docs) {
-        const userData = userDoc.data();
-        const commissionsSnap = await db.collection('commissions')
-          .where('userId', '==', userDoc.id)
-          .get();
+      try {
+        const userSnapshot = await db.collection('users').where('isAffiliate', '==', true).get();
 
-        let total = 0;
-        let clicks = 0;
-        commissionsSnap.forEach(c => {
-          total += c.data().amount || 0;
-          clicks += c.data().clicks || 0;
-        });
+        if (userSnapshot.empty) {
+          container.innerHTML = `<p class="text-center text-gray-600 text-lg">Tidak ada data affiliate ditemukan.</p>`;
+          return;
+        }
 
-        const div = document.createElement('div');
-        div.className = 'bg-white p-4 shadow rounded';
-        div.innerHTML = `
-          <p><strong>Nama:</strong> ${userData.nama}</p>
-          <p><strong>Email:</strong> ${userData.email}</p>
-          <p><strong>Total Klik:</strong> ${clicks}</p>
-          <p><strong>Total Komisi:</strong> Rp ${total.toLocaleString('id-ID')}</p>
-          <p><strong>Referral Link:</strong> ${location.origin}/informasi.html?ref=${userDoc.id}</p>
-        `;
-        container.appendChild(div);
+        container.innerHTML = '';
+        for (let userDoc of userSnapshot.docs) {
+          const userData = userDoc.data();
+          const commissionsSnap = await db.collection('commissions')
+            .where('userId', '==', userDoc.id)
+            .get();
+
+          let total = 0;
+          let clicks = 0;
+          commissionsSnap.forEach(c => {
+            total += c.data().amount || 0;
+            clicks += c.data().clicks || 0;
+          });
+
+          // Create card container
+          const card = document.createElement('div');
+          card.className = 'bg-white rounded-lg shadow-md p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between';
+
+          // Left side: user info
+          const userInfo = document.createElement('div');
+          userInfo.className = 'space-y-1 text-gray-800';
+
+          const nameEl = document.createElement('p');
+          nameEl.innerHTML = `<strong>Nama:</strong> ${userData.nama || '-'}`;
+          userInfo.appendChild(nameEl);
+
+          const emailEl = document.createElement('p');
+          emailEl.innerHTML = `<strong>Email:</strong> ${userData.email || '-'}`;
+          userInfo.appendChild(emailEl);
+
+          // Middle side: stats
+          const stats = document.createElement('div');
+          stats.className = 'mt-4 sm:mt-0 flex flex-col sm:flex-row sm:space-x-8 text-gray-700';
+
+          const clicksEl = document.createElement('p');
+          clicksEl.innerHTML = `<strong>Total Klik:</strong> ${clicks}`;
+          stats.appendChild(clicksEl);
+
+          const totalEl = document.createElement('p');
+          totalEl.innerHTML = `<strong>Total Komisi:</strong> Rp ${total.toLocaleString('id-ID')}`;
+          stats.appendChild(totalEl);
+
+          // Right side: referral link with copy button
+          const referralContainer = document.createElement('div');
+          referralContainer.className = 'mt-4 sm:mt-0 flex flex-col sm:items-end';
+
+          const referralLink = `${location.origin}/informasi.html?ref=${userDoc.id}`;
+          const referralEl = document.createElement('p');
+          referralEl.className = 'break-all text-blue-600 underline cursor-pointer select-text';
+          referralEl.textContent = referralLink;
+          referralContainer.appendChild(referralEl);
+
+          const copyBtn = document.createElement('button');
+          copyBtn.type = 'button';
+          copyBtn.className = 'mt-2 inline-flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded hover:bg-blue-600 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400';
+          copyBtn.innerHTML = '<i class="fas fa-copy mr-2"></i> Salin Link';
+          copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(referralLink).then(() => {
+              copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Tersalin!';
+              setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fas fa-copy mr-2"></i> Salin Link';
+              }, 2000);
+            });
+          });
+          referralContainer.appendChild(copyBtn);
+
+          card.appendChild(userInfo);
+          card.appendChild(stats);
+          card.appendChild(referralContainer);
+
+          container.appendChild(card);
+        }
+      } catch (error) {
+        container.innerHTML = `<p class="text-center text-red-600 font-semibold">Terjadi kesalahan saat memuat data: ${error.message}</p>`;
       }
     }
 
