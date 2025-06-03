@@ -1,262 +1,55 @@
+<!-- administrasi.html -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Administrasi Token</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Administrator SPA</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-  />
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-  <div class="flex flex-1 min-h-0">
-    <!-- Left Navigation -->
-    <nav
-      id="nav-left"
-      class="w-28 bg-white border-r border-gray-200 flex flex-col items-center py-6 space-y-8"
-      aria-label="Primary Navigation"
-    >
-      <button
-        data-mode="spectate"
-        class="nav-btn flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none focus:text-blue-600"
-        aria-current="page"
-      >
-        <i class="fas fa-tv fa-lg mb-1"></i>
-        <span class="text-xs font-semibold">Spectate</span>
-      </button>
-      <button
-        data-mode="news"
-        class="nav-btn flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none focus:text-blue-600"
-      >
-        <i class="fas fa-newspaper fa-lg mb-1"></i>
-        <span class="text-xs font-semibold">News</span>
-      </button>
-      <button
-        data-mode="mcs"
-        class="nav-btn flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none focus:text-blue-600"
-      >
-        <i class="fas fa-cogs fa-lg mb-1"></i>
-        <span class="text-xs font-semibold">MCS</span>
-      </button>
-      <button
-        data-mode="moa"
-        class="nav-btn flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none focus:text-blue-600"
-      >
-        <i class="fas fa-handshake fa-lg mb-1"></i>
-        <span class="text-xs font-semibold">MOA</span>
-      </button>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-h-0">
-      <div
-        id="iframe-container"
-        class="flex flex-1 min-h-0 overflow-hidden bg-white"
-      >
-        <!-- Iframes inserted here dynamically -->
-      </div>
-    </main>
-
-    <!-- Right Navigation -->
-    <aside
-      id="nav-right"
-      class="w-48 bg-white border-l border-gray-200 flex flex-col p-6 space-y-6"
-      aria-label="Token Info"
-    >
-      <div>
-        <h2 class="text-gray-700 font-semibold text-sm mb-1">Active Token</h2>
-        <p
-          id="token-display"
-          class="break-words text-gray-900 font-mono text-xs select-all"
-          title="Active token"
-        >
-          Loading...
-        </p>
-      </div>
-      <div>
-        <h2 class="text-gray-700 font-semibold text-sm mb-1">Time Remaining</h2>
-        <p
-          id="timer-display"
-          class="text-blue-600 font-bold text-lg tracking-wide"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          --
-        </p>
-      </div>
-    </aside>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-2xl font-bold mb-4">🗃️ Administrasi Semua Token</h2>
+    <ul id="allTokenList" class="space-y-2"></ul>
   </div>
 
   <script>
-    // Firebase config - replace with your own config
     const firebaseConfig = {
-      apiKey: "AIzaSyD-PLACEHOLDER-KEY",
-      authDomain: "your-project.firebaseapp.com",
-      projectId: "your-project",
-      storageBucket: "your-project.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234567890:web:abcdef123456",
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Helper: parse token from URL ?token=...
-    function getTokenFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("token");
+    function formatDate(date) {
+      return date.toLocaleString();
     }
 
-    // Redirect to kloterAdmin.html
-    function redirectToLogin() {
-      window.location.href = "kloterAdmin.html";
-    }
+    async function loadAllTokens() {
+      const now = new Date();
+      const querySnapshot = await db.collection('token').orderBy('createdAt', 'desc').get();
+      const list = document.getElementById('allTokenList');
+      list.innerHTML = '';
 
-    // Validate token in Firestore
-    async function validateToken(token) {
-      if (!token) return null;
-      try {
-        const docRef = db.collection("tokens").doc(token);
-        const doc = await docRef.get();
-        if (!doc.exists) return null;
+      querySnapshot.forEach(doc => {
         const data = doc.data();
-        if (!data || !data.createdAt) return null;
+        const createdAt = data.createdAt?.toDate();
+        if (!createdAt) return;
 
-        // createdAt is Firestore Timestamp
-        const createdAt = data.createdAt.toDate();
-        const now = new Date();
-        const diffMs = now - createdAt;
-        const diffHours = diffMs / (1000 * 60 * 60);
+        const expiresAt = new Date(createdAt.getTime() + 6 * 3600000);
+        const expired = expiresAt < now;
 
-        if (diffHours > 6) return null; // expired
-
-        return { token, createdAt };
-      } catch (e) {
-        return null;
-      }
-    }
-
-    // Format time remaining as mm:ss
-    function formatTimeRemaining(ms) {
-      if (ms < 0) return "00:00";
-      const totalSeconds = Math.floor(ms / 1000);
-      const minutes = Math.floor(totalSeconds / 60)
-        .toString()
-        .padStart(2, "0");
-      const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-      return `${minutes}:${seconds}`;
-    }
-
-    // Setup timer countdown and redirect on expiry
-    function startTimer(createdAt) {
-      const validDurationMs = 6 * 60 * 60 * 1000; // 6 hours
-      const expiryTime = createdAt.getTime() + validDurationMs;
-      const timerDisplay = document.getElementById("timer-display");
-
-      function update() {
-        const now = new Date().getTime();
-        const remaining = expiryTime - now;
-        if (remaining <= 0) {
-          timerDisplay.textContent = "00:00";
-          redirectToLogin();
-          return;
-        }
-        timerDisplay.textContent = formatTimeRemaining(remaining);
-        requestAnimationFrame(update);
-      }
-      update();
-    }
-
-    // Navigation buttons and iframe sources mapping
-    const modeIframes = {
-      spectate: [
-        { src: "users.html", title: "Users Interface" },
-        { src: "statues.html", title: "Statues Interface" },
-      ],
-      news: [
-        { src: "jurnalis.html", title: "Jurnalis Interface" },
-        { src: "news.html", title: "News Interface" },
-      ],
-      mcs: [
-        { src: "mcs.html", title: "MCS Interface" },
-        { src: "informasi.html", title: "Informasi Interface" },
-      ],
-      moa: [
-        { src: "affiliate.html", title: "Affiliate Interface" },
-        { src: "affiliate-spect.html", title: "Affiliate Spectate Interface" },
-      ],
-    };
-
-    // Render iframes for selected mode
-    function renderIframes(mode) {
-      const container = document.getElementById("iframe-container");
-      container.innerHTML = "";
-      const iframes = modeIframes[mode];
-      if (!iframes) return;
-
-      iframes.forEach(({ src, title }) => {
-        const iframe = document.createElement("iframe");
-        iframe.src = src + window.location.search;
-        iframe.title = title;
-        iframe.className =
-          "flex-1 border-l border-gray-200 min-h-0 w-1/2 h-full";
-        iframe.setAttribute("loading", "lazy");
-        iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms");
-        container.appendChild(iframe);
+        const li = document.createElement('li');
+        li.className = `p-3 rounded-md ${expired ? 'bg-red-100' : 'bg-green-100'}`;
+        li.innerHTML = `<strong>${data.value}</strong> - <small>${expired ? 'Expired' : 'Active'} | Exp: ${formatDate(expiresAt)}</small>`;
+        list.appendChild(li);
       });
     }
 
-    // Update nav button active state
-    function setActiveNavButton(selectedMode) {
-      const buttons = document.querySelectorAll(".nav-btn");
-      buttons.forEach((btn) => {
-        if (btn.dataset.mode === selectedMode) {
-          btn.classList.add("text-blue-600", "font-semibold");
-          btn.setAttribute("aria-current", "page");
-        } else {
-          btn.classList.remove("text-blue-600", "font-semibold");
-          btn.removeAttribute("aria-current");
-        }
-      });
-    }
-
-    // Initialize SPA
-    async function init() {
-      const token = getTokenFromURL();
-      const validation = await validateToken(token);
-      if (!validation) {
-        redirectToLogin();
-        return;
-      }
-
-      // Show token
-      const tokenDisplay = document.getElementById("token-display");
-      tokenDisplay.textContent = token;
-
-      // Start timer
-      startTimer(validation.createdAt);
-
-      // Default mode
-      let currentMode = "spectate";
-      setActiveNavButton(currentMode);
-      renderIframes(currentMode);
-
-      // Nav button click handlers
-      const navButtons = document.querySelectorAll(".nav-btn");
-      navButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          if (btn.dataset.mode === currentMode) return;
-          currentMode = btn.dataset.mode;
-          setActiveNavButton(currentMode);
-          renderIframes(currentMode);
-        });
-      });
-    }
-
-    window.addEventListener("load", init);
+    loadAllTokens();
   </script>
 </body>
 </html>
