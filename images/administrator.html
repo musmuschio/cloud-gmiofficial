@@ -1,198 +1,299 @@
-<html lang="en">
+<html lang="en" class="scroll-smooth" >
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SPA with Firebase Token & Countdown</title>
+  <title>SPA Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
   />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
   <style>
-    /* Scrollbar for user list */
-    #userList {
-      scrollbar-width: thin;
-      scrollbar-color: #4a7ccf #e5e7eb;
-    }
-    #userList::-webkit-scrollbar {
-      width: 8px;
-    }
-    #userList::-webkit-scrollbar-track {
-      background: #e5e7eb;
-    }
-    #userList::-webkit-scrollbar-thumb {
-      background-color: #4a7ccf;
-      border-radius: 10px;
-      border: 2px solid #e5e7eb;
+    body {
+      font-family: 'Inter', sans-serif;
     }
   </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col">
-  <div class="flex flex-wrap justify-between items-center border-b border-gray-400">
-    <div class="flex flex-wrap">
-      <button id="btnSpectate" class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">Spectate</button>
-      <button id="btnNews" class="bg-[#a9b9d9] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">News</button>
-      <button id="btnMcs" class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">Mcs</button>
-      <button id="btnMoa" class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 hover:bg-blue-700 transition-colors">MoA</button>
-      <button disabled class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 opacity-50 cursor-not-allowed"></button>
-      <button disabled class="bg-[#4a7ccf] text-white text-sm font-normal px-6 py-3 opacity-50 cursor-not-allowed"></button>
-    </div>
-    <div class="flex flex-wrap text-white text-xs font-normal">
-      <div class="bg-gray-600 border border-gray-400 w-[160px] text-center py-2 flex items-center justify-center">ADMINISTRATOR V 1.0</div>
-      <div class="bg-gray-600 border border-gray-400 w-[160px] text-center py-2 flex items-center justify-center">ADMINISTRATOR V 1.0</div>
-      <div class="bg-gray-700 border border-gray-400 w-[160px] text-center py-2 flex justify-center items-center gap-1 font-mono">
-        <span>DURATION</span><span>:</span>
-        <span id="countdown" class="text-red-600">--:-- menit lagi</span>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <div id="app" class="flex flex-col flex-1">
+    <!-- Navigation -->
+    <nav
+      class="flex justify-between items-center bg-white shadow px-4 sm:px-6 lg:px-8 h-14 sm:h-16"
+      aria-label="Primary Navigation"
+    >
+      <div class="flex space-x-2 sm:space-x-4">
+        <button
+          id="btn-spectate"
+          class="spa-btn px-3 py-1 sm:px-4 sm:py-2 rounded-md text-sm sm:text-base font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          data-spa="spectate"
+          aria-pressed="true"
+          type="button"
+        >
+          Spectate
+        </button>
+        <button
+          id="btn-news"
+          class="spa-btn px-3 py-1 sm:px-4 sm:py-2 rounded-md text-sm sm:text-base font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          data-spa="jurnalist"
+          type="button"
+        >
+          News
+        </button>
+        <button
+          id="btn-mcs"
+          class="spa-btn px-3 py-1 sm:px-4 sm:py-2 rounded-md text-sm sm:text-base font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          data-spa="mcs"
+          type="button"
+        >
+          MCS
+        </button>
+        <button
+          id="btn-moa"
+          class="spa-btn px-3 py-1 sm:px-4 sm:py-2 rounded-md text-sm sm:text-base font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          data-spa="moa"
+          type="button"
+        >
+          MOA
+        </button>
       </div>
-    </div>
+      <div class="flex items-center space-x-6 text-gray-700 text-sm sm:text-base font-medium select-none">
+        <div class="flex items-center space-x-1">
+          <i class="fas fa-key text-indigo-600"></i>
+          <span id="token-display" class="font-semibold">Loading...</span>
+        </div>
+        <div class="flex items-center space-x-1">
+          <i class="fas fa-clock text-indigo-600"></i>
+          <span id="timer-display" class="font-semibold">--:--</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content area -->
+    <main class="flex-1 flex flex-col sm:flex-row overflow-hidden bg-white border-t border-gray-200">
+      <!-- Frame 1 -->
+      <section
+        id="frame1"
+        class="flex-1 border-b sm:border-b-0 sm:border-r border-gray-200 overflow-auto"
+        tabindex="0"
+        aria-label="Frame 1 content"
+      >
+        <iframe
+          id="iframe1"
+          src=""
+          title="Frame 1"
+          class="w-full h-full min-h-[300px] sm:min-h-full"
+          frameborder="0"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        ></iframe>
+      </section>
+
+      <!-- Frame 2 -->
+      <section
+        id="frame2"
+        class="flex-1 overflow-auto"
+        tabindex="0"
+        aria-label="Frame 2 content"
+      >
+        <iframe
+          id="iframe2"
+          src=""
+          title="Frame 2"
+          class="w-full h-full min-h-[300px] sm:min-h-full"
+          frameborder="0"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        ></iframe>
+      </section>
+    </main>
   </div>
 
-  <div class="flex flex-1 border-t border-gray-600 min-h-0 flex-col md:flex-row">
-    <!-- Left frame -->
-    <div class="flex-1 border-r border-gray-600 relative min-h-0 flex flex-col">
-      <iframe id="frame1" class="flex-1 min-h-0 w-full" src="" frameborder="0" title="Frame 1"></iframe>
-    </div>
-    <!-- Right frame -->
-    <div class="flex-1 relative min-h-0 flex flex-col">
-      <iframe id="frame2" class="flex-1 min-h-0 w-full" src="" frameborder="0" title="Frame 2"></iframe>
-    </div>
-  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  <script>
+    // Firebase config - replace with your own config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDUMMYKEY1234567890",
+      authDomain: "your-project.firebaseapp.com",
+      databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+      projectId: "your-project",
+      storageBucket: "your-project.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef123456",
+    };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-  authDomain: "gmi-enterprise23.firebaseapp.com",
-  projectId: "gmi-enterprise23",
-  storageBucket: "gmi-enterprise23.appspot.com",
-  messagingSenderId: "974090028804",
-  appId: "1:974090028804:web:43ae563ffd9433463c7251",
-  measurementId: "G-S27YB5Z8PR"
-};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    // Elements
+    const tokenDisplay = document.getElementById("token-display");
+    const timerDisplay = document.getElementById("timer-display");
+    const iframe1 = document.getElementById("iframe1");
+    const iframe2 = document.getElementById("iframe2");
+    const spaButtons = document.querySelectorAll(".spa-btn");
 
-const countdownEl = document.getElementById("countdown");
-const frame1 = document.getElementById("frame1");
-const frame2 = document.getElementById("frame2");
+    // SPA routes mapping
+    const spaRoutes = {
+      spectate: {
+        frame1: "users.html",
+        frame2: "statues.html",
+      },
+      jurnalist: {
+        frame1: "jurnalis.html",
+        frame2: "news.html",
+      },
+      mcs: {
+        frame1: "mcs.html",
+        frame2: "informasi.html",
+      },
+      moa: {
+        frame1: "affiliate.html",
+        frame2: "affiliate-spect.html",
+      },
+    };
 
-const btnSpectate = document.getElementById("btnSpectate");
-const btnNews = document.getElementById("btnNews");
-const btnMcs = document.getElementById("btnMcs");
-const btnMoa = document.getElementById("btnMoa");
+    // Redirect to kloterAdmin.html if no token in localStorage
+    function redirectToTokenPage() {
+      window.location.href = "kloterAdmin.html";
+    }
 
-let countdownInterval = null;
+    // Countdown timer variables
+    let countdownInterval = null;
+    let countdownEndTime = null;
 
-async function checkTokenAndLoad() {
-  try {
-    const q = query(collection(db, "tokenAdmin"), orderBy("expiresAt", "desc"), limit(1));
-    const snapshot = await getDocs(q);
+    // Load token from Firebase Realtime Database
+    function loadTokenFromFirebase() {
+      return new Promise((resolve, reject) => {
+        db.ref("tokenAdmin").once("value", (snapshot) => {
+          const token = snapshot.val();
+          if (token) {
+            resolve(token);
+          } else {
+            resolve(null);
+          }
+        }, reject);
+      });
+    }
 
-    if (!snapshot.empty) {
-      const doc = snapshot.docs[0];
-      const data = doc.data();
-      const expiresAt = data.expiresAt.toDate();
-      const now = new Date();
+    // Save token and expiry to localStorage
+    function saveToken(token, durationSeconds) {
+      const now = Date.now();
+      const expiry = now + durationSeconds * 1000;
+      localStorage.setItem("tokenAdmin", token);
+      localStorage.setItem("tokenExpiry", expiry.toString());
+    }
 
-      // Jangan redirect kalau token valid
-      if (expiresAt.getTime() < now.getTime()) {
-        // Token kadaluarsa
-        window.location.href = "kloterAdmin.html";
+    // Load token and expiry from localStorage
+    function loadTokenFromLocalStorage() {
+      const token = localStorage.getItem("tokenAdmin");
+      const expiry = localStorage.getItem("tokenExpiry");
+      if (!token || !expiry) return null;
+      return { token, expiry: parseInt(expiry, 10) };
+    }
+
+    // Clear token from localStorage
+    function clearToken() {
+      localStorage.removeItem("tokenAdmin");
+      localStorage.removeItem("tokenExpiry");
+    }
+
+    // Update timer display
+    function updateTimerDisplay(remainingMs) {
+      if (remainingMs <= 0) {
+        timerDisplay.textContent = "00:00";
+        return;
+      }
+      const totalSeconds = Math.floor(remainingMs / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      timerDisplay.textContent =
+        String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+    }
+
+    // Start countdown timer
+    function startCountdown(expiryTimestamp) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownEndTime = expiryTimestamp;
+
+      function tick() {
+        const now = Date.now();
+        const remaining = countdownEndTime - now;
+        if (remaining <= 0) {
+          clearInterval(countdownInterval);
+          clearToken();
+          redirectToTokenPage();
+          return;
+        }
+        updateTimerDisplay(remaining);
+      }
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
+
+    // Initialize SPA buttons and frames
+    function setActiveSPA(spaKey) {
+      spaButtons.forEach((btn) => {
+        if (btn.dataset.spa === spaKey) {
+          btn.classList.add("bg-indigo-600", "text-white");
+          btn.setAttribute("aria-pressed", "true");
+        } else {
+          btn.classList.remove("bg-indigo-600", "text-white");
+          btn.setAttribute("aria-pressed", "false");
+        }
+      });
+      const routes = spaRoutes[spaKey];
+      iframe1.src = routes.frame1;
+      iframe2.src = routes.frame2;
+    }
+
+    // On SPA button click
+    spaButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setActiveSPA(btn.dataset.spa);
+      });
+    });
+
+    // Main initialization
+    async function init() {
+      // Check token in localStorage
+      const localTokenData = loadTokenFromLocalStorage();
+      if (!localTokenData) {
+        redirectToTokenPage();
         return;
       }
 
-      // Hitung countdown hanya sampai waktu expired (maksimal 6 jam dari sekarang untuk batas tampilan)
-      const maxDuration = 6 * 60 * 60 * 1000; // 6 jam dalam ms
-      const countdownEnd = new Date(Math.min(expiresAt.getTime(), now.getTime() + maxDuration));
-      startCountdown(countdownEnd);
-    } else {
-      // Tidak ada token sama sekali
-      window.location.href = "kloterAdmin.html";
+      // Load token from Firebase
+      const firebaseToken = await loadTokenFromFirebase();
+      if (!firebaseToken) {
+        redirectToTokenPage();
+        return;
+      }
+
+      // Check if local token matches Firebase token
+      if (localTokenData.token !== firebaseToken) {
+        // Token mismatch, clear and redirect
+        clearToken();
+        redirectToTokenPage();
+        return;
+      }
+
+      // Show token in nav
+      tokenDisplay.textContent = firebaseToken;
+
+      // Start countdown timer with expiry from localStorage
+      startCountdown(localTokenData.expiry);
+
+      // Default SPA selection: spectate
+      setActiveSPA("spectate");
     }
-  } catch (error) {
-    console.error("Error checking token:", error);
-    window.location.href = "kloterAdmin.html";
-  }
-}
 
-function startCountdown(expirationTime) {
-  if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const now = Date.now();
-    const distance = expirationTime.getTime() - now;
-
-    if (distance <= 0) {
-      clearInterval(countdownInterval);
-      countdownEl.textContent = "Token expired";
-      window.location.href = "kloterAdmin.html";
-    } else {
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-      countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} menit lagi`;
-    }
-  }, 1000);
-}
-
-function renderSpectate() {
-  frame1.src = "user.html";
-  frame2.src = "statuses.html";
-}
-
-function renderNews() {
-  frame1.src = "jurnalis.html";
-  frame2.src = "home.html";
-}
-
-function renderMcs() {
-  frame1.src = "mcs.html";
-  frame2.src = "informasi.html";
-}
-
-function renderMoa() {
-  frame1.src = "spect-affiliate.html";
-  frame2.src = "";
-}
-
-function setActiveButton(activeBtn) {
-  [btnSpectate, btnNews, btnMcs, btnMoa].forEach(btn => {
-    if (btn === activeBtn) {
-      btn.classList.remove("bg-[#4a7ccf]");
-      btn.classList.add("bg-[#a9b9d9]");
-    } else {
-      btn.classList.remove("bg-[#a9b9d9]");
-      btn.classList.add("bg-[#4a7ccf]");
-    }
-  });
-}
-
-btnSpectate.addEventListener("click", () => {
-  setActiveButton(btnSpectate);
-  renderSpectate();
-});
-
-btnNews.addEventListener("click", () => {
-  setActiveButton(btnNews);
-  renderNews();
-});
-
-btnMcs.addEventListener("click", () => {
-  setActiveButton(btnMcs);
-  renderMcs();
-});
-
-btnMoa.addEventListener("click", () => {
-  setActiveButton(btnMoa);
-  renderMoa();
-});
-
-// Default to News tab on load
-setActiveButton(btnNews);
-renderNews();
-checkTokenAndLoad();
-</script>
-
+    // Run init on page load
+    window.addEventListener("load", () => {
+      init();
+    });
+  </script>
 </body>
 </html>
