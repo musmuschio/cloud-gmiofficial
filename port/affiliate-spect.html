@@ -1,52 +1,60 @@
-<html lang="en">
+<!DOCTYPE html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Monitor Affiliate - Admin</title>
+  <meta charset="UTF-8">
+  <title>Admin - Monitoring Affiliate</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="p-6 bg-gray-100">
+  <h1 class="text-2xl font-bold mb-6">Statistik Affiliate Semua User</h1>
+  <div id="dataList" class="space-y-4"></div>
 
+  <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-      authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR"
+      apiKey: "API_KEY_ANDA",
+      authDomain: "PROJECT_ID.firebaseapp.com",
+      projectId: "PROJECT_ID",
+      storageBucket: "PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const listEl = document.getElementById('list');
-      const affiliateCol = collection(db, 'affiliate');
+    async function loadAffiliateData() {
+      const container = document.getElementById('dataList');
+      const userSnapshot = await db.collection('users').where('isAffiliate', '==', true).get();
 
-      onSnapshot(affiliateCol, (snapshot) => {
-        let html = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          html += `
-            <div class="p-4 border border-gray-300 rounded-md shadow-sm mb-4 bg-white">
-              <h2 class="text-lg font-semibold text-gray-800 mb-2"><i class="fas fa-user-circle mr-2 text-indigo-600"></i>${doc.id}</h2>
-              <p class="text-gray-700">Share: <span class="font-medium">${data.share || 0}</span></p>
-              <p class="text-gray-700">Click: <span class="font-medium">${data.click || 0}</span></p>
-              <p class="text-gray-700">Point: <span class="font-medium">${data.point || 0}</span></p>
-            </div>
-          `;
+      for (let userDoc of userSnapshot.docs) {
+        const userData = userDoc.data();
+        const commissionsSnap = await db.collection('commissions')
+          .where('userId', '==', userDoc.id)
+          .get();
+
+        let total = 0;
+        let clicks = 0;
+        commissionsSnap.forEach(c => {
+          total += c.data().amount || 0;
+          clicks += c.data().clicks || 0;
         });
-        listEl.innerHTML = html || `<p class="text-gray-500 text-center py-10">No affiliate data found.</p>`;
-      });
-    });
+
+        const div = document.createElement('div');
+        div.className = 'bg-white p-4 shadow rounded';
+        div.innerHTML = `
+          <p><strong>Nama:</strong> ${userData.nama}</p>
+          <p><strong>Email:</strong> ${userData.email}</p>
+          <p><strong>Total Klik:</strong> ${clicks}</p>
+          <p><strong>Total Komisi:</strong> Rp ${total.toLocaleString('id-ID')}</p>
+          <p><strong>Referral Link:</strong> ${location.origin}/informasi.html?ref=${userDoc.id}</p>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    loadAffiliateData();
   </script>
-</head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center p-4">
-  <main class="w-full max-w-3xl">
-    <div id="list"></div>
-  </main>
 </body>
 </html>
