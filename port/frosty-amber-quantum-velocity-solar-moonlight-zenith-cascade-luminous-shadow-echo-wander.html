@@ -1,85 +1,55 @@
-<html lang="id">
+<!-- token.html -->
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Generator Token Admin</title>
+  <title>Generate Token</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-  />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-  <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
-    <h2 class="text-3xl font-extrabold mb-6 text-center text-gray-800">
-      Generator Token Admin (3 Jam)
-    </h2>
-    <button
-      id="generateBtn"
-      class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md transition-colors duration-300 flex items-center justify-center gap-2"
-      aria-label="Buat Token Baru"
-    >
-      <i class="fas fa-key fa-lg"></i> Buat Token Baru
-    </button>
-    <div
-      id="tokenResult"
-      class="mt-6 bg-gray-50 border border-gray-300 rounded-md p-4 font-mono text-sm text-center whitespace-pre-wrap break-words select-text min-h-[3rem]"
-      aria-live="polite"
-      aria-atomic="true"
-    ></div>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+    <h1 class="text-xl font-bold mb-4 text-center">🎯 Generate Token</h1>
+    <button id="generateBtn" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Generate Token</button>
+    <div id="result" class="mt-4 hidden">
+      <p class="text-center font-mono text-lg" id="tokenValue"></p>
+      <p class="text-center text-sm text-gray-500" id="expiryTime"></p>
+    </div>
   </div>
 
   <script>
-    // Firebase config - replace with your actual config
     const firebaseConfig = {
       apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
       authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR",
+      projectId: "gmi-enterprise23"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function getRandomChunk(length) {
-      const chars =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+[]{}";
-      let result = "";
-      for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;
+    function generateToken(length = 8) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     }
 
-    function generateComplexToken() {
-      let parts = [];
-      for (let i = 0; i < 8; i++) {
-        parts.push(getRandomChunk(4 + Math.floor(Math.random() * 3))); // 4-6 chars per part
-      }
-      return parts.join("--");
+    function formatDate(date) {
+      return date.toLocaleString();
     }
 
-    async function generateToken() {
-      const token = generateComplexToken();
-      try {
-        await db.collection("adminTokens").doc(token).set({
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-        document.getElementById("tokenResult").innerText = `Token:\n${token}`;
-        Swal.fire("Sukses", "Token berhasil dibuat dan berlaku 3 jam.", "success");
-      } catch (error) {
-        console.error(error);
-        Swal.fire("Gagal", "Gagal menyimpan token ke Firestore.", "error");
-      }
-    }
+    document.getElementById('generateBtn').onclick = async () => {
+      const token = generateToken();
+      const createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
-    document.getElementById("generateBtn").addEventListener("click", generateToken);
+      const docRef = await db.collection('token').add({ value: token, createdAt });
+      const snap = await docRef.get();
+      const createdDate = snap.data().createdAt?.toDate() || new Date();
+      const expiryDate = new Date(createdDate.getTime() + 6 * 3600000);
+
+      document.getElementById('tokenValue').textContent = `Token: ${token}`;
+      document.getElementById('expiryTime').textContent = `Expires at: ${formatDate(expiryDate)}`;
+      document.getElementById('result').classList.remove('hidden');
+    };
   </script>
 </body>
 </html>
