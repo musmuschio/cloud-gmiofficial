@@ -45,20 +45,20 @@
       const tokenInput = document.getElementById("token");
       const errorMessage = document.getElementById("error-message");
 
-      // Fetch all valid tokens from Firestore collection "token"
-      async function fetchValidTokens() {
+      // Fetch all valid token from Firestore collection "token"
+      async function fetchValidtoken() {
         try {
-          const tokensCol = collection(db, "token");
-          const tokenSnapshot = await getDocs(tokensCol);
-          const tokens = [];
-          tokenSnapshot.forEach(doc => {
+          const tokenCol = collection(db, "token");
+          const tokennapshot = await getDocs(tokenCol);
+          const token = [];
+          tokennapshot.forEach(doc => {
             // Assuming each document has a field "value" that stores the token string
             const data = doc.data();
-            if (data.value) tokens.push(data.value.trim());
+            if (data.value) token.push(data.value.trim());
           });
-          return tokens;
+          return token;
         } catch (error) {
-          console.error("Error fetching tokens from Firestore:", error);
+          console.error("Error fetching token from Firestore:", error);
           return [];
         }
       }
@@ -75,9 +75,9 @@
 
         errorMessage.classList.add("hidden");
 
-        const validTokens = await fetchValidTokens();
+        const validtoken = await fetchValidtoken();
 
-        if (validTokens.includes(enteredToken)) {
+        if (validtoken.includes(enteredToken)) {
           // Valid token: save to localStorage and redirect
           localStorage.setItem("token", enteredToken);
           window.location.href = "administrator.html";
