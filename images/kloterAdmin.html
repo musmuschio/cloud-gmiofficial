@@ -18,6 +18,77 @@
       background-color: #f6f6f2;
     }
   </style>
+  <script type="module">
+    // Import Firebase SDK modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("tokenForm");
+      const tokenInput = document.getElementById("token");
+      const errorMessage = document.getElementById("error-message");
+
+      // Fetch all valid tokens from Firestore collection "token"
+      async function fetchValidTokens() {
+        try {
+          const tokensCol = collection(db, "token");
+          const tokenSnapshot = await getDocs(tokensCol);
+          const tokens = [];
+          tokenSnapshot.forEach(doc => {
+            // Assuming each document has a field "value" that stores the token string
+            const data = doc.data();
+            if (data.value) tokens.push(data.value.trim());
+          });
+          return tokens;
+        } catch (error) {
+          console.error("Error fetching tokens from Firestore:", error);
+          return [];
+        }
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const enteredToken = tokenInput.value.trim();
+
+        if (!enteredToken) {
+          errorMessage.textContent = "Token tidak boleh kosong.";
+          errorMessage.classList.remove("hidden");
+          return;
+        }
+
+        errorMessage.classList.add("hidden");
+
+        const validTokens = await fetchValidTokens();
+
+        if (validTokens.includes(enteredToken)) {
+          // Valid token: save to localStorage and redirect
+          localStorage.setItem("token", enteredToken);
+          window.location.href = "administrator.html";
+        } else {
+          // Invalid token: show error message
+          errorMessage.textContent = "Token tidak valid. Silakan coba lagi.";
+          errorMessage.classList.remove("hidden");
+        }
+      });
+    });
+  </script>
 </head>
 <body>
   <div class="min-h-screen flex flex-col justify-start p-20 relative overflow-hidden">
@@ -90,36 +161,5 @@
       VERIFIKSI ULNG TOKEN!
     </p>
   </div>
-
-  <script>
-    const form = document.getElementById("tokenForm");
-    const tokenInput = document.getElementById("token");
-    const errorMessage = document.getElementById("error-message");
-
-    // Example validation function (customize as needed)
-    function isValidToken(token) {
-      // For demonstration, let's say a valid token is non-empty and at least 6 characters
-      return token.trim().length >= 6;
-    }
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const tokenValue = tokenInput.value;
-
-      if (isValidToken(tokenValue)) {
-        // Clear error message if any
-        errorMessage.classList.add("hidden");
-
-        // Save token to localStorage
-        localStorage.setItem("token", tokenValue);
-
-        // Redirect to administrator.html
-        window.location.href = "administrator.html";
-      } else {
-        // Show error message
-        errorMessage.classList.remove("hidden");
-      }
-    });
-  </script>
 </body>
 </html>
