@@ -3,16 +3,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Token Aktif</title>
+  <title>Validasi Token</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-xl mx-auto bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-2xl font-bold mb-4">📋 Token Aktif</h2>
-    <ul id="tokenList" class="space-y-2"></ul>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center mb-4">🔑 Masukkan Token</h2>
+    <input type="text" id="tokenInput" placeholder="Contoh: aBc123" class="w-full border p-2 rounded mb-4" />
+    <button id="validateBtn" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Validasi</button>
+    <p id="msg" class="mt-4 text-center text-sm text-red-500"></p>
   </div>
 
   <script>
@@ -24,32 +26,39 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function formatDate(date) {
-      return date.toLocaleString();
-    }
+    document.getElementById('validateBtn').onclick = async () => {
+      const tokenInput = document.getElementById('tokenInput').value.trim();
+      const msg = document.getElementById('msg');
+      msg.textContent = '';
 
-    async function loadTokens() {
+      if (!tokenInput) {
+        msg.textContent = 'Token tidak boleh kosong.';
+        return;
+      }
+
+      const querySnapshot = await db.collection('token').where('value', '==', tokenInput).get();
+      if (querySnapshot.empty) {
+        msg.textContent = 'Token tidak ditemukan.';
+        return;
+      }
+
+      const tokenData = querySnapshot.docs[0].data();
+      const createdAt = tokenData.createdAt?.toDate();
+      if (!createdAt) {
+        msg.textContent = 'Token tidak valid.';
+        return;
+      }
+
+      const expiresAt = new Date(createdAt.getTime() + 6 * 60 * 60 * 1000); // +6 jam
       const now = new Date();
-      const querySnapshot = await db.collection('token').orderBy('createdAt', 'desc').get();
-      const list = document.getElementById('tokenList');
-      list.innerHTML = '';
 
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const createdAt = data.createdAt?.toDate();
-        if (!createdAt) return;
-
-        const expiresAt = new Date(createdAt.getTime() + 6 * 3600000);
-        if (expiresAt > now) {
-          const li = document.createElement('li');
-          li.className = 'p-3 bg-blue-100 rounded-md';
-          li.innerHTML = `<strong>${data.value}</strong><br><small>Expires: ${formatDate(expiresAt)}</small>`;
-          list.appendChild(li);
-        }
-      });
-    }
-
-    loadTokens();
+      if (now > expiresAt) {
+        msg.textContent = 'Token sudah kedaluwarsa.';
+      } else {
+        // Token valid
+        window.location.href = 'administrator.html';
+      }
+    };
   </script>
 </body>
 </html>
