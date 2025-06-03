@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,30 +6,27 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gray-100 text-gray-900">
-  <div class="flex h-screen">
-    <!-- Navigation -->
-    <nav class="w-64 bg-white shadow-md p-4 space-y-2">
-      <button onclick="loadSPA('spectate')" class="w-full bg-blue-500 text-white py-2 rounded">Spectate</button>
-      <button onclick="loadSPA('jurnalist')" class="w-full bg-green-500 text-white py-2 rounded">News</button>
-      <button onclick="loadSPA('mcs')" class="w-full bg-yellow-500 text-white py-2 rounded">MCS</button>
-      <button onclick="loadSPA('moa')" class="w-full bg-purple-500 text-white py-2 rounded">MOA</button>
+  <div class="flex flex-col h-screen">
+    <!-- Tabs Navigation -->
+    <nav class="bg-white shadow flex items-center px-4 h-12 space-x-4 border-b border-gray-300">
+      <button id="tab-spectate" onclick="loadSPA('spectate')" class="text-gray-700 px-3 py-1 rounded-t border-b-2 border-blue-600 font-semibold focus:outline-none">Spectate</button>
+      <button id="tab-jurnalist" onclick="loadSPA('jurnalist')" class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded-t border-b-2 border-transparent font-semibold focus:outline-none">News</button>
+      <button id="tab-mcs" onclick="loadSPA('mcs')" class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded-t border-b-2 border-transparent font-semibold focus:outline-none">MCS</button>
+      <button id="tab-moa" onclick="loadSPA('moa')" class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded-t border-b-2 border-transparent font-semibold focus:outline-none">MOA</button>
+      <div class="ml-auto flex items-center space-x-6 text-sm font-mono text-gray-700">
+        <div id="timer" class="text-red-600"></div>
+        <div id="tokenLabel" class="font-semibold"></div>
+      </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col">
-      <!-- Token Info -->
-      <div class="flex justify-between items-center p-4 bg-gray-200">
-        <div id="tokenLabel" class="font-bold"></div>
-        <div id="timer" class="text-red-600 font-mono"></div>
-      </div>
-
-      <!-- Frames -->
-      <div class="flex flex-1">
-        <iframe id="frame1" class="w-1/2 h-full border-r"></iframe>
-        <iframe id="frame2" class="w-1/2 h-full"></iframe>
-      </div>
+    <div class="flex-1 flex overflow-hidden">
+      <iframe id="frame1" class="w-1/2 h-full border-r border-gray-300"></iframe>
+      <iframe id="frame2" class="w-1/2 h-full"></iframe>
     </div>
   </div>
 
@@ -72,24 +68,68 @@
       startCountdown(expiryTimestamp - now);
     }
 
-    function redirectToTokenInput() {
-      const input = prompt("Masukkan Token Admin:");
-      if (!input) return location.reload();
+    async function redirectToTokenInput() {
+      const { value: input } = await Swal.fire({
+        title: 'Masukkan Token Admin',
+        input: 'text',
+        inputLabel: 'Token',
+        inputPlaceholder: 'Masukkan token admin Anda',
+        inputAttributes: {
+          autocapitalize: 'off',
+          autocorrect: 'off'
+        },
+        showCancelButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: 'Submit',
+        preConfirm: (token) => {
+          if (!token) {
+            Swal.showValidationMessage('Token tidak boleh kosong');
+          }
+          return token;
+        }
+      });
+
+      if (!input) {
+        location.reload();
+        return;
+      }
       validateToken(input);
     }
 
     async function validateToken(input) {
       const snapshot = await db.collection('token').where('value', '==', input).get();
-      if (snapshot.empty) return alert('Token tidak valid');
+      if (snapshot.empty) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Token tidak valid',
+          confirmButtonText: 'Coba lagi'
+        });
+        return redirectToTokenInput();
+      }
 
       const doc = snapshot.docs[0];
       const createdAt = doc.data().createdAt?.toDate();
-      if (!createdAt) return alert('Token tidak valid');
+      if (!createdAt) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Token tidak valid',
+          confirmButtonText: 'Coba lagi'
+        });
+        return redirectToTokenInput();
+      }
 
       const now = new Date().getTime();
       const expire = createdAt.getTime() + 6 * 60 * 60 * 1000;
 
-      if (now > expire) return alert('Token sudah kedaluwarsa');
+      if (now > expire) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Token sudah kedaluwarsa',
+          confirmButtonText: 'Coba lagi'
+        });
+        return redirectToTokenInput();
+      }
 
       localStorage.setItem(tokenKey, input);
       location.reload();
@@ -110,11 +150,31 @@
         remaining -= 1000;
         if (remaining <= 0) {
           clearInterval(interval);
-          alert('Token expired');
-          localStorage.removeItem(tokenKey);
-          location.reload();
+          Swal.fire({
+            icon: 'warning',
+            title: 'Token expired',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            localStorage.removeItem(tokenKey);
+            location.reload();
+          });
         }
       }, 1000);
+    }
+
+    function setActiveTab(activeId) {
+      const tabs = ['tab-spectate', 'tab-jurnalist', 'tab-mcs', 'tab-moa'];
+      tabs.forEach(id => {
+        const el = document.getElementById(id);
+        if (id === activeId) {
+          el.classList.add('border-blue-600', 'text-gray-900');
+          el.classList.remove('border-transparent', 'text-gray-600', 'hover:text-gray-900');
+        } else {
+          el.classList.remove('border-blue-600', 'text-gray-900');
+          el.classList.add('border-transparent', 'text-gray-600');
+          el.classList.add('hover:text-gray-900');
+        }
+      });
     }
 
     function loadSPA(type) {
@@ -125,23 +185,30 @@
         case 'spectate':
           frame1.src = 'users.html';
           frame2.src = 'statues.html';
+          setActiveTab('tab-spectate');
           break;
         case 'jurnalist':
           frame1.src = 'jurnalis.html';
           frame2.src = 'news.html';
+          setActiveTab('tab-jurnalist');
           break;
         case 'mcs':
           frame1.src = 'mcs.html';
           frame2.src = 'informasi.html';
+          setActiveTab('tab-mcs');
           break;
         case 'moa':
           frame1.src = 'affiliate.html';
           frame2.src = 'affiliate-spect.html';
+          setActiveTab('tab-moa');
           break;
       }
     }
 
-    window.onload = checkToken;
+    window.onload = () => {
+      checkToken();
+      loadSPA('spectate');
+    };
   </script>
 </body>
 </html>
