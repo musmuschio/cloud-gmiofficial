@@ -57,54 +57,64 @@
    NB : TOKEN HANYA BERLAKU 6 JAM! JIKA TOKEN HABIS SEGERA MELAPOR KE OPERATOR UTK VERIFIKSI ULNG TOKEN!
   </p>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-      authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+    authDomain: "gmi-enterprise23.firebaseapp.com",
+    projectId: "gmi-enterprise23",
+    storageBucket: "gmi-enterprise23.firebasestorage.app",
+    messagingSenderId: "974090028804",
+    appId: "1:974090028804:web:43ae563ffd9433463c7251",
+    measurementId: "G-S27YB5Z8PR"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
 
-    window.cekToken = async function() {
-      const inputToken = document.getElementById('kirimtoken').value.trim();
-      if (!inputToken) return alert("Token tidak boleh kosong");
-
-      try {
-        const q = query(collection(db, "tokenAdmin"), where("token", "==", inputToken));
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) {
-          alert("Token salah atau tidak terdaftar");
-          return;
-        }
-        const doc = snapshot.docs[0];
-        const tokenData = doc.data();
-        const createdAt = tokenData.createdAt.toDate();
-        const now = new Date();
-        const diffMs = now - createdAt;
-        const diffHours = diffMs / (1000 * 60 * 60);
-
-        if (diffHours > 6) {
-          alert("Token sudah kadaluarsa. Silakan minta token baru.");
-        } else {
-          localStorage.setItem("adminToken", inputToken);
-          alert("Login berhasil! Mengalihkan ke halaman administrator...");
-          window.location.href = "administrator.html";
-        }
-      } catch (err) {
-        alert("Gagal memeriksa token: " + err.message);
-      }
+  window.cekToken = async function() {
+    const inputToken = document.getElementById('kirimtoken').value.trim();
+    if (!inputToken) {
+      alert("Token tidak boleh kosong");
+      document.getElementById('kirimtoken').focus();
+      return;
     }
-  </script>
+
+    try {
+      const tokenRef = doc(db, "tokenAdmin", "tokenDoc");
+      const tokenSnap = await getDoc(tokenRef);
+
+      if (!tokenSnap.exists()) {
+        alert("Token belum tersedia. Hubungi operator.");
+        return;
+      }
+
+      const tokenData = tokenSnap.data();
+
+      if (tokenData.token !== inputToken) {
+        alert("Token salah atau tidak terdaftar.");
+        return;
+      }
+
+      const expiryDate = tokenData.expiry?.toDate?.();
+      if (!expiryDate || expiryDate < new Date()) {
+        alert("Token sudah kadaluarsa. Silakan minta token baru.");
+        return;
+      }
+
+      localStorage.setItem("adminToken", inputToken);
+      alert("Login berhasil! Mengalihkan ke halaman administrator...");
+      window.location.href = "administrator.html";
+    } catch (err) {
+      console.error("Error saat cek token:", err);
+      alert("Terjadi kesalahan saat memeriksa token.");
+    }
+  };
+</script>
+
  </body>
 </html>
