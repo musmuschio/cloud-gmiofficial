@@ -5,21 +5,31 @@
   <title>Informasi Pelatihan</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <style>
+    /* Hide scrollbar but keep scroll functionality */
+    #cardContainer::-webkit-scrollbar {
+      display: none;
+    }
+    #cardContainer {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+  </style>
 </head>
 <body class="p-4 bg-gray-50 min-h-screen">
-  <div id="cardContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto"></div>
+  <div id="cardContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto overflow-auto"></div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script>
-    // Your Firebase configuration here (replace with your config)
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -33,7 +43,7 @@
         const card = document.createElement('div');
         card.className = 'bg-white rounded-lg shadow-md overflow-hidden flex flex-col';
         card.innerHTML = `
-          <img src="${data.imageUrl}" alt="Gambar pelatihan ${data.judul}, menampilkan ilustrasi terkait topik pelatihan" class="w-full h-48 object-cover" />
+          <img src="${data.imageUrl}" alt="Gambar pelatihan ${data.judul}, menampilkan ilustrasi terkait topik pelatihan" class="w-full h-auto object-contain" />
           <div class="p-5 flex flex-col flex-grow">
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">${data.judul}</h2>
             <p class="text-gray-700 flex-grow">${data.deskripsi}</p>
