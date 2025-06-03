@@ -8,27 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-gray-100 p-4 min-h-screen flex flex-col">
-  <h2 class="text-2xl font-bold mb-4 text-center">Daftar Pengguna</h2>
-  <div class="overflow-x-auto flex-grow">
-    <table class="table-auto min-w-full bg-white shadow-md rounded border border-gray-300">
-      <thead class="bg-blue-600 text-white text-sm select-none">
-        <tr>
-          <th class="px-3 py-2 whitespace-nowrap">Nama</th>
-          <th class="px-3 py-2 whitespace-nowrap">Email</th>
-          <th class="px-3 py-2 whitespace-nowrap">WhatsApp</th>
-          <th class="px-3 py-2 whitespace-nowrap">Desa</th>
-          <th class="px-3 py-2 whitespace-nowrap">Kecamatan</th>
-          <th class="px-3 py-2 whitespace-nowrap">Kabupaten</th>
-          <th class="px-3 py-2 whitespace-nowrap">Provinsi</th>
-          <th class="px-3 py-2 whitespace-nowrap">Referral</th>
-          <th class="px-3 py-2 whitespace-nowrap">Referred By</th>
-          <th class="px-3 py-2 whitespace-nowrap">Poin</th>
-          <th class="px-3 py-2 whitespace-nowrap">Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="usersTable" class="text-sm"></tbody>
-    </table>
-  </div>
+  <div id="usersContainer" class="space-y-4 overflow-auto flex-grow max-w-5xl mx-auto"></div>
 
   <script>
     const firebaseConfig = {
@@ -39,7 +19,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const usersTable = document.getElementById("usersTable");
+    const usersContainer = document.getElementById("usersContainer");
 
     function escapeHtml(text) {
       if (!text) return '';
@@ -50,66 +30,128 @@
                  .replace(/'/g, "&#039;");
     }
 
-    function renderUsers() {
-      usersTable.innerHTML = "";
-      db.collection("users").get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const row = document.createElement("tr");
-          row.className = "border-b border-gray-200";
-
-          row.innerHTML = `
-            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.fullName)}" data-id="${doc.id}" data-field="fullName" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="email" value="${escapeHtml(d.email)}" data-id="${doc.id}" data-field="email" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="tel" value="${escapeHtml(d.whatsapp)}" data-id="${doc.id}" data-field="whatsapp" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.desa)}" data-id="${doc.id}" data-field="desa" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.kecamatan)}" data-id="${doc.id}" data-field="kecamatan" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.kabupaten)}" data-id="${doc.id}" data-field="kabupaten" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.provinsi)}" data-id="${doc.id}" data-field="provinsi" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.referral)}" data-id="${doc.id}" data-field="referral" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-xs"><input type="text" value="${escapeHtml(d.referredBy)}" data-id="${doc.id}" data-field="referredBy" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 max-w-[5rem]"><input type="number" min="0" value="${d.points || 0}" data-id="${doc.id}" data-field="points" class="editable w-full border border-gray-300 rounded px-1 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-400" /></td>
-            <td class="border px-2 py-1 text-center whitespace-nowrap">
-              <button aria-label="Hapus pengguna ${escapeHtml(d.fullName)}" class="text-red-600 hover:text-red-800 font-semibold focus:outline-none focus:ring-2 focus:ring-red-400 rounded" onclick="deleteUser('${doc.id}')">Hapus</button>
-            </td>
-          `;
-          usersTable.appendChild(row);
-        });
-
-        document.querySelectorAll(".editable").forEach(input => {
-          input.addEventListener("change", e => {
-            const id = e.target.dataset.id;
-            const field = e.target.dataset.field;
-            let value = e.target.value;
-            if (field === "points") {
-              value = parseInt(value);
-              if (isNaN(value) || value < 0) {
-                value = 0;
-                e.target.value = 0;
-              }
-            }
-            db.collection("users").doc(id).update({ [field]: value }).then(() => {
-              e.target.classList.add("bg-green-100");
-              setTimeout(() => e.target.classList.remove("bg-green-100"), 800);
-            }).catch(err => {
-              alert("Gagal memperbarui data: " + err.message);
-            });
-          });
-        });
-      }).catch(err => {
-        usersTable.innerHTML = `<tr><td colspan="11" class="text-center text-red-600 py-4">Gagal memuat data pengguna: ${err.message}</td></tr>`;
-      });
+    function createInput(value, id, field, type = "text") {
+      return `<input type="${type}" value="${escapeHtml(value)}" data-id="${id}" data-field="${field}" class="editable w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />`;
     }
 
-    function deleteUser(id) {
-      if (confirm("Yakin ingin menghapus user ini?")) {
-        db.collection("users").doc(id).delete().then(() => renderUsers()).catch(err => {
-          alert("Gagal menghapus user: " + err.message);
+    function renderUsers() {
+      usersContainer.innerHTML = "";
+      db.collection("users").get().then(snapshot => {
+        if (snapshot.empty) {
+          usersContainer.innerHTML = `<p class="text-center text-gray-500">Belum ada data pengguna.</p>`;
+          return;
+        }
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const userId = doc.id;
+
+          const userCard = document.createElement("div");
+          userCard.className = "bg-white rounded shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-6";
+
+          // Left side: user data inputs in a grid
+          const dataGrid = document.createElement("div");
+          dataGrid.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 flex-grow";
+
+          // Fields to show
+          const fields = [
+            { label: "Nama", field: "fullName", type: "text", value: d.fullName || "" },
+            { label: "Email", field: "email", type: "email", value: d.email || "" },
+            { label: "WhatsApp", field: "whatsapp", type: "tel", value: d.whatsapp || "" },
+            { label: "Desa", field: "desa", type: "text", value: d.desa || "" },
+            { label: "Kecamatan", field: "kecamatan", type: "text", value: d.kecamatan || "" },
+            { label: "Kabupaten", field: "kabupaten", type: "text", value: d.kabupaten || "" },
+            { label: "Provinsi", field: "provinsi", type: "text", value: d.provinsi || "" },
+            { label: "Referral", field: "referral", type: "text", value: d.referral || "" },
+            { label: "Referred By", field: "referredBy", type: "text", value: d.referredBy || "" },
+            { label: "Poin", field: "points", type: "number", value: d.points || 0 },
+          ];
+
+          fields.forEach(({label, field, type, value}) => {
+            const fieldWrapper = document.createElement("div");
+            fieldWrapper.className = "flex flex-col";
+
+            const labelEl = document.createElement("label");
+            labelEl.className = "text-xs font-semibold text-gray-600 mb-1 select-none";
+            labelEl.textContent = label;
+
+            const inputEl = document.createElement("input");
+            inputEl.type = type;
+            inputEl.value = value;
+            inputEl.dataset.id = userId;
+            inputEl.dataset.field = field;
+            inputEl.className = "editable w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400";
+
+            fieldWrapper.appendChild(labelEl);
+            fieldWrapper.appendChild(inputEl);
+            dataGrid.appendChild(fieldWrapper);
+          });
+
+          // Right side: action buttons
+          const actionsDiv = document.createElement("div");
+          actionsDiv.className = "flex space-x-3 justify-end";
+
+          // Edit button
+          const editBtn = document.createElement("button");
+          editBtn.type = "button";
+          editBtn.className = "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center space-x-2";
+          editBtn.innerHTML = `<i class="fas fa-save"></i><span>Simpan</span>`;
+          editBtn.title = "Simpan perubahan";
+          editBtn.addEventListener("click", () => {
+            const inputs = userCard.querySelectorAll("input.editable");
+            let updateData = {};
+            let valid = true;
+
+            inputs.forEach(input => {
+              let val = input.value.trim();
+              if (input.dataset.field === "points") {
+                val = parseInt(val);
+                if (isNaN(val) || val < 0) {
+                  val = 0;
+                  input.value = 0;
+                }
+              }
+              updateData[input.dataset.field] = val;
+            });
+
+            db.collection("users").doc(userId).update(updateData).then(() => {
+              editBtn.classList.add("bg-green-600");
+              setTimeout(() => editBtn.classList.remove("bg-green-600"), 1000);
+            }).catch(err => {
+              alert("Gagal menyimpan data: " + err.message);
+            });
+          });
+
+          // Delete button
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.className = "bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-400 flex items-center space-x-2";
+          deleteBtn.innerHTML = `<i class="fas fa-trash-alt"></i><span>Hapus</span>`;
+          deleteBtn.title = "Hapus pengguna";
+          deleteBtn.addEventListener("click", () => {
+            if (confirm(`Yakin ingin menghapus pengguna "${d.fullName || 'tanpa nama'}"?`)) {
+              db.collection("users").doc(userId).delete().then(() => {
+                renderUsers();
+              }).catch(err => {
+                alert("Gagal menghapus pengguna: " + err.message);
+              });
+            }
+          });
+
+          actionsDiv.appendChild(editBtn);
+          actionsDiv.appendChild(deleteBtn);
+
+          userCard.appendChild(dataGrid);
+          userCard.appendChild(actionsDiv);
+
+          usersContainer.appendChild(userCard);
         });
-      }
+      }).catch(err => {
+        usersContainer.innerHTML = `<p class="text-center text-red-600">Gagal memuat data pengguna: ${err.message}</p>`;
+      });
     }
 
     window.onload = renderUsers;
   </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 </body>
 </html>
