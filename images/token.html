@@ -36,7 +36,7 @@
       const durationMs = 136060 * 1000; // 13 hours in milliseconds
 
       try {
-        await addDoc(collection(db, "tokens"), {
+        await addDoc(collection(db, "token"), {
           token: token,
           createdAt: serverTimestamp(),
           duration: durationMs
