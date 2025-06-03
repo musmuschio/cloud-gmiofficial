@@ -1,13 +1,26 @@
-<html>
+<html lang="en">
 <head>
-  <title>Generate Token</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Token Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-analytics.js";
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-2xl font-semibold mb-6 text-center text-gray-800">Generate Token</h1>
+    <button id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md flex items-center justify-center gap-2">
+      <i class="fas fa-key"></i> Generate Token
+    </button>
+    <div id="result" class="mt-8 bg-gray-100 rounded-md p-4 text-center hidden">
+      <p class="text-lg font-mono text-gray-900 mb-2" id="tokenValue"></p>
+      <p class="text-sm text-gray-600" id="expiryTime"></p>
+    </div>
+  </div>
 
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
       authDomain: "gmi-enterprise23.firebaseapp.com",
@@ -18,52 +31,56 @@
       measurementId: "G-S27YB5Z8PR"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    function generateToken(length = 16) {
+    function generateRandomToken(length = 8) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let result = '';
+      let token = '';
       for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+        token += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      return result;
+      return token;
     }
 
-    async function createToken() {
-      const token = generateToken(16);
-      const durationMs = 136060 * 1000; // 13 hours in milliseconds
+    function formatDate(date) {
+      return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const token = generateRandomToken(8);
+      const createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
       try {
-        await addDoc(collection(db, "token"), {
-          token: token,
-          createdAt: serverTimestamp(),
-          duration: durationMs
+        // Add token to Firestore
+        const docRef = await db.collection('token').add({
+          value: token,
+          createdAt: createdAt,
         });
-        document.getElementById('tokenDisplay').textContent = token;
-      } catch (e) {
-        document.getElementById('tokenDisplay').textContent = "Error generating token.";
-        console.error("Error adding document: ", e);
-      }
-    }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      createToken();
-      document.getElementById('generateBtn').addEventListener('click', createToken);
+        // Because createdAt is serverTimestamp, we fetch the document again to get the timestamp
+        const docSnap = await docRef.get();
+        const createdAtTimestamp = docSnap.data().createdAt?.toDate() || new Date();
+
+        // Calculate expiry time based on createdAt + 6 hours
+        const expiryDate = new Date(createdAtTimestamp.getTime() + 6 * 60 * 60 * 1000);
+
+        // Show token and expiry time
+        const resultDiv = document.getElementById('result');
+        document.getElementById('tokenValue').textContent = `Token: ${token}`;
+        document.getElementById('expiryTime').textContent = `Expires at: ${formatDate(expiryDate)}`;
+        resultDiv.classList.remove('hidden');
+      } catch (error) {
+        alert('Error generating token: ' + error.message);
+      }
     });
   </script>
-</head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
-  <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
-    <h1 class="text-2xl font-bold mb-4 text-gray-800">Generate Token</h1>
-    <p class="mb-6 text-gray-600">Token will be generated automatically when the page loads or when you press the button below.</p>
-    <div class="mb-6">
-      <div class="inline-block px-6 py-3 bg-indigo-100 text-indigo-700 font-mono text-xl rounded select-all" id="tokenDisplay" aria-live="polite" aria-label="Generated token">Loading...</div>
-    </div>
-    <button id="generateBtn" class="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition">
-      <i class="fas fa-sync-alt"></i> Generate New Token
-    </button>
-  </div>
 </body>
 </html>
