@@ -28,7 +28,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
@@ -50,7 +50,6 @@
       const getRandom = (chars, length) =>
         Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 
-      // Shuffle the token characters to avoid predictable pattern
       const shuffleString = (str) => {
         const arr = str.split('');
         for (let i = arr.length - 1; i > 0; i--) {
@@ -63,9 +62,13 @@
       let token = getRandom(alphabets, 6) + getRandom(symbols, 6) + getRandom(numbers, 6);
       token = shuffleString(token);
 
+      const expiryTimestamp = Date.now() + 6 * 60 * 60 * 1000; // 6 jam ke depan dalam ms
+      const expiryFirestoreTimestamp = Timestamp.fromMillis(expiryTimestamp);
+
       try {
-        await addDoc(collection(db, "tokenAdmin"), {
+        await setDoc(doc(db, "tokenAdmin", "tokenDoc"), {
           token: token,
+          expiry: expiryFirestoreTimestamp,
           createdAt: serverTimestamp()
         });
 
