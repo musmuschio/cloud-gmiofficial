@@ -1,0 +1,126 @@
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Semua Status</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+
+  <main class="flex-grow max-w-2xl mx-auto px-4 py-6 w-full">
+    <div id="statusContainer" class="space-y-6"></div>
+  </main>
+
+  <footer class="bg-white shadow-inner p-4 text-center text-gray-500 text-sm">
+    &copy; 2024 Semua Hak Dilindungi
+  </footer>
+
+  <script>
+    const statusContainer = document.getElementById("statusContainer");
+
+    function createStatusCard(doc) {
+      const data = doc.data();
+      const gambarURL = data.gambar && data.gambar.includes("imgur.com") ? data.gambar : "";
+      const tanggal = data.timestamp?.toDate?.().toLocaleString("id-ID") || "Waktu tidak tersedia";
+
+      const card = document.createElement("div");
+      card.className = "bg-white p-4 rounded-xl shadow relative";
+
+      const headerDiv = document.createElement("div");
+      headerDiv.className = "flex justify-between items-center mb-2";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "font-bold text-gray-900";
+      nameSpan.textContent = data.fullName || "Tanpa Nama";
+
+      const dateSpan = document.createElement("span");
+      dateSpan.className = "text-xs text-gray-500";
+      dateSpan.textContent = tanggal;
+
+      headerDiv.appendChild(nameSpan);
+      headerDiv.appendChild(dateSpan);
+
+      const descP = document.createElement("p");
+      descP.className = "text-gray-700 mb-3 whitespace-pre-line";
+      descP.textContent = data.deskripsi || "(tidak ada deskripsi)";
+
+      card.appendChild(headerDiv);
+      card.appendChild(descP);
+
+      if (gambarURL) {
+        const img = document.createElement("img");
+        img.src = gambarURL;
+        img.alt = "Gambar status yang diunggah oleh pengguna dengan deskripsi terkait";
+        img.className = "w-full max-h-64 object-cover rounded-lg mb-2";
+        card.appendChild(img);
+      }
+
+      const likeDiv = document.createElement("div");
+      likeDiv.className = "text-sm text-gray-500 flex items-center space-x-1 mb-3";
+      const likeIcon = document.createElement("i");
+      likeIcon.className = "fas fa-thumbs-up";
+      likeDiv.appendChild(likeIcon);
+      const likeText = document.createElement("span");
+      likeText.textContent = ` ${data.likeCount || 0} suka`;
+      likeDiv.appendChild(likeText);
+
+      card.appendChild(likeDiv);
+
+      // Delete button
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "absolute top-3 right-3 text-red-600 hover:text-red-800 focus:outline-none";
+      deleteBtn.title = "Hapus postingan";
+      deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+
+      deleteBtn.addEventListener("click", () => {
+        if (confirm("Apakah Anda yakin ingin menghapus postingan ini?")) {
+          db.collection("statuses").doc(doc.id).delete()
+            .then(() => {
+              card.remove();
+            })
+            .catch(error => {
+              alert("Gagal menghapus postingan: " + error.message);
+            });
+        }
+      });
+
+      card.appendChild(deleteBtn);
+
+      return card;
+    }
+
+    db.collection("statuses").orderBy("timestamp", "desc").get().then(snapshot => {
+      if (snapshot.empty) {
+        statusContainer.innerHTML = "<p class='text-center text-gray-500'>Belum ada status.</p>";
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const card = createStatusCard(doc);
+        statusContainer.appendChild(card);
+      });
+    }).catch(error => {
+      console.error("Gagal memuat status:", error);
+      statusContainer.innerHTML = "<p class='text-red-500 text-center'>Gagal memuat data status.</p>";
+    });
+  </script>
+
+</body>
+</html>
