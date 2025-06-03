@@ -2,107 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Administrator Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrator Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
-<body class="bg-white text-gray-800">
+<body class="bg-gray-100 text-gray-900">
+  <div class="flex h-screen">
+    <!-- Navigation -->
+    <nav class="w-64 bg-white shadow-md p-4 space-y-2">
+      <button onclick="loadSPA('spectate')" class="w-full bg-blue-500 text-white py-2 rounded">Spectate</button>
+      <button onclick="loadSPA('jurnalist')" class="w-full bg-green-500 text-white py-2 rounded">News</button>
+      <button onclick="loadSPA('mcs')" class="w-full bg-yellow-500 text-white py-2 rounded">MCS</button>
+      <button onclick="loadSPA('moa')" class="w-full bg-purple-500 text-white py-2 rounded">MOA</button>
+    </nav>
 
-  <!-- Navigation Bar -->
-  <div class="flex items-center justify-between bg-gray-100 px-4 py-2 shadow">
-    <!-- Left SPA Buttons -->
-    <div class="flex gap-2">
-      <button onclick="loadSPA('spectate')" class="spa-btn bg-blue-600 text-white px-3 py-1 rounded">Spectate</button>
-      <button onclick="loadSPA('jurnalist')" class="spa-btn bg-green-600 text-white px-3 py-1 rounded">News</button>
-      <button onclick="loadSPA('mcs')" class="spa-btn bg-purple-600 text-white px-3 py-1 rounded">MCS</button>
-      <button onclick="loadSPA('moa')" class="spa-btn bg-red-600 text-white px-3 py-1 rounded">MOA</button>
-    </div>
-    <!-- Right Token Info & Countdown -->
-    <div class="text-right">
-      <div>Token: <span id="tokenDisplay" class="font-mono font-semibold text-blue-700"></span></div>
-      <div class="text-sm text-gray-600">Sisa waktu: <span id="timer" class="font-semibold"></span></div>
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+      <!-- Token Info -->
+      <div class="flex justify-between items-center p-4 bg-gray-200">
+        <div id="tokenLabel" class="font-bold"></div>
+        <div id="timer" class="text-red-600 font-mono"></div>
+      </div>
+
+      <!-- Frames -->
+      <div class="flex flex-1">
+        <iframe id="frame1" class="w-1/2 h-full border-r"></iframe>
+        <iframe id="frame2" class="w-1/2 h-full"></iframe>
+      </div>
     </div>
   </div>
 
-  <!-- Content Iframes -->
-  <div class="grid grid-cols-2 gap-1 h-[calc(100vh-60px)]">
-    <iframe id="frame1" class="w-full h-full border-none"></iframe>
-    <iframe id="frame2" class="w-full h-full border-none"></iframe>
-  </div>
-
-  <!-- Firebase & Logic -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
       authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23"
+      projectId: "gmi-enterprise23",
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let activeToken = localStorage.getItem('admin_token');
-    let expiryTime;
+    const tokenKey = 'adminToken';
+    let expiryTimestamp = null;
 
-    async function validateToken() {
-      if (!activeToken) {
-        window.location.href = 'kloterAdmin.html';
-        return;
+    async function checkToken() {
+      const token = localStorage.getItem(tokenKey);
+      if (!token) {
+        return redirectToTokenInput();
       }
 
-      const query = await db.collection('token').where('value', '==', activeToken).get();
-      if (query.empty) {
-        window.location.href = 'kloterAdmin.html';
-        return;
+      const snapshot = await db.collection('token').where('value', '==', token).get();
+      if (snapshot.empty) {
+        return redirectToTokenInput();
       }
 
-      const doc = query.docs[0];
-      const data = doc.data();
-      const createdAt = data.createdAt?.toDate();
-      if (!createdAt) {
-        window.location.href = 'kloterAdmin.html';
-        return;
+      const doc = snapshot.docs[0];
+      const createdAt = doc.data().createdAt?.toDate();
+      if (!createdAt) return redirectToTokenInput();
+
+      expiryTimestamp = createdAt.getTime() + 6 * 60 * 60 * 1000;
+      const now = new Date().getTime();
+      if (now > expiryTimestamp) {
+        localStorage.removeItem(tokenKey);
+        return redirectToTokenInput();
       }
 
-      expiryTime = new Date(createdAt.getTime() + 6 * 60 * 60 * 1000);
-      const now = new Date();
-      if (now > expiryTime) {
-        localStorage.removeItem('admin_token');
-        window.location.href = 'kloterAdmin.html';
-      }
-
-      document.getElementById('tokenDisplay').textContent = activeToken;
-      startCountdown();
-      loadSPA('spectate');
+      document.getElementById('tokenLabel').textContent = `Token: ${token}`;
+      startCountdown(expiryTimestamp - now);
     }
 
-    function startCountdown() {
+    function redirectToTokenInput() {
+      const input = prompt("Masukkan Token Admin:");
+      if (!input) return location.reload();
+      validateToken(input);
+    }
+
+    async function validateToken(input) {
+      const snapshot = await db.collection('token').where('value', '==', input).get();
+      if (snapshot.empty) return alert('Token tidak valid');
+
+      const doc = snapshot.docs[0];
+      const createdAt = doc.data().createdAt?.toDate();
+      if (!createdAt) return alert('Token tidak valid');
+
+      const now = new Date().getTime();
+      const expire = createdAt.getTime() + 6 * 60 * 60 * 1000;
+
+      if (now > expire) return alert('Token sudah kedaluwarsa');
+
+      localStorage.setItem(tokenKey, input);
+      location.reload();
+    }
+
+    function startCountdown(duration) {
       const timerEl = document.getElementById('timer');
+      let remaining = duration;
+
       const interval = setInterval(() => {
-        const now = new Date();
-        const diff = expiryTime - now;
+        const hours = Math.floor(remaining / (1000 * 60 * 60));
+        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+        timerEl.textContent = `${hours.toString().padStart(2, '0')}:${
+          minutes.toString().padStart(2, '0')}:${
+          seconds.toString().padStart(2, '0')}`;
 
-        if (diff <= 0) {
+        remaining -= 1000;
+        if (remaining <= 0) {
           clearInterval(interval);
-          localStorage.removeItem('admin_token');
-          alert("Token kedaluwarsa!");
-          window.location.href = 'kloterAdmin.html';
+          alert('Token expired');
+          localStorage.removeItem(tokenKey);
+          location.reload();
         }
-
-        const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
-        const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-        const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-
-        timerEl.textContent = `${h}:${m}:${s}`;
       }, 1000);
     }
 
-    function loadSPA(mode) {
+    function loadSPA(type) {
       const frame1 = document.getElementById('frame1');
       const frame2 = document.getElementById('frame2');
 
-      switch (mode) {
+      switch (type) {
         case 'spectate':
           frame1.src = 'users.html';
           frame2.src = 'statues.html';
@@ -119,14 +138,10 @@
           frame1.src = 'affiliate.html';
           frame2.src = 'affiliate-spect.html';
           break;
-        default:
-          frame1.src = '';
-          frame2.src = '';
       }
     }
 
-    // Start on load
-    validateToken();
+    window.onload = checkToken;
   </script>
 </body>
 </html>
