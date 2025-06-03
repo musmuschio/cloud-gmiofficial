@@ -1,94 +1,15 @@
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1" name="viewport" />
-  <title>Green Engineer</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
   <style>
     body {
-      font-family: "Inter", sans-serif;
-      background-color: #f6f6f2;
+      font-family: 'Inter', sans-serif;
     }
   </style>
-  <script type="module">
-    // Import Firebase SDK modules
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
-      authDomain: "gmi-enterprise23.firebaseapp.com",
-      projectId: "gmi-enterprise23",
-      storageBucket: "gmi-enterprise23.firebasestorage.app",
-      messagingSenderId: "974090028804",
-      appId: "1:974090028804:web:43ae563ffd9433463c7251",
-      measurementId: "G-S27YB5Z8PR"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("tokenForm");
-      const tokenInput = document.getElementById("token");
-      const errorMessage = document.getElementById("error-message");
-
-      // Fetch all valid tokens from Firestore collection named "token"
-      async function fetchValidTokens() {
-        try {
-          const tokensCol = collection(db, "token"); // collection name is "token"
-          const tokenSnapshot = await getDocs(tokensCol);
-          const tokens = [];
-          tokenSnapshot.forEach(doc => {
-            // Assuming each document has a field "value" that stores the token string
-            const data = doc.data();
-            if (data.value) tokens.push(data.value.trim());
-          });
-          return tokens;
-        } catch (error) {
-          console.error("Error fetching tokens from Firestore:", error);
-          return [];
-        }
-      }
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const enteredToken = tokenInput.value.trim();
-
-        if (!enteredToken) {
-          errorMessage.textContent = "Token tidak boleh kosong.";
-          errorMessage.classList.remove("hidden");
-          return;
-        }
-
-        errorMessage.classList.add("hidden");
-
-        const validTokens = await fetchValidTokens();
-
-        if (validTokens.includes(enteredToken)) {
-          // Valid token: save to localStorage and redirect
-          localStorage.setItem("token", enteredToken);
-          window.location.href = "administrator.html";
-        } else {
-          // Invalid token: show error message
-          errorMessage.textContent = "Token tidak valid. Silakan coba lagi.";
-          errorMessage.classList.remove("hidden");
-        }
-      });
-    });
-  </script>
 </head>
 <body>
   <div class="min-h-screen flex flex-col justify-start p-20 relative overflow-hidden">
@@ -99,10 +20,10 @@
       src="https://storage.googleapis.com/a1aa/image/0eeb16ae-cb63-4f21-e99d-509d0999a606.jpg"
       width="1920"
     />
-    <div class="flex justify-between items-start max-w-7xl w-full mx-auto">
+    <div class="flex flex-col sm:flex-row justify-between items-start max-w-7xl w-full mx-auto gap-10 sm:gap-0">
       <div class="max-w-3xl">
         <p class="text-gray-700 text-xl font-normal mb-2 tracking-wide">WELCOME TO,</p>
-        <h1 class="text-gray-800 font-extrabold text-7xl leading-tight mb-6 uppercase">
+        <h1 class="text-gray-800 font-extrabold text-5xl sm:text-7xl leading-tight mb-6 uppercase">
           GREEN ENGINEER!
         </h1>
         <p class="text-gray-700 font-extrabold text-2xl mb-3 uppercase">ADMINISTRASI :</p>
@@ -110,7 +31,7 @@
           <li>Green Medicine Institute</li>
         </ul>
       </div>
-      <div class="flex flex-col items-center ml-20">
+      <div class="flex flex-col items-center sm:ml-20">
         <img
           alt="Green Medicine Institute logo with dark teal hexagon and stylized text"
           class="w-40 h-40 object-contain"
@@ -130,8 +51,7 @@
       <label
         for="token"
         class="text-white font-extrabold text-xl flex-shrink-0 w-full sm:w-auto"
-        >isi Token Terbaru :</label
-      >
+      >isi Token Terbaru :</label>
       <input
         type="text"
         id="token"
@@ -144,7 +64,7 @@
       <button
         type="submit"
         class="bg-[#00b04b] rounded-lg px-8 py-3 text-white font-semibold text-lg hover:bg-[#009f43] transition-colors"
-      ></button>
+      >Submit</button>
     </form>
     <p
       id="error-message"
@@ -161,5 +81,67 @@
       VERIFIKSI ULNG TOKEN!
     </p>
   </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBggKVSzDyI-meBSL3BMjA736Ss-j_My0E",
+      authDomain: "gmi-enterprise23.firebaseapp.com",
+      projectId: "gmi-enterprise23",
+      storageBucket: "gmi-enterprise23.firebasestorage.app",
+      messagingSenderId: "974090028804",
+      appId: "1:974090028804:web:43ae563ffd9433463c7251",
+      measurementId: "G-S27YB5Z8PR"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const form = document.getElementById('tokenForm');
+    const tokenInput = document.getElementById('token');
+    const errorMsg = document.getElementById('error-message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.classList.add('hidden');
+      const inputToken = tokenInput.value.trim();
+
+      if (!inputToken) {
+        errorMsg.textContent = 'Please enter a token.';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const tokensSnapshot = await db.collection('tokens').get();
+        const now = Date.now();
+        const sixHoursMs = 6 * 60 * 60 * 1000;
+        let validTokenFound = false;
+
+        tokensSnapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.token === inputToken) {
+            const createdAt = data.createdAt;
+            if (createdAt && createdAt.toMillis) {
+              const createdAtMs = createdAt.toMillis();
+              if (now - createdAtMs <= sixHoursMs) {
+                validTokenFound = true;
+              }
+            }
+          }
+        });
+
+        if (validTokenFound) {
+          window.location.href = `administrator.html?token=${encodeURIComponent(inputToken)}`;
+        } else {
+          errorMsg.textContent = 'Token tidak valid. Silakan coba lagi.';
+          errorMsg.classList.remove('hidden');
+        }
+      } catch (error) {
+        errorMsg.textContent = 'Error validating token. Please try again later.';
+        errorMsg.classList.remove('hidden');
+        console.error('Error fetching tokens:', error);
+      }
+    });
+  </script>
 </body>
 </html>
