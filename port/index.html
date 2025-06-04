@@ -1121,30 +1121,31 @@
         }
       });
 
-      document.addEventListener(
-        "deviceready",
-        function () {
-          window.plugins.OneSignal.setAppId(
-            "500cb426-9e4e-419b-bf36-57650b7655e2"
-          );
+      document.addEventListener("deviceready", function () {
+        // Ganti dengan OneSignal App ID kamu
+        const oneSignalAppId = "500cb426-9e4e-419b-bf36-57650b7655e2";
 
-          window.plugins.OneSignal.setNotificationOpenedHandler(function (
-            notification
-          ) {
-            const data = notification.notification.additionalData;
-            if (data && data.targetPage) {
-              window.location.href = data.targetPage;
-            }
-          });
+        // Inisialisasi OneSignal
+        window.plugins.OneSignal.setAppId(oneSignalAppId);
 
-          window.plugins.OneSignal.promptForPushNotificationsWithUserResponse(
-            function (accepted) {
-              console.log("Notifikasi diizinkan: " + accepted);
-            }
-          );
-        },
-        false
-      );
+        // Optional: Set handler saat notifikasi dibuka
+        window.plugins.OneSignal.setNotificationOpenedHandler(function (
+          jsonData
+        ) {
+          console.log("Notification opened: ", JSON.stringify(jsonData));
+          const data = jsonData.notification.additionalData;
+          if (data && data.targetPage) {
+            window.location.href = data.targetPage; // Contoh redirect ke halaman tertentu
+          }
+        });
+
+        // Minta izin push notification (khusus iOS)
+        window.plugins.OneSignal.promptForPushNotificationsWithUserResponse(
+          function (accepted) {
+            console.log("Push notification permission accepted: " + accepted);
+          }
+        );
+      });
     </script>
   </body>
 </html>
