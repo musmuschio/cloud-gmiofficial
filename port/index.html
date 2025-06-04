@@ -1124,22 +1124,19 @@
       document.addEventListener(
         "deviceready",
         function () {
-          // Ganti dengan App ID kamu
           window.plugins.OneSignal.setAppId(
-            "3094a557-e6fd-491f-8d2d-76f340f1fa1e"
+            "500cb426-9e4e-419b-bf36-57650b7655e2"
           );
 
-          // Notifikasi dibuka
           window.plugins.OneSignal.setNotificationOpenedHandler(function (
             notification
           ) {
             const data = notification.notification.additionalData;
             if (data && data.targetPage) {
-              window.location.href = data.targetPage; // Misalnya buka halaman forum.html
+              window.location.href = data.targetPage;
             }
           });
 
-          // Minta izin notifikasi
           window.plugins.OneSignal.promptForPushNotificationsWithUserResponse(
             function (accepted) {
               console.log("Notifikasi diizinkan: " + accepted);
@@ -1148,9 +1145,6 @@
         },
         false
       );
-
-      // Initialize app
-      // We do not call navigateTo here because onAuthStateChanged will handle it
     </script>
   </body>
 </html>
